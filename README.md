@@ -105,6 +105,19 @@ PowerShell:
 .\run_tests.ps1 -q
 ```
 
+GitHub Actions:
+
+- Workflow: [Pytest CI](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml)
+- Wszystkie runy: [Actions](https://github.com/Melly-999/alpha_data_scraper_ai/actions)
+
+Szybki workflow git dla tego repo:
+
+```bash
+git add .
+git commit -m "opis zmian"
+git push
+```
+
 ---
 
 ## Docker
