@@ -1,5 +1,7 @@
 # Grok Alpha AI - Automated Trading Terminal
 
+[![Pytest CI](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml/badge.svg)](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml)
+
 ## 3-Layer LSTM | RSI Fusion | Stochastic | MT5 Live Trading Engine
 
 Grok Alpha AI to zaawansowany terminal tradingowy oparty o:
@@ -54,7 +56,7 @@ grok_alpha_ai/
 ### 1. Klonowanie repo
 
 ```bash
-git clone https://github.com/<twoj_login>/grok_alpha_ai.git
+git clone https://github.com/Melly-999/alpha_data_scraper_ai.git
 cd grok_alpha_ai
 ```
 
