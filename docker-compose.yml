@@ -1,0 +1,23 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: grok-alpha-ai:local
+    command: ["python", "main.py"]
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: grok-alpha-ai:local
+    command: ["python", "-m", "pytest", "-q"]
+
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: grok-alpha-ai:local
+    command: ["bash"]
+    stdin_open: true
+    tty: true

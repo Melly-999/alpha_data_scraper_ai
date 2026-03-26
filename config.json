@@ -1,0 +1,7 @@
+{
+	"symbol": "EURUSD",
+	"timeframe": "M5",
+	"bars": 700,
+	"lookback": 30,
+	"epochs": 2
+}
