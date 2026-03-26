@@ -1,6 +1,6 @@
 # Grok Alpha AI - Automated Trading Terminal
 
-[![Pytest CI](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml/badge.svg)](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml)
+[![Pytest CI (main)](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml?query=branch%3Amain)
 
 ## 3-Layer LSTM | RSI Fusion | Stochastic | MT5 Live Trading Engine
 
