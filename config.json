@@ -3,5 +3,17 @@
 	"timeframe": "M5",
 	"bars": 700,
 	"lookback": 30,
-	"epochs": 2
+	"epochs": 2,
+	"autotrade": {
+		"enabled": true,
+		"dry_run": true,
+		"min_confidence": 75.0,
+		"volume": 0.01,
+		"deviation": 20,
+		"sl_points": 250,
+		"tp_points": 350,
+		"magic": 20260327,
+		"cooldown_seconds": 120,
+		"allow_same_signal": false
+	}
 }

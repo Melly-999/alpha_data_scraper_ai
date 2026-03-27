@@ -89,6 +89,48 @@ Jesli masz problem z lokalnym Pythonem, uruchamiaj projekt przez Docker z sekcji
 python main.py
 ```
 
+### Auto-trade MetaTrader5
+
+Auto-trade jest sterowany przez sekcje `autotrade` w `config.json`.
+
+Domyslnie:
+
+- `enabled: false` (brak wysylki zlecen),
+- `dry_run: true` (symulacja requestu do MT5 bez realnego ordera).
+
+Zalecana kolejnosc:
+
+1. Ustaw `enabled: true` i zostaw `dry_run: true`, uruchom aplikacje i sprawdzaj pole `autotrade` w snapshotach.
+2. Po weryfikacji ustaw `dry_run: false`, aby wlaczyc realne zlecenia rynkowe BUY/SELL.
+
+Przykladowe klucze:
+
+- `min_confidence` - minimalna pewnosc sygnalu do wyslania zlecenia,
+- `volume` - wolumen pozycji,
+- `sl_points` / `tp_points` - odleglosc SL/TP w punktach,
+- `cooldown_seconds` - minimalny odstep miedzy kolejnymi zleceniami,
+- `allow_same_signal` - czy pozwolic na kolejne zlecenie w tym samym kierunku.
+
+Gotowe profile (folder `profiles/`):
+
+1. `paper_safe.json` - bezpieczny paper-trading (`dry_run: true`)
+2. `real_conservative.json` - real trading konserwatywny
+3. `real_aggressive.json` - real trading agresywny
+
+Uruchamianie z profilem:
+
+```powershell
+.[0m\.venv\Scripts\python.exe main.py --config profiles/paper_safe.json --continuous --interval 2
+```
+
+```powershell
+.[0m\.venv\Scripts\python.exe main.py --config profiles/real_conservative.json --continuous --interval 2
+```
+
+```powershell
+.[0m\.venv\Scripts\python.exe main.py --config profiles/real_aggressive.json --continuous --interval 2
+```
+
 ---
 
 ## Testy

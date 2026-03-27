@@ -1,0 +1,19 @@
+{
+  "symbol": "EURUSD",
+  "timeframe": "M5",
+  "bars": 700,
+  "lookback": 30,
+  "epochs": 2,
+  "autotrade": {
+    "enabled": true,
+    "dry_run": false,
+    "min_confidence": 65.0,
+    "volume": 0.02,
+    "deviation": 25,
+    "sl_points": 180,
+    "tp_points": 260,
+    "magic": 20260329,
+    "cooldown_seconds": 45,
+    "allow_same_signal": true
+  }
+}
