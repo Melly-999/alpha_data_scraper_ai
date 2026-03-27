@@ -12,3 +12,10 @@ pre-commit
 memory-profiler
 tensorflow; python_version < "3.13"
 MetaTrader5; platform_system == "Windows" and python_version < "3.13"
+requests
+beautifulsoup4
+lxml
+torch
+pydantic
+fastapi
+uvicorn
