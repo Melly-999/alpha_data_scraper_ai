@@ -1,23 +1,107 @@
+version: '3.8'
+
 services:
-  app:
+  # Production trading bot service
+  trading-bot:
     build:
       context: .
-      dockerfile: Dockerfile.prod
-    image: grok-alpha-ai:local
-    command: ["python", "main.py"]
+      dockerfile: Dockerfile
+    image: grok-alpha-ai:latest
+    container_name: grok-trading-bot
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TZ=UTC
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - NEWSAPI_KEY=${NEWSAPI_KEY}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./backups:/app/backups
+      - ./config.json:/app/config.json:ro
+    command: python example_runner.py --symbols EURUSD GBPUSD USDJPY --demo
+    ports:
+      - "8000:8000"  # API server if enabled
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import logging; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - trading-network
 
-  tests:
+  # Testing service
+  test-runner:
     build:
       context: .
-      dockerfile: Dockerfile.prod
-    image: grok-alpha-ai:local
-    command: ["python", "-m", "pytest", "-q"]
+      dockerfile: Dockerfile
+    image: grok-alpha-ai:latest
+    container_name: grok-ai-tests
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./tests:/app/tests:ro
+      - ./results:/app/results
+    command: python -m pytest tests/ -v --cov=. --cov-report=html:/app/results/coverage
+    networks:
+      - trading-network
+    profiles:
+      - test
 
-  dev:
+  # Development shell
+  dev-shell:
     build:
       context: .
-      dockerfile: Dockerfile.prod
-    image: grok-alpha-ai:local
-    command: ["bash"]
+      dockerfile: Dockerfile
+    image: grok-alpha-ai:latest
+    container_name: grok-dev
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TZ=UTC
+    volumes:
+      - .:/app
     stdin_open: true
     tty: true
+    command: /bin/bash
+    networks:
+      - trading-network
+    profiles:
+      - dev
+
+  # Notebook server for analysis
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: grok-alpha-ai:latest
+    container_name: grok-jupyter
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TZ=UTC
+    volumes:
+      - .:/app
+      - ./notebooks:/app/notebooks
+    ports:
+      - "8888:8888"
+    command: jupyter notebook --ip=0.0.0.0 --allow-root --no-browser
+    networks:
+      - trading-network
+    profiles:
+      - notebook
+
+volumes:
+  logs:
+    driver: local
+  data:
+    driver: local
+  backups:
+    driver: local
+  results:
+    driver: local
+  notebooks:
+    driver: local
+
+networks:
+  trading-network:
+    driver: bridge

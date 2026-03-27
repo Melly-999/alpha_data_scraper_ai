@@ -1,11 +1,63 @@
+# Git
 .git
 .gitignore
-.venv
+.github
+
+# Python
 __pycache__
-.pytest_cache
-.mypy_cache
-*.pyc
-*.pyo
-*.pyd
-dist
-build
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv
+venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Project specific
+logs/
+data/
+backups/
+profiling/
+results/
+.pre-commit-config.yaml
+
+# Documentation
+*.md
+docs/
+notebooks/
+
+# Services
+service_logs/
+service_wrapper.ps1
+service_start.bat
