@@ -136,9 +136,14 @@ _secrets_singleton: Optional[Secrets] = None
 
 def load_secrets() -> Secrets:
     """Load all secrets from environment and return a Secrets instance."""
+    news_api_key = _load("NEWS_API_KEY", "NEWS_API_KEY_FILE")
+    if not news_api_key:
+        # Backward compatibility with existing deployment/env naming.
+        news_api_key = _load("NEWSAPI_KEY")
+
     return Secrets(
         claude_api_key=_load("CLAUDE_API_KEY", "CLAUDE_API_KEY_FILE"),
-        news_api_key=_load("NEWS_API_KEY", "NEWS_API_KEY_FILE"),
+        news_api_key=news_api_key,
         mt5_login=_load("MT5_LOGIN"),
         mt5_password=_load("MT5_PASSWORD", "MT5_PASSWORD_FILE"),
         mt5_server=_load("MT5_SERVER", default="MetaQuotes-Demo"),

@@ -81,9 +81,10 @@ jobs:
             --requirement requirements-ci.txt \
             --format json \
             --output pip-audit-report.json \
-            --skip-editable || true
+            --skip-editable
 
       - name: Upload audit report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pip-audit-report

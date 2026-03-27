@@ -49,7 +49,7 @@ jobs:
       - name: Set image tag in kustomization
         working-directory: k8s
         run: |
-          kustomize edit set image trading-bot=ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.tag }}
+          kustomize edit set image grok-alpha-ai=ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.tag }}
 
       - name: Apply Kubernetes manifests
         run: |
@@ -59,4 +59,4 @@ jobs:
       - name: Verify deployment
         run: |
           kubectl -n trading get pods -l app=trading-bot
-          kubectl -n trading get svc trading-bot
+          kubectl -n trading get svc trading-bot-svc
