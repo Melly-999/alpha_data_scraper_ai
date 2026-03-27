@@ -1,6 +1,7 @@
 {
   "symbol": "EURUSD",
   "timeframe": "M5",
+  "interval": 1.0,
   "bars": 700,
   "lookback": 30,
   "epochs": 2,

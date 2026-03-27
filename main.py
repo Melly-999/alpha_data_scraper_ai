@@ -173,8 +173,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--interval",
         type=float,
-        default=5.0,
-        help="Seconds between snapshots in continuous mode",
+        default=None,
+        help="Seconds between snapshots in continuous mode (overrides config interval)",
     )
     return parser.parse_args()
 
@@ -183,11 +183,12 @@ def main() -> None:
     args = _parse_args()
     cfg = _load_config(args.config)
     runtime = AppRuntime(cfg)
+    interval = float(args.interval if args.interval is not None else cfg.get("interval", 5.0))
 
     if args.gui:
-        if args.interval <= 0:
+        if interval <= 0:
             raise ValueError("--interval must be greater than 0")
-        run_live_gui(runtime.next_snapshot, interval_seconds=args.interval)
+        run_live_gui(runtime.next_snapshot, interval_seconds=interval)
         return
 
     if not args.continuous:
@@ -195,7 +196,7 @@ def main() -> None:
         render_console(snapshot)
         return
 
-    if args.interval <= 0:
+    if interval <= 0:
         raise ValueError("--interval must be greater than 0")
 
     try:
@@ -203,8 +204,8 @@ def main() -> None:
             snapshot = runtime.next_snapshot()
             _clear_console()
             render_console(snapshot)
-            print(f"\nNext update in {args.interval:.1f}s (Ctrl+C to stop)")
-            time.sleep(args.interval)
+            print(f"\nNext update in {interval:.1f}s (Ctrl+C to stop)")
+            time.sleep(interval)
     except KeyboardInterrupt:
         print("\nStopped continuous mode.")
 
