@@ -19,7 +19,7 @@ from signal_generator import generate_signal, signal_to_dict
 
 DEFAULT_SYMBOLS = [
     "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURJPY",
-    "XAUUSD", "XTIUSD", "NVDA", "GOOGL", "NAS100",
+    "XAUUSD", "XTIUSD", "XNAS", "GOOGL", "NAS100",
 ]
 
 
@@ -294,3 +294,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

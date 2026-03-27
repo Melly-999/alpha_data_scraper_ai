@@ -21,7 +21,7 @@ _SYNTHETIC_BASE: dict[str, float] = {
     "EURJPY": 162.5,
     "XAUUSD": 2050.0,
     "XTIUSD": 78.0,      # WTI crude oil (USD/barrel)
-    "NVDA": 850.0,       # NVIDIA stock
+    "XNAS": 850.0,       # NVIDIA stock
     "GOOGL": 175.0,      # Alphabet/Google stock
     "NAS100": 18500.0,   # NASDAQ 100 index
 }
@@ -154,4 +154,5 @@ class MT5Fetcher:
             ].rename(columns={"tick_volume": "volume"})
         finally:
             mt5.shutdown()
+
 
