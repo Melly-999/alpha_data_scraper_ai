@@ -12,6 +12,100 @@ try:
 except Exception:  # pragma: no cover - optional runtime dependency
     mt5 = None
 
+# Base prices for synthetic fallback per symbol (approximate mid-market)
+_SYNTHETIC_BASE: dict[str, float] = {
+    "EURUSD": 1.08,
+    "GBPUSD": 1.27,
+    "USDJPY": 150.5,
+    "AUDUSD": 0.65,
+    "EURJPY": 162.5,
+    "XAUUSD": 2050.0,
+}
+
+
+def batch_fetch(
+    symbols: list[str],
+    timeframe: str = "M5",
+    bars: int = 700,
+) -> dict[str, pd.DataFrame]:
+    """Fetch OHLCV data for multiple symbols in a single MT5 session.
+
+    Opens MT5 once, fetches all symbols sequentially, then shuts down.
+    Falls back to per-symbol synthetic data when MT5 is unavailable or a
+    symbol cannot be fetched.
+    """
+    if bars < 120:
+        bars = 120
+
+    results: dict[str, pd.DataFrame] = {}
+
+    tf_map = {
+        "M1": mt5.TIMEFRAME_M1 if mt5 else None,
+        "M5": mt5.TIMEFRAME_M5 if mt5 else None,
+        "M15": mt5.TIMEFRAME_M15 if mt5 else None,
+        "H1": mt5.TIMEFRAME_H1 if mt5 else None,
+    }
+    tf_value = tf_map.get(timeframe.upper())
+
+    mt5_ok = mt5 is not None and mt5.initialize()
+    try:
+        for idx, sym in enumerate(symbols):
+            df: Optional[pd.DataFrame] = None
+            if mt5_ok and tf_value is not None:
+                try:
+                    rates = mt5.copy_rates_from_pos(sym, tf_value, 0, bars)
+                    if rates is not None:
+                        frame = pd.DataFrame(rates)
+                        if not frame.empty:
+                            frame["time"] = pd.to_datetime(frame["time"], unit="s")
+                            df = frame[
+                                ["time", "open", "high", "low", "close", "tick_volume"]
+                            ].rename(columns={"tick_volume": "volume"})
+                except Exception:
+                    df = None
+            if df is None or df.empty:
+                df = _synthetic_rates(sym, bars=bars, seed=42 + idx)
+            results[sym] = df
+    finally:
+        if mt5_ok:
+            mt5.shutdown()
+
+    return results
+
+
+def _synthetic_rates(symbol: str, bars: int = 700, seed: int = 42) -> pd.DataFrame:
+    base = _SYNTHETIC_BASE.get(symbol, 1.0)
+    # Scale volatility for JPY-pairs and gold
+    vol = 0.0012 if base < 5 else (0.12 if base < 200 else 1.5)
+    drift = 0.00005 if base < 5 else (0.005 if base < 200 else 0.05)
+
+    rng = np.random.default_rng(seed)
+    returns = rng.normal(loc=drift, scale=vol, size=bars)
+    close = base + np.cumsum(returns)
+
+    spread = vol * 0.35
+    high_spread = np.abs(rng.normal(spread, spread * 0.35, size=bars))
+    low_spread = np.abs(rng.normal(spread, spread * 0.35, size=bars))
+    open_ = np.roll(close, 1)
+    open_[0] = close[0]
+    high = np.maximum(open_, close) + high_spread
+    low = np.minimum(open_, close) - low_spread
+    volume = rng.integers(100, 1200, size=bars)
+
+    start = datetime.now(timezone.utc) - timedelta(minutes=5 * bars)
+    time = pd.date_range(start=start, periods=bars, freq="5min")
+
+    return pd.DataFrame(
+        {
+            "time": time,
+            "open": open_,
+            "high": high,
+            "low": low,
+            "close": close,
+            "volume": volume,
+        }
+    )
+
 
 @dataclass
 class MT5Fetcher:
@@ -27,7 +121,7 @@ class MT5Fetcher:
         live = self._fetch_from_mt5(bars)
         if live is not None and not live.empty:
             return live
-        return self._synthetic_rates(bars)
+        return _synthetic_rates(self.symbol, bars=bars, seed=self.seed)
 
     def _fetch_from_mt5(self, bars: int) -> Optional[pd.DataFrame]:
         if mt5 is None:
@@ -57,29 +151,3 @@ class MT5Fetcher:
         finally:
             mt5.shutdown()
 
-    def _synthetic_rates(self, bars: int) -> pd.DataFrame:
-        rng = np.random.default_rng(self.seed)
-        returns = rng.normal(loc=0.00005, scale=0.0012, size=bars)
-        close = 1.08 + np.cumsum(returns)
-
-        high_spread = np.abs(rng.normal(0.0004, 0.00015, size=bars))
-        low_spread = np.abs(rng.normal(0.0004, 0.00015, size=bars))
-        open_ = np.roll(close, 1)
-        open_[0] = close[0]
-        high = np.maximum(open_, close) + high_spread
-        low = np.minimum(open_, close) - low_spread
-        volume = rng.integers(100, 1200, size=bars)
-
-        start = datetime.now(timezone.utc) - timedelta(minutes=5 * bars)
-        time = pd.date_range(start=start, periods=bars, freq="5min")
-
-        return pd.DataFrame(
-            {
-                "time": time,
-                "open": open_,
-                "high": high,
-                "low": low,
-                "close": close,
-                "volume": volume,
-            }
-        )
