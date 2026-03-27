@@ -1,5 +1,5 @@
 {
-  "symbols": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURJPY", "XAUUSD", "XTIUSD", "XNAS", "GOOGL", "NAS100"],
+  "symbols": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURJPY", "XAUUSD", "WTI", "NVDA", "GOOGL", "USTECH100"],
   "timeframe": "M5",
   "interval": 1.0,
   "bars": 700,
@@ -18,4 +18,5 @@
     "allow_same_signal": true
   }
 }
+
 
