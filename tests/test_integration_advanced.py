@@ -1,372 +1,542 @@
 """
-Integration tests for advanced modules: multi-timeframe + backtest + claude
-Tests the complete pipeline: MultiTimeframeAnalyzer → BacktestEngine → ClaudeAI validation
+Advanced integration tests for trading pipeline modules.
+
+Tests multi_timeframe + backtest + claude_ai together using mocks.
+No live network calls, no MetaTrader5 required — runs in CI.
 """
 from __future__ import annotations
 
 import json
+import sys
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Callable, Dict, Optional, Tuple
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from multi_timeframe import (
+# ---------------------------------------------------------------------------
+# Module-level stubs so tests run without MetaTrader5 installed on Linux CI
+# ---------------------------------------------------------------------------
+if "MetaTrader5" not in sys.modules:
+    mt5_stub = MagicMock()
+    mt5_stub.TIMEFRAME_M1 = 1
+    mt5_stub.TIMEFRAME_M5 = 5
+    mt5_stub.TIMEFRAME_H1 = 16388
+    sys.modules["MetaTrader5"] = mt5_stub
+
+from multi_timeframe import (  # noqa: E402
     MultiTimeframeAnalyzer,
     TimeframeSignal,
     MultiTimeframeResult,
 )
-from backtest import BacktestEngine, BacktestMetrics, Trade
-from claude_ai import ClaudeAIClient, ClaudeAIIntegration, ClaudeSignal
+from backtest import BacktestEngine, BacktestMetrics, Trade  # noqa: E402
+from claude_ai import ClaudeAIClient, ClaudeAIIntegration, ClaudeSignal  # noqa: E402
 
 
-@pytest.fixture
-def sample_multi_timeframe_data() -> dict[str, pd.DataFrame]:
-    """Create sample OHLCV data for M1, M5, H1 timeframes"""
-    rng = np.random.default_rng(42)
-    base_time = datetime(2025, 1, 1, 0, 0, 0)
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-    data = {}
-    for tf_name, periods in [("M1", 60), ("M5", 300), ("H1", 3600)]:
-        n = 500
-        close = 1.1 + np.cumsum(rng.normal(0.0, 0.0005, size=n))
-        open_ = close + rng.normal(0, 0.0005, size=n)
-        high = np.maximum(open_, close) + np.abs(rng.normal(0, 0.0003, size=n))
-        low = np.minimum(open_, close) - np.abs(rng.normal(0, 0.0003, size=n))
-        volume = rng.integers(100, 1000, size=n)
-
-        times = [base_time + timedelta(minutes=i * (periods / 60)) for i in range(n)]
-
-        data[tf_name] = pd.DataFrame(
-            {
-                "time": times,
-                "open": open_,
-                "high": high,
-                "low": low,
-                "close": close,
-                "volume": volume,
-            }
-        )
-
-    return data
-
-
-@pytest.fixture
-def multi_timeframe_analyzer() -> MultiTimeframeAnalyzer:
-    """Create MultiTimeframeAnalyzer instance"""
-    return MultiTimeframeAnalyzer(symbol="EURUSD")
-
-
-@pytest.fixture
-def mock_claude_client() -> MagicMock:
-    """Mock ClaudeAIClient for testing"""
-    mock_client = MagicMock(spec=ClaudeAIClient)
-    mock_client.get_trading_signal.return_value = ClaudeSignal(
-        signal="BUY", confidence=85, risk="MEDIUM", reason="Strong uptrend detected"
+def _make_ohlcv(n: int = 300, seed: int = 42) -> pd.DataFrame:
+    """Deterministic OHLCV DataFrame."""
+    rng = np.random.default_rng(seed)
+    close = 1.1 + np.cumsum(rng.normal(0.0, 0.0008, n))
+    open_ = close + rng.normal(0, 0.0004, n)
+    high = np.maximum(open_, close) + np.abs(rng.normal(0, 0.0003, n))
+    low = np.minimum(open_, close) - np.abs(rng.normal(0, 0.0003, n))
+    start = datetime(2025, 1, 1)
+    return pd.DataFrame(
+        {
+            "time": [start + timedelta(minutes=i) for i in range(n)],
+            "open": open_,
+            "high": high,
+            "low": low,
+            "close": close,
+            "volume": rng.integers(100, 1000, n),
+        }
     )
-    return mock_client
+
+
+def _make_indicators(
+    rsi: float = 45.0,
+    macd_hist: float = 0.001,
+    bb_pos: float = 0.3,
+    slope: float = 0.0002,
+) -> Dict[str, float]:
+    return {"rsi": rsi, "macd_hist": macd_hist, "bb_position": bb_pos, "slope": slope}
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def ohlcv() -> pd.DataFrame:
+    return _make_ohlcv(300)
+
+
+@pytest.fixture
+def indicator_data() -> Dict[str, Dict]:
+    """Pre-computed indicator data for M1/M5/H1 — no MT5 needed."""
+    return {
+        "M1": _make_indicators(rsi=42, macd_hist=0.002, bb_pos=0.25, slope=0.0003),
+        "M5": _make_indicators(rsi=40, macd_hist=0.003, bb_pos=0.30, slope=0.0004),
+        "H1": _make_indicators(rsi=38, macd_hist=0.004, bb_pos=0.20, slope=0.0005),
+    }
+
+
+@pytest.fixture
+def bearish_indicator_data() -> Dict[str, Dict]:
+    return {
+        "M1": _make_indicators(rsi=72, macd_hist=-0.003, bb_pos=0.85, slope=-0.0005),
+        "M5": _make_indicators(rsi=68, macd_hist=-0.002, bb_pos=0.80, slope=-0.0004),
+        "H1": _make_indicators(rsi=70, macd_hist=-0.004, bb_pos=0.90, slope=-0.0006),
+    }
+
+
+@pytest.fixture
+def mtf_analyzer() -> MultiTimeframeAnalyzer:
+    return MultiTimeframeAnalyzer(symbol="EURUSD")
 
 
 class TestMultiTimeframeAnalysis:
     """Test multi-timeframe analysis functionality"""
 
-    def test_analyze_returns_multi_timeframe_result(
-        self, multi_timeframe_analyzer, sample_multi_timeframe_data
-    ):
-        """Test that analyze() returns MultiTimeframeResult with correct structure"""
-        result = multi_timeframe_analyzer.analyze(sample_multi_timeframe_data)
 
+# ---------------------------------------------------------------------------
+# 1. MultiTimeframeAnalyzer tests
+# ---------------------------------------------------------------------------
+
+
+class TestMultiTimeframeAnalysis:
+    """Test multi-timeframe analysis functionality."""
+
+    def test_returns_result_dataclass(self, mtf_analyzer, indicator_data):
+        result = mtf_analyzer.analyze(indicator_data)
         assert isinstance(result, MultiTimeframeResult)
-        assert result.weighted_signal in ["BUY", "SELL", "HOLD"]
-        assert 0 <= result.confirmation_signal <= 3
-        assert "M1" in result.signals
-        assert "M5" in result.signals
-        assert "H1" in result.signals
 
-    def test_timeframe_signals_have_required_fields(
-        self, multi_timeframe_analyzer, sample_multi_timeframe_data
-    ):
-        """Test that each timeframe signal has all required attributes"""
-        result = multi_timeframe_analyzer.analyze(sample_multi_timeframe_data)
+    def test_weighted_signal_is_valid(self, mtf_analyzer, indicator_data):
+        result = mtf_analyzer.analyze(indicator_data)
+        assert result.weighted_signal in {"BUY", "SELL", "HOLD"}
 
-        for timeframe, signal in result.signals.items():
-            assert isinstance(signal, TimeframeSignal)
-            assert signal.timeframe == timeframe
-            assert signal.signal in ["BUY", "SELL", "HOLD"]
-            assert signal.confidence >= 0
-            assert signal.indicators is not None
+    def test_confirmation_signal_is_string(self, mtf_analyzer, indicator_data):
+        result = mtf_analyzer.analyze(indicator_data)
+        assert result.confirmation_signal in {"BUY", "SELL", "HOLD"}
 
-    def test_confirmation_strategy_requires_agreement(
-        self, multi_timeframe_analyzer, sample_multi_timeframe_data
-    ):
-        """Test confirmation strategy (M5 & H1 must agree)"""
-        result = multi_timeframe_analyzer.analyze(sample_multi_timeframe_data)
+    def test_confirmation_strength_range(self, mtf_analyzer, indicator_data):
+        result = mtf_analyzer.analyze(indicator_data)
+        assert 0 <= result.confirmation_strength <= 3
 
-        # If confirmation_signal > 0, at least M5 and H1 should agree
-        if result.confirmation_signal > 0:
-            m5_signal = result.signals["M5"].signal
-            h1_signal = result.signals["H1"].signal
-            assert m5_signal == h1_signal, "M5 and H1 signals must agree for confirmation"
+    def test_all_timeframes_present(self, mtf_analyzer, indicator_data):
+        result = mtf_analyzer.analyze(indicator_data)
+        for tf in ("M1", "M5", "H1"):
+            assert tf in result.signals
 
-    def test_weighted_combination(
-        self, multi_timeframe_analyzer, sample_multi_timeframe_data
-    ):
-        """Test weighted combination logic (40% M1, 35% M5, 25% H1)"""
-        result = multi_timeframe_analyzer.analyze(sample_multi_timeframe_data)
+    def test_each_signal_is_valid(self, mtf_analyzer, indicator_data):
+        result = mtf_analyzer.analyze(indicator_data)
+        for tf, sig in result.signals.items():
+            assert isinstance(sig, TimeframeSignal)
+            assert sig.timeframe == tf
+            assert sig.signal in {"BUY", "SELL", "HOLD"}
+            assert 0 <= sig.confidence <= 100
 
-        # Result should reflect weighting (40% M1, 35% M5, 25% H1)
-        assert result.weighted_signal in ["BUY", "SELL", "HOLD"]
-        # If most signals are BUY, weighted result should likely be BUY
-        buy_count = sum(
-            1 for sig in result.signals.values() if sig.signal == "BUY"
-        )
-        if buy_count >= 2:
-            assert result.weighted_signal in ["BUY", "HOLD"]
+    def test_bullish_indicators_produce_buy_or_hold(self, mtf_analyzer, indicator_data):
+        """Strongly oversold RSI + positive MACD should lean BUY, not SELL."""
+        result = mtf_analyzer.analyze(indicator_data)
+        assert result.weighted_signal in {"BUY", "HOLD"}
+
+    def test_bearish_indicators_produce_sell_or_hold(self, mtf_analyzer, bearish_indicator_data):
+        """Strongly overbought RSI + negative MACD should lean SELL, not BUY."""
+        result = mtf_analyzer.analyze(bearish_indicator_data)
+        assert result.weighted_signal in {"SELL", "HOLD"}
+
+    def test_confirmation_requires_m5_h1_agreement(self, mtf_analyzer, indicator_data):
+        """Confirmation signal only fires when M5 & H1 agree."""
+        result = mtf_analyzer.analyze(indicator_data)
+        if result.confirmation_signal != "HOLD":
+            assert result.signals["M5"].signal == result.signals["H1"].signal
+
+    def test_missing_h1_handled_gracefully(self, mtf_analyzer):
+        """Partial indicator data (no H1) should not raise."""
+        partial = {
+            "M1": _make_indicators(),
+            "M5": _make_indicators(),
+        }
+        result = mtf_analyzer.analyze(partial)
+        assert result.weighted_signal in {"BUY", "SELL", "HOLD"}
+
+    def test_different_symbols(self):
+        """Analyzer instantiates for multiple symbols without error."""
+        for sym in ("EURUSD", "GBPUSD", "USDJPY", "XAUUSD"):
+            analyzer = MultiTimeframeAnalyzer(symbol=sym)
+            result = analyzer.analyze(
+                {
+                    "M1": _make_indicators(),
+                    "M5": _make_indicators(),
+                    "H1": _make_indicators(),
+                }
+            )
+            assert result.weighted_signal in {"BUY", "SELL", "HOLD"}
+
+    def test_weights_sum_to_one(self, mtf_analyzer):
+        total = sum(mtf_analyzer.weights.values())
+        assert abs(total - 1.0) < 1e-9
+
+
+# ---------------------------------------------------------------------------
+# 2. BacktestEngine tests (no MT5 — patches _fetch_historical_data)
+# ---------------------------------------------------------------------------
 
 
 class TestBacktestIntegration:
-    """Test backtesting with trading signals"""
+    """BacktestEngine.backtest() expects signal_func(df) → (signal, confidence)."""
 
-    def test_backtest_with_multi_timeframe_signals(
-        self, multi_timeframe_analyzer, sample_multi_timeframe_data
-    ):
-        """Test backtesting using signals from multi-timeframe analyzer"""
-        from datetime import datetime, timedelta
+    def _run(
+        self,
+        signal_fn: Callable[[pd.DataFrame], Tuple[str, float]],
+        df: Optional[pd.DataFrame] = None,
+        symbol: str = "EURUSD",
+        balance: float = 1000.0,
+    ) -> Optional[BacktestMetrics]:
+        df = df if df is not None else _make_ohlcv()
+        engine = BacktestEngine(symbol=symbol, initial_balance=balance)
+        start = df["time"].iloc[0]
+        end = df["time"].iloc[-1]
+        with patch.object(engine, "_fetch_historical_data", return_value=df):
+            return engine.backtest(
+                signal_func=signal_fn,
+                start_date=start,
+                end_date=end,
+                lookback_bars=50,
+            )
 
-        engine = BacktestEngine(symbol="EURUSD", initial_balance=1000.0)
+    def test_returns_metrics_or_none(self, ohlcv):
+        metrics = self._run(lambda df: ("BUY", 70), df=ohlcv)
+        assert metrics is None or isinstance(metrics, BacktestMetrics)
 
-        # Create signal function that returns (signal, confidence) tuple
-        def signal_func(ohlcv_data: pd.DataFrame):
-            if len(ohlcv_data) < 50:
-                return ("HOLD", 30)
-            # For simplicity, directly return signal based on price movement
-            close_now = ohlcv_data["close"].iloc[-1]
-            close_past = ohlcv_data["close"].iloc[-10]
-            confidence = 75 if abs(close_now - close_past) > 0.001 else 50
-            signal = "BUY" if close_now > close_past else "SELL"
-            return (signal, confidence)
+    def test_win_rate_range(self, ohlcv):
+        metrics = self._run(lambda df: ("BUY", 70), df=ohlcv)
+        if metrics:
+            assert 0.0 <= metrics.win_rate <= 1.0
 
-        # Run backtest with date range
-        df = sample_multi_timeframe_data["M1"]
-        start_date = df["time"].iloc[0]
-        end_date = df["time"].iloc[-1]
+    def test_max_drawdown_non_negative(self, ohlcv):
+        metrics = self._run(lambda df: ("BUY", 70), df=ohlcv)
+        if metrics:
+            assert metrics.max_drawdown >= 0
 
-        metrics = engine.backtest(
-            signal_func=signal_func,
-            start_date=start_date,
-            end_date=end_date,
-            lookback_bars=50,
-        )
-
-        # Should either return metrics or None (if no data)
-        if metrics is not None:
-            assert isinstance(metrics, BacktestMetrics)
-            assert metrics.total_trades >= 0
-            assert 0 <= metrics.win_rate <= 1.0
-            assert metrics.max_drawdown <= 100
-
-    def test_backtest_metrics_calculation(
-        self, multi_timeframe_analyzer, sample_multi_timeframe_data
-    ):
-        """Test that backtest metrics are calculated correctly"""
-        engine = BacktestEngine(symbol="EURUSD", initial_balance=1000.0)
-
-        def simple_signal(ohlcv):
-            idx = len(ohlcv) % 2
-            confidence = 70
-            signal = "BUY" if idx == 0 else "SELL"
-            return (signal, confidence)
-
-        df = sample_multi_timeframe_data["M1"]
-        start_date = df["time"].iloc[0]
-        end_date = df["time"].iloc[-1]
-
-        metrics = engine.backtest(
-            signal_func=simple_signal,
-            start_date=start_date,
-            end_date=end_date,
-            lookback_bars=50,
-        )
-
-        # Verify metric consistency if we have metrics
-        if metrics is not None and metrics.total_trades > 0:
+    def test_trade_count_consistency(self, ohlcv):
+        metrics = self._run(lambda df: ("BUY", 70), df=ohlcv)
+        if metrics and metrics.total_trades > 0:
             assert metrics.winning_trades + metrics.losing_trades == metrics.total_trades
-            expected_wr = (metrics.winning_trades / metrics.total_trades)
-            assert abs(metrics.win_rate - expected_wr) < 0.01
 
-    def test_trade_tracking(
-        self, multi_timeframe_analyzer, sample_multi_timeframe_data
-    ):
-        """Test that trades are properly tracked during backtest"""
-        engine = BacktestEngine(symbol="EURUSD", initial_balance=5000.0)
+    def test_win_rate_formula(self, ohlcv):
+        metrics = self._run(lambda df: ("BUY", 70), df=ohlcv)
+        if metrics and metrics.total_trades > 0:
+            expected = metrics.winning_trades / metrics.total_trades
+            assert abs(metrics.win_rate - expected) < 0.01
 
-        def alternating_signal(ohlcv: pd.DataFrame):
-            idx = len(ohlcv) % 3
-            confidence = 70
-            if idx == 0:
-                return ("BUY", confidence)
-            elif idx == 1:
-                return ("SELL", confidence)
-            else:
-                return ("HOLD", 30)
+    def test_hold_signal_no_trades(self, ohlcv):
+        metrics = self._run(lambda df: ("HOLD", 50), df=ohlcv)
+        if metrics:
+            assert metrics.total_trades == 0
 
-        df = sample_multi_timeframe_data["M1"]
-        start_date = df["time"].iloc[0]
-        end_date = df["time"].iloc[-1]
+    def test_alternating_buy_sell(self, ohlcv):
+        counter = {"n": 0}
 
-        metrics = engine.backtest(
-            signal_func=alternating_signal,
-            start_date=start_date,
-            end_date=end_date,
-            lookback_bars=50,
-        )
+        def alt(df):
+            counter["n"] += 1
+            return ("BUY", 75) if counter["n"] % 2 == 0 else ("SELL", 75)
 
-        # Should have recorded metrics if backtest ran
-        if metrics is not None:
-            assert metrics is not None
-            assert metrics.total_trades >= 0
+        metrics = self._run(alt, df=ohlcv)
+        assert metrics is None or isinstance(metrics, BacktestMetrics)
+
+    def test_low_confidence_excluded(self, ohlcv):
+        """Signals below 60% confidence threshold should not open positions."""
+        metrics = self._run(lambda df: ("BUY", 30), df=ohlcv)
+        if metrics:
+            assert metrics.total_trades == 0
+
+    def test_multiple_symbols_independent(self):
+        for sym in ("EURUSD", "GBPUSD", "USDJPY"):
+            df = _make_ohlcv(seed=hash(sym) % 1000)
+            engine = BacktestEngine(symbol=sym, initial_balance=1000.0)
+            start, end = df["time"].iloc[0], df["time"].iloc[-1]
+            with patch.object(engine, "_fetch_historical_data", return_value=df):
+                m = engine.backtest(
+                    signal_func=lambda d: ("BUY", 75),
+                    start_date=start,
+                    end_date=end,
+                    lookback_bars=50,
+                )
+            assert m is None or isinstance(m, BacktestMetrics)
+
+    def test_summary_str_contains_key_fields(self, ohlcv):
+        metrics = self._run(lambda df: ("BUY", 70), df=ohlcv)
+        if metrics:
+            summary = metrics.summary_str()
+            assert "BACKTEST" in summary
+            assert "Win Rate" in summary
+
+    def test_backtest_with_multi_timeframe_signals(self, indicator_data, ohlcv):
+        """Full flow: MTF → signal function → BacktestEngine."""
+        analyzer = MultiTimeframeAnalyzer(symbol="EURUSD")
+        mt_result = analyzer.analyze(indicator_data)
+        chosen = mt_result.weighted_signal
+        chosen_conf = mt_result.weighted_confidence
+
+        def mt_signal_fn(df: pd.DataFrame) -> Tuple[str, float]:
+            return (chosen, chosen_conf)
+
+        engine = BacktestEngine(symbol="EURUSD", initial_balance=1000.0)
+        start, end = ohlcv["time"].iloc[0], ohlcv["time"].iloc[-1]
+        with patch.object(engine, "_fetch_historical_data", return_value=ohlcv):
+            metrics = engine.backtest(
+                signal_func=mt_signal_fn,
+                start_date=start,
+                end_date=end,
+                lookback_bars=50,
+            )
+        assert metrics is None or isinstance(metrics, BacktestMetrics)
+
+
+# ---------------------------------------------------------------------------
+# 3. ClaudeAIClient tests (all network calls mocked)
+# ---------------------------------------------------------------------------
 
 
 class TestClaudeAIIntegration:
-    """Test Claude AI integration with other modules"""
+    """Test Claude AI client and integration layer."""
 
-    def test_claude_client_initialization(self):
-        """Test ClaudeAIClient can be initialized"""
-        with patch.dict("os.environ", {"CLAUDE_API_KEY": "test_key"}):
-            client = ClaudeAIClient(api_key="test_key")
-            assert client is not None
+    def test_client_init_with_api_key(self):
+        client = ClaudeAIClient(api_key="test-key")
+        assert client.api_key == "test-key"
 
-    def test_claude_signal_structure(self):
-        """Test ClaudeSignal dataclass structure"""
-        signal = ClaudeSignal(
-            signal="BUY", confidence=90, risk="HIGH", reason="Strong momentum"
-        )
+    def test_client_init_from_env(self, monkeypatch):
+        monkeypatch.setenv("CLAUDE_API_KEY", "env-key")
+        client = ClaudeAIClient()
+        assert client.api_key == "env-key"
 
-        assert signal.signal == "BUY"
-        assert signal.confidence == 90
-        assert signal.risk == "HIGH"
-        assert signal.reason == "Strong momentum"
+    def test_missing_key_raises(self, monkeypatch):
+        monkeypatch.delenv("CLAUDE_API_KEY", raising=False)
+        with pytest.raises(ValueError):
+            ClaudeAIClient()
 
-    def test_claude_ai_integration_validation(self, mock_claude_client):
-        """Test ClaudeAIIntegration validation logic"""
-        integration = ClaudeAIIntegration(client=mock_claude_client)
+    def test_claude_signal_dataclass(self):
+        sig = ClaudeSignal(signal="BUY", confidence=90, risk="HIGH", reason="Strong momentum")
+        assert sig.signal == "BUY"
+        assert sig.confidence == 90
+        assert sig.risk == "HIGH"
 
-        # Test agreement boosting
-        engine_signal = "BUY"
-        engine_confidence = 70
-        market_data = {
-            "close": [1.1, 1.1, 1.105],
-            "volume": [100, 105, 110],
+    def test_get_signal_buy(self):
+        raw = json.dumps({"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "RSI oversold"})
+        client = ClaudeAIClient(api_key="test")
+        with patch.object(client, "_call_api", return_value=raw):
+            sig = client.get_trading_signal({"symbol": "EURUSD", "rsi": 35.0})
+        assert isinstance(sig, ClaudeSignal)
+        assert sig.signal == "BUY"
+        assert sig.confidence == 80
+
+    def test_get_signal_sell(self):
+        raw = json.dumps({"signal": "SELL", "confidence": 75, "risk": "MEDIUM", "reason": "RSI overbought"})
+        client = ClaudeAIClient(api_key="test")
+        with patch.object(client, "_call_api", return_value=raw):
+            sig = client.get_trading_signal({"symbol": "GBPUSD", "rsi": 75.0})
+        assert sig.signal == "SELL"
+        assert sig.confidence == 75
+
+    def test_api_error_returns_none(self):
+        client = ClaudeAIClient(api_key="test")
+        with patch.object(client, "_call_api", return_value=None):
+            sig = client.get_trading_signal({"symbol": "EURUSD"})
+        assert sig is None
+
+    def test_malformed_json_returns_hold(self):
+        client = ClaudeAIClient(api_key="test")
+        with patch.object(client, "_call_api", return_value="not valid json"):
+            sig = client.get_trading_signal({"symbol": "EURUSD"})
+        assert sig is not None
+        assert sig.signal == "HOLD"
+        assert sig.risk == "HIGH"
+
+    def test_markdown_wrapped_json_parsed(self):
+        """Claude sometimes wraps JSON in markdown code fences."""
+        raw = '```json\n{"signal":"BUY","confidence":70,"risk":"LOW","reason":"ok"}\n```'
+        client = ClaudeAIClient(api_key="test")
+        with patch.object(client, "_call_api", return_value=raw):
+            sig = client.get_trading_signal({"symbol": "EURUSD"})
+        assert sig.signal == "BUY"
+
+    def test_portfolio_signal_batch(self):
+        raw_buy = json.dumps({"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "ok"})
+        client = ClaudeAIClient(api_key="test")
+        portfolio = {
+            "EURUSD": {"symbol": "EURUSD", "rsi": 35},
+            "GBPUSD": {"symbol": "GBPUSD", "rsi": 40},
+            "USDJPY": {"symbol": "USDJPY", "rsi": 38},
         }
+        with patch.object(client, "_call_api", return_value=raw_buy):
+            sigs = client.get_portfolio_signal(portfolio)
+        assert sigs is not None
+        assert len(sigs) == 3
+        for sym in portfolio:
+            assert sym in sigs
+            assert isinstance(sigs[sym], ClaudeSignal)
 
-        validated = integration.validate_signal(
-            symbol="EURUSD",
-            engine_signal=engine_signal,
-            engine_confidence=engine_confidence,
-            market_data=market_data,
-        )
-
-        assert isinstance(validated, ClaudeSignal)
-        # If Claude agrees, confidence should be boosted
-        if validated.signal == engine_signal:
-            assert validated.confidence >= engine_confidence
-
-    def test_claude_conflict_resolution(self, mock_claude_client):
-        """Test that signal conflicts default to HOLD"""
-        integration = ClaudeAIIntegration(client=mock_claude_client)
-
-        # Make Claude return opposite signal
-        mock_claude_client.get_trading_signal.return_value = ClaudeSignal(
-            signal="SELL", confidence=85, risk="MEDIUM", reason="Bearish signal"
-        )
-
-        validated = integration.validate_signal(
+    def test_integration_disabled_passthrough(self):
+        integration = ClaudeAIIntegration(enabled=False)
+        sig, conf, reason = integration.validate_signal(
             symbol="EURUSD",
             engine_signal="BUY",
-            engine_confidence=60,
-            market_data={"close": [1.1, 1.1, 1.105]},
+            engine_confidence=75.0,
+            market_data={},
         )
+        assert sig == "BUY"
+        assert conf == 75.0
 
-        # Conflict should result in HOLD or neutral handling
-        assert validated.signal in ["HOLD", "SELL", "BUY"]
+    def test_integration_agreement_boosts_confidence(self):
+        raw = json.dumps({"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "agrees"})
+        integration = ClaudeAIIntegration(api_key="test", enabled=True)
+        with patch.object(integration.client, "_call_api", return_value=raw):
+            sig, conf, reason = integration.validate_signal(
+                symbol="EURUSD",
+                engine_signal="BUY",
+                engine_confidence=65.0,
+                market_data={"symbol": "EURUSD", "rsi": 35.0},
+            )
+        assert sig == "BUY"
+        assert conf > 65.0
+
+    def test_integration_conflict_returns_hold(self):
+        raw = json.dumps({"signal": "SELL", "confidence": 75, "risk": "MEDIUM", "reason": "bearish"})
+        integration = ClaudeAIIntegration(api_key="test", enabled=True)
+        with patch.object(integration.client, "_call_api", return_value=raw):
+            sig, conf, reason = integration.validate_signal(
+                symbol="EURUSD",
+                engine_signal="BUY",
+                engine_confidence=70.0,
+                market_data={"symbol": "EURUSD"},
+            )
+        assert sig == "HOLD"
+        assert "Conflict" in reason
+
+    def test_integration_claude_failure_falls_back(self):
+        integration = ClaudeAIIntegration(api_key="test", enabled=True)
+        with patch.object(integration.client, "_call_api", return_value=None):
+            sig, conf, reason = integration.validate_signal(
+                symbol="EURUSD",
+                engine_signal="SELL",
+                engine_confidence=60.0,
+                market_data={},
+            )
+        assert sig == "SELL"
+        assert conf == 60.0
+
+    def test_integration_independent_signal(self):
+        raw = json.dumps({"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "ok"})
+        integration = ClaudeAIIntegration(api_key="test", enabled=True)
+        with patch.object(integration.client, "_call_api", return_value=raw):
+            sig = integration.get_independent_signal({"symbol": "EURUSD", "rsi": 32})
+        assert isinstance(sig, ClaudeSignal)
+        assert sig.signal == "BUY"
+
+    def test_integration_independent_signal_disabled(self):
+        integration = ClaudeAIIntegration(enabled=False)
+        assert integration.get_independent_signal({}) is None
+
+
+# ---------------------------------------------------------------------------
+# 4. Full pipeline integration test
+# ---------------------------------------------------------------------------
 
 
 class TestFullPipeline:
-    """Test complete pipeline: MultiTimeframe → Backtest → Claude validation"""
+    """Multi-timeframe → Backtest → Claude — all with mocks."""
 
-    def test_full_pipeline_execution(
-        self,
-        multi_timeframe_analyzer,
-        sample_multi_timeframe_data,
-        mock_claude_client,
-    ):
-        """Test full pipeline from analysis to validation"""
-        # Step 1: Multi-timeframe analysis
-        mt_result = multi_timeframe_analyzer.analyze(sample_multi_timeframe_data)
-        assert mt_result.weighted_signal in ["BUY", "SELL", "HOLD"]
+    def test_pipeline_produces_valid_output(self, indicator_data, ohlcv):
+        # Step 1: multi-timeframe
+        analyzer = MultiTimeframeAnalyzer(symbol="EURUSD")
+        mt_result = analyzer.analyze(indicator_data)
+        assert mt_result.weighted_signal in {"BUY", "SELL", "HOLD"}
 
-        # Step 2: Create signal function based on multi-timeframe
-        def mt_signal_func(ohlcv: pd.DataFrame) -> str:
-            return mt_result.weighted_signal
+        # Step 2: backtest using that signal
+        engine = BacktestEngine(symbol="EURUSD", initial_balance=1000.0)
+        chosen = mt_result.weighted_signal
 
-        # Step 3: Backtest the signal
-        engine = BacktestEngine(symbol="EURUSD")
-        metrics = engine.backtest(
-            signal_func=mt_signal_func,
-            historical_data=sample_multi_timeframe_data["M1"],
-            balance=1000.0,
-            risk_per_trade=0.02,
+        def mt_fn(df: pd.DataFrame) -> Tuple[str, float]:
+            return (chosen, mt_result.weighted_confidence)
+
+        start, end = ohlcv["time"].iloc[0], ohlcv["time"].iloc[-1]
+        with patch.object(engine, "_fetch_historical_data", return_value=ohlcv):
+            metrics = engine.backtest(
+                signal_func=mt_fn,
+                start_date=start,
+                end_date=end,
+                lookback_bars=50,
+            )
+        assert metrics is None or isinstance(metrics, BacktestMetrics)
+
+        # Step 3: Claude validation
+        raw = json.dumps(
+            {"signal": chosen, "confidence": 78, "risk": "MEDIUM", "reason": "agrees"}
         )
-        assert metrics.total_trades >= 0
+        integration = ClaudeAIIntegration(api_key="test")
+        with patch.object(integration.client, "_call_api", return_value=raw):
+            final_sig, final_conf, reason = integration.validate_signal(
+                symbol="EURUSD",
+                engine_signal=chosen,
+                engine_confidence=mt_result.weighted_confidence,
+                market_data={"symbol": "EURUSD", "rsi": indicator_data["M1"]["rsi"]},
+            )
+        assert final_sig in {"BUY", "SELL", "HOLD"}
+        assert isinstance(final_conf, float)
 
-        # Step 4: Claude validation
-        integration = ClaudeAIIntegration(client=mock_claude_client)
-        claude_signal = integration.validate_signal(
-            symbol="EURUSD",
-            engine_signal=mt_result.weighted_signal,
-            engine_confidence=mt_result.signals["M5"].confidence,
-            market_data={
-                "close": sample_multi_timeframe_data["M1"]["close"].tail(10).tolist(),
-                "volume": sample_multi_timeframe_data["M1"]["volume"].tail(10).tolist(),
-            },
+    def test_bearish_pipeline(self, bearish_indicator_data):
+        analyzer = MultiTimeframeAnalyzer(symbol="GBPUSD")
+        mt_result = analyzer.analyze(bearish_indicator_data)
+        assert mt_result.weighted_signal in {"SELL", "HOLD"}
+
+    def test_pipeline_holds_on_disagreement(self, indicator_data):
+        """Engine says BUY, Claude says SELL → final must be HOLD."""
+        raw = json.dumps(
+            {"signal": "SELL", "confidence": 80, "risk": "HIGH", "reason": "counter"}
         )
+        integration = ClaudeAIIntegration(api_key="test")
+        with patch.object(integration.client, "_call_api", return_value=raw):
+            final_sig, _, reason = integration.validate_signal(
+                symbol="EURUSD",
+                engine_signal="BUY",
+                engine_confidence=70.0,
+                market_data={"symbol": "EURUSD"},
+            )
+        assert final_sig == "HOLD"
 
-        assert isinstance(claude_signal, ClaudeSignal)
-        assert claude_signal.signal in ["BUY", "SELL", "HOLD"]
+    def test_pipeline_with_ten_symbols(self):
+        symbols = [
+            "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURJPY",
+            "XAUUSD", "WTI", "NVDA", "GOOGL", "USTECH100",
+        ]
+        for sym in symbols:
+            analyzer = MultiTimeframeAnalyzer(symbol=sym)
+            result = analyzer.analyze(
+                {
+                    "M1": _make_indicators(rsi=50, macd_hist=0.0, bb_pos=0.5, slope=0.0),
+                    "M5": _make_indicators(rsi=50, macd_hist=0.0, bb_pos=0.5, slope=0.0),
+                    "H1": _make_indicators(rsi=50, macd_hist=0.0, bb_pos=0.5, slope=0.0),
+                }
+            )
+            assert result.weighted_signal in {"BUY", "SELL", "HOLD"}
 
-    def test_pipeline_with_different_symbols(
-        self, sample_multi_timeframe_data, mock_claude_client
-    ):
-        """Test pipeline consistency across different symbols"""
-        symbols = ["EURUSD", "GBPUSD", "USDJPY"]
-
-        for symbol in symbols:
-            analyzer = MultiTimeframeAnalyzer(symbol=symbol)
-            result = analyzer.analyze(sample_multi_timeframe_data)
-            assert result.weighted_signal in ["BUY", "SELL", "HOLD"]
-
-            # Each symbol should produce valid signals
-            for timeframe, signal in result.signals.items():
-                assert signal.signal in ["BUY", "SELL", "HOLD"]
-                assert signal.confidence >= 0
-
-    def test_pipeline_error_handling(
-        self, multi_timeframe_analyzer, mock_claude_client
-    ):
-        """Test error handling in full pipeline"""
-        # Test with incomplete data
-        incomplete_data = {"M1": pd.DataFrame({"close": [1.1, 1.11]})}
-
-        # Should not crash
-        try:
-            result = multi_timeframe_analyzer.analyze(incomplete_data)
-            # Result should still be valid
-            assert result.weighted_signal in ["BUY", "SELL", "HOLD"]
-        except Exception as e:
-            # If it fails, it should be a clear error
-            assert isinstance(e, (ValueError, KeyError, IndexError))
+    def test_pipeline_error_handling_incomplete_data(self, mtf_analyzer):
+        """Incomplete dict (no H1) should not crash the pipeline."""
+        partial = {
+            "M1": _make_indicators(),
+            "M5": _make_indicators(),
+        }
+        result = mtf_analyzer.analyze(partial)
+        assert result.weighted_signal in {"BUY", "SELL", "HOLD"}
 
 
 if __name__ == "__main__":

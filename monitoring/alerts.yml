@@ -1,0 +1,42 @@
+groups:
+  - name: trading_bot_alerts
+    rules:
+      # Bot not responding
+      - alert: TradingBotDown
+        expr: up{job="trading-bot"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Trading bot is down"
+          description: "The trading bot Prometheus metrics endpoint has been unreachable for > 2 minutes."
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(trading_bot_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate > 0.1/s for 5 minutes on {{ $labels.module }}."
+
+      # Signal confidence too low
+      - alert: LowSignalConfidence
+        expr: trading_bot_signal_confidence < 40
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low signal confidence"
+          description: "Signal confidence for {{ $labels.symbol }} has been below 40% for 10 minutes."
+
+      # Claude AI integration slow
+      - alert: ClaudeAPISlowResponse
+        expr: trading_bot_claude_duration_seconds > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claude API slow"
+          description: "Claude AI response time > 10s for 5 minutes."

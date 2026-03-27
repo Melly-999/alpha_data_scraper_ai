@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trading-bot-config
+  namespace: trading
+  labels:
+    app: grok-alpha-ai
+data:
+  TZ: "UTC"
+  PYTHONUNBUFFERED: "1"
+  LOG_LEVEL: "INFO"
+  SYMBOLS: "EURUSD,GBPUSD,USDJPY,AUDUSD,EURJPY"
+  TIMEFRAMES: "M1,M5,H1"
+  DEMO_MODE: "true"
+  BALANCE: "1000.0"
+  RISK_PER_TRADE: "0.02"
+  UPDATE_INTERVAL_SECONDS: "60"
+  MIN_CONFIDENCE_THRESHOLD: "60"
+  # Prometheus metrics export
+  METRICS_PORT: "8080"
+  METRICS_PATH: "/metrics"

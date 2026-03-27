@@ -383,7 +383,7 @@ class BacktestEngine:
                 recovery_idx = i
                 break
 
-        dd_duration = timedelta(minutes=recovery_idx - peak_idx)
+        dd_duration = timedelta(minutes=int(recovery_idx - peak_idx))
         return max_dd, dd_duration
 
     @staticmethod
