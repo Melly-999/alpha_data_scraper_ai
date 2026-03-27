@@ -20,6 +20,10 @@ _SYNTHETIC_BASE: dict[str, float] = {
     "AUDUSD": 0.65,
     "EURJPY": 162.5,
     "XAUUSD": 2050.0,
+    "XTIUSD": 78.0,      # WTI crude oil (USD/barrel)
+    "NVDA": 850.0,       # NVIDIA stock
+    "GOOGL": 175.0,      # Alphabet/Google stock
+    "NAS100": 18500.0,   # NASDAQ 100 index
 }
 
 

@@ -17,7 +17,10 @@ from mt5_trader import MT5AutoTrader
 from signal_generator import generate_signal, signal_to_dict
 
 
-DEFAULT_SYMBOLS = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURJPY", "XAUUSD"]
+DEFAULT_SYMBOLS = [
+    "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURJPY",
+    "XAUUSD", "XTIUSD", "NVDA", "GOOGL", "NAS100",
+]
 
 
 def _default_config() -> dict[str, Any]:
