@@ -7,8 +7,35 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import subprocess
+import sys
 import time
 from typing import Any
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+from utils.config import *  # noqa: F403
+from utils.risk_manager import RiskManager
+
+risk = RiskManager()
+
+
+def _sync_risk_from_mt5() -> None:
+    """Łączy z MT5, aktualizuje saldo w RiskManager (batch_fetch zamyka sesję osobno)."""
+    try:
+        import MetaTrader5 as mt5  # type: ignore
+    except Exception:
+        return
+    if not mt5.initialize():
+        return
+    try:
+        account = mt5.account_info()
+        if account is None:
+            return
+        risk.update_balance(account.balance)
+    finally:
+        mt5.shutdown()
+
 
 from gui import render_console, run_live_gui
 from indicators import add_indicators
@@ -155,6 +182,7 @@ class AppRuntime:
 
     def next_snapshots(self) -> list[dict[str, Any]]:
         """Fetch all symbols (one MT5 session) then analyse in parallel."""
+        _sync_risk_from_mt5()
         raw_data = batch_fetch(
             symbols=self.symbols,
             timeframe=str(self.cfg.get("timeframe", "M5")),
@@ -179,8 +207,15 @@ class AppRuntime:
         signal_data = snapshot.get("signal", {})
         signal = str(signal_data.get("signal", "HOLD")).upper()
         confidence = float(signal_data.get("confidence", 0.0))
+        can_trade, reason = risk.can_trade()
+
+        if not can_trade:
+            print("🚫 BLOCK:", reason)
+            signal = None
 
         if signal not in {"BUY", "SELL"}:
+            if not can_trade:
+                return {"status": "risk_blocked", "reason": reason}
             return {"status": "no_trade_signal", "signal": signal}
 
         now_ts = time.time()
@@ -194,8 +229,12 @@ class AppRuntime:
         if not self.allow_same_signal and signal == self.last_trade_signal.get(symbol, ""):
             return {"status": "same_signal_blocked", "signal": signal}
 
+        lot = risk.calculate_lot_size(risk.current_balance, sl_pips=100)
+        trader.volume = lot
         result = trader.maybe_execute(signal=signal, confidence=confidence)
         if result.get("status") in {"placed", "dry_run"}:
+            profit = float(result.get("profit", 0.0))
+            risk.register_trade(profit)
             self.last_trade_ts[symbol] = now_ts
             self.last_trade_signal[symbol] = signal
         return result
@@ -336,6 +375,9 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     """Main entry point: parse args, load config, run snapshots."""
+    print("FTMO MODE:", FTMO_MODE)
+    print("Max daily loss:", START_BALANCE * (MAX_DAILY_LOSS_PCT / 100))
+
     args = _parse_args()
     cfg = _load_config(args.config)
     runtime = AppRuntime(cfg)
@@ -357,6 +399,8 @@ def main() -> None:
             # One-shot mode
             snapshots = runtime.next_snapshots()
             render_console(snapshots)
+            status: dict[str, Any] = risk.get_status()
+            print(str(status))
     except KeyboardInterrupt:
         logger.info("Stopped by user (Ctrl+C)")
 
@@ -372,6 +416,8 @@ def _run_continuous_loop(runtime: AppRuntime, interval: float) -> None:
             snapshots = runtime.next_snapshots()
             _clear_console()
             render_console(snapshots)
+            status: dict[str, Any] = risk.get_status()
+            print(str(status))
             print(f"Next update in {interval:.1f}s (Ctrl+C to stop)")
             time.sleep(interval)
     except KeyboardInterrupt:
