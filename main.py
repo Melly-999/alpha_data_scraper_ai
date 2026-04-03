@@ -20,8 +20,13 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import subprocess
+import sys
 import time
-from typing import Any
+from typing import Any, cast
+
+_ROOT = Path(__file__).resolve().parents[2]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 from gui import render_console, run_live_gui
 from indicators import add_indicators
@@ -29,9 +34,28 @@ from lstm_model import LSTMPipeline
 from mt5_fetcher import batch_fetch
 from mt5_trader import MT5AutoTrader
 from signal_generator import generate_signal, signal_to_dict
+from utils.risk_manager import RiskManager
 
 
 DEFAULT_SYMBOLS = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURJPY", "XAUUSD"]
+
+
+def _sync_risk_from_mt5(risk: RiskManager) -> None:
+    try:
+        import MetaTrader5 as mt5  # type: ignore
+    except Exception:
+        return
+
+    if not mt5.initialize():
+        return
+
+    try:
+        account = mt5.account_info()
+        if account is None:
+            return
+        risk.update_balance(account.balance)
+    finally:
+        mt5.shutdown()
 
 
 def _default_config() -> dict[str, Any]:
@@ -83,34 +107,61 @@ def _load_config(path: str = "config.json") -> dict[str, Any]:
 class AppRuntime:
     def __init__(self, cfg: dict[str, Any]) -> None:
         self.cfg = cfg
-        autotrade_cfg = cfg.get("autotrade", {})
+        self.autotrade_cfg = cfg.get("autotrade", {})
         self.symbols: list[str] = list(cfg.get("symbols", DEFAULT_SYMBOLS))
+        self.risk = RiskManager()
+        self.auto_trading_enabled = bool(self.autotrade_cfg.get("enabled", False))
 
         # One MT5AutoTrader per symbol, all sharing the same autotrade params
-        self._make_trader = lambda sym, magic_offset=0: MT5AutoTrader(
-            symbol=sym,
-            enabled=bool(autotrade_cfg.get("enabled", False)),
-            dry_run=bool(autotrade_cfg.get("dry_run", True)),
-            min_confidence=float(autotrade_cfg.get("min_confidence", 70.0)),
-            volume=float(autotrade_cfg.get("volume", 0.01)),
-            deviation=int(autotrade_cfg.get("deviation", 20)),
-            sl_points=int(autotrade_cfg.get("sl_points", 200)),
-            tp_points=int(autotrade_cfg.get("tp_points", 300)),
-            magic=int(autotrade_cfg.get("magic", 20260327)) + magic_offset,
-        )
         self.traders: dict[str, MT5AutoTrader] = {
-            sym: self._make_trader(sym, idx)
+            sym: self._create_trader(sym, idx)
             for idx, sym in enumerate(self.symbols)
         }
 
-        self.cooldown_seconds = int(autotrade_cfg.get("cooldown_seconds", 60))
-        self.allow_same_signal = bool(autotrade_cfg.get("allow_same_signal", False))
+        self.cooldown_seconds = int(self.autotrade_cfg.get("cooldown_seconds", 60))
+        self.allow_same_signal = bool(self.autotrade_cfg.get("allow_same_signal", False))
         # Per-symbol trade state
         self.last_trade_ts: dict[str, float] = {sym: 0.0 for sym in self.symbols}
         self.last_trade_signal: dict[str, str] = {sym: "" for sym in self.symbols}
 
+    def _create_trader(self, symbol: str, magic_offset: int) -> MT5AutoTrader:
+        return MT5AutoTrader(
+            symbol=symbol,
+            enabled=self.auto_trading_enabled,
+            dry_run=bool(self.autotrade_cfg.get("dry_run", True)),
+            min_confidence=float(self.autotrade_cfg.get("min_confidence", 70.0)),
+            volume=float(self.autotrade_cfg.get("volume", 0.01)),
+            deviation=int(self.autotrade_cfg.get("deviation", 20)),
+            sl_points=int(self.autotrade_cfg.get("sl_points", 200)),
+            tp_points=int(self.autotrade_cfg.get("tp_points", 300)),
+            magic=int(self.autotrade_cfg.get("magic", 20260327)) + magic_offset,
+        )
+
+    def _set_traders_enabled(self, enabled: bool) -> None:
+        for trader in self.traders.values():
+            trader.enabled = enabled
+
+    def set_auto_trading(self, enabled: bool) -> tuple[bool, str]:
+        can_trade, reason = self.risk.can_trade()
+        if enabled and not can_trade:
+            self.auto_trading_enabled = False
+            self._set_traders_enabled(False)
+            return False, reason
+
+        self.auto_trading_enabled = enabled
+        self._set_traders_enabled(enabled)
+        return True, "ON" if enabled else "OFF"
+
+    def _risk_status_view(self) -> dict[str, Any]:
+        can_trade, reason = self.risk.can_trade()
+        status = cast(dict[str, Any], self.risk.get_status())
+        status["can_trade"] = can_trade
+        status["reason"] = reason
+        return status
+
     def next_snapshots(self) -> list[dict[str, Any]]:
         """Fetch all symbols (one MT5 session) then analyse in parallel."""
+        _sync_risk_from_mt5(self.risk)
         raw_data = batch_fetch(
             symbols=self.symbols,
             timeframe=str(self.cfg.get("timeframe", "M5")),
@@ -120,6 +171,8 @@ class AppRuntime:
         for snap in snapshots:
             sym = snap.get("symbol", "")
             snap["autotrade"] = self._maybe_trade(sym, snap)
+            snap["risk_status"] = self._risk_status_view()
+            snap["auto_trading_enabled"] = self.auto_trading_enabled
         return snapshots
 
     # Keep backward-compat single-snapshot method
@@ -136,6 +189,20 @@ class AppRuntime:
         signal = str(signal_data.get("signal", "HOLD")).upper()
         confidence = float(signal_data.get("confidence", 0.0))
 
+        can_trade, reason = self.risk.can_trade()
+        if not can_trade:
+            if isinstance(signal_data, dict):
+                signal_data["signal"] = None
+                signal_data["confidence"] = 0.0
+            signal = None
+            confidence = 0.0
+            self.auto_trading_enabled = False
+            self._set_traders_enabled(False)
+            return {"status": "risk_blocked", "reason": reason}
+
+        if not self.auto_trading_enabled:
+            return {"status": "auto_trading_off"}
+
         if signal not in {"BUY", "SELL"}:
             return {"status": "no_trade_signal", "signal": signal}
 
@@ -150,8 +217,16 @@ class AppRuntime:
         if not self.allow_same_signal and signal == self.last_trade_signal.get(symbol, ""):
             return {"status": "same_signal_blocked", "signal": signal}
 
+        balance = float(self.risk.current_balance)
+        lot = self.risk.calculate_lot_size(balance, sl_pips=trader.sl_points)
+        trader.volume = lot
         result = trader.maybe_execute(signal=signal, confidence=confidence)
+        result["lot"] = lot
+        result["sl"] = trader.sl_points
+        result["tp"] = trader.tp_points
         if result.get("status") in {"placed", "dry_run"}:
+            profit = float(result.get("profit", 0.0))
+            self.risk.register_trade(profit)
             self.last_trade_ts[symbol] = now_ts
             self.last_trade_signal[symbol] = signal
         return result

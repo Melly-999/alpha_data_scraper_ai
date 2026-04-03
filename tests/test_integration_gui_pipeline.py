@@ -51,4 +51,5 @@ def test_gui_pipeline_snapshot_prints(capsys: Any) -> None:
     out: str = str(capsys.readouterr().out)
     assert "Alpha AI Live Snapshot" in out
     assert "EURUSD" in out
-    assert '"signal"' in out
+    assert "SIGNAL" in out
+    assert result.signal in out
