@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-bot
+  namespace: trading
+  labels:
+    app: grok-alpha-ai
+    component: trading-bot
+    version: "1.0.0"
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+spec:
+  replicas: 1   # Only 1 replica — MT5/financial state must not be duplicated
+  selector:
+    matchLabels:
+      app: grok-alpha-ai
+      component: trading-bot
+  strategy:
+    type: Recreate   # Recreate (not RollingUpdate) to avoid duplicate trades
+  template:
+    metadata:
+      labels:
+        app: grok-alpha-ai
+        component: trading-bot
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: trading-bot-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: trading-bot
+          image: grok-alpha-ai:latest   # Replace with your registry URL
+          imagePullPolicy: Always
+          command: ["python", "example_runner.py"]
+          args:
+            - "--symbols"
+            - "EURUSD"
+            - "GBPUSD"
+            - "USDJPY"
+            - "AUDUSD"
+            - "EURJPY"
+            - "--demo"
+          ports:
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: trading-bot-config
+            - secretRef:
+                name: trading-bot-secrets
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: logs-volume
+              mountPath: /app/logs
+            - name: data-volume
+              mountPath: /app/data
+            - name: config-volume
+              mountPath: /app/config.json
+              subPath: config.json
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: logs-volume
+          persistentVolumeClaim:
+            claimName: trading-logs-pvc
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: trading-data-pvc
+        - name: config-volume
+          configMap:
+            name: trading-bot-config
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: trading-bot-sa
+  namespace: trading
+  labels:
+    app: grok-alpha-ai
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: trading-logs-pvc
+  namespace: trading
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: trading-data-pvc
+  namespace: trading
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard

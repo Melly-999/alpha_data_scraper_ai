@@ -1,0 +1,21 @@
+{
+  "symbols": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURJPY", "XAUUSD", "WTI", "NVDA", "GOOGL", "USTECH100"],
+  "timeframe": "M5",
+  "bars": 700,
+  "lookback": 30,
+  "epochs": 2,
+  "autotrade": {
+    "enabled": true,
+    "dry_run": false,
+    "min_confidence": 78.0,
+    "volume": 0.01,
+    "deviation": 15,
+    "sl_points": 220,
+    "tp_points": 320,
+    "magic": 20260328,
+    "cooldown_seconds": 180,
+    "allow_same_signal": false
+  }
+}
+
+

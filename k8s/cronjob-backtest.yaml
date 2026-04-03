@@ -1,0 +1,65 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backtest-runner
+  namespace: trading
+  labels:
+    app: grok-alpha-ai
+    component: backtest
+spec:
+  # Run backtest every day at 00:05 UTC
+  schedule: "5 0 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600   # 1-hour timeout
+      template:
+        metadata:
+          labels:
+            app: grok-alpha-ai
+            component: backtest
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: trading-bot-sa
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+          containers:
+            - name: backtest
+              image: grok-alpha-ai:latest
+              command: ["python", "-c"]
+              args:
+                - |
+                  from backtest import BacktestEngine
+                  from datetime import datetime, timedelta
+                  import json, os
+
+                  symbol = os.getenv("BACKTEST_SYMBOL", "EURUSD")
+                  days   = int(os.getenv("BACKTEST_DAYS", "30"))
+                  end    = datetime.utcnow()
+                  start  = end - timedelta(days=days)
+
+                  engine = BacktestEngine(symbol=symbol)
+                  print(f"INFO Backtest {symbol} {start:%Y-%m-%d} → {end:%Y-%m-%d}")
+              envFrom:
+                - configMapRef:
+                    name: trading-bot-config
+                - secretRef:
+                    name: trading-bot-secrets
+              resources:
+                requests:
+                  cpu: "500m"
+                  memory: "1Gi"
+                limits:
+                  cpu: "2000m"
+                  memory: "4Gi"
+              volumeMounts:
+                - name: results-volume
+                  mountPath: /app/results
+          volumes:
+            - name: results-volume
+              persistentVolumeClaim:
+                claimName: trading-data-pvc

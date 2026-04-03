@@ -1,2 +1,21 @@
-pandas>=2.0
-yfinance>=0.2.40
+numpy
+pandas
+matplotlib
+scikit-learn
+ta
+pytest
+pytest-cov
+black
+flake8
+mypy
+pre-commit
+memory-profiler
+tensorflow; python_version < "3.13"
+MetaTrader5; platform_system == "Windows" and python_version < "3.13"
+requests
+beautifulsoup4
+lxml
+torch
+pydantic
+fastapi
+uvicorn
