@@ -1,10 +1,10 @@
-# Grok Alpha AI - Automated Trading Terminal
+#  Alpha AI - Automated Trading Terminal
 
 [![Pytest CI (main)](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml?query=branch%3Amain)
 
 ## 3-Layer LSTM | RSI Fusion | Stochastic | MT5 Live Trading Engine
 
-Grok Alpha AI to zaawansowany terminal tradingowy oparty o:
+ Alpha AI to zaawansowany terminal tradingowy oparty o:
 
 - **LSTM (3 warstwy) + RSI Fusion**
 - **Stochastic Oscillator**
