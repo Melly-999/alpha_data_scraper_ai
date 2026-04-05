@@ -34,3 +34,7 @@ ORDER_TIMEOUT_SEC = 30
 # Backtest
 BACKTEST_INITIAL_BALANCE = 100_000.0
 BACKTEST_COMMISSION_PER_LOT = 7.0
+
+# Prop-firm / FTMO compliance
+FTMO_MODE = True
+START_BALANCE = ACCOUNT_BALANCE  # reference balance for daily-loss display

@@ -19,3 +19,4 @@ torch
 pydantic
 fastapi
 uvicorn
+websockets

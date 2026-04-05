@@ -4,6 +4,57 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Any
 
+# ── Grid visualiser helpers ───────────────────────────────────────────────────
+
+_GRID_COLORS = {
+    "current": "#ffffff",
+    "vwap": "#f1c40f",
+    "resistance": "#e74c3c",
+    "support": "#2ecc71",
+    "default": "#4a5568",
+}
+
+
+def _draw_grid(canvas: tk.Canvas, levels: list[dict[str, Any]], signal: str, conf: float) -> None:
+    """Render price grid levels on a Tkinter Canvas widget."""
+    canvas.delete("all")
+    if not levels:
+        canvas.create_text(10, 80, anchor="nw", text="No grid data", fill="#8b9bb2",
+                           font=("Consolas", 10))
+        return
+
+    w = int(canvas["width"])
+    h = int(canvas["height"])
+    pad = 22
+    prices = [lv["price"] for lv in levels]
+    hi, lo = max(prices), min(prices)
+    price_range = hi - lo or 1e-9
+
+    def to_y(price: float) -> float:
+        return pad + (1.0 - (price - lo) / price_range) * (h - 2 * pad)
+
+    for lv in levels:
+        y = to_y(lv["price"])
+        color = _GRID_COLORS.get(lv["type"], _GRID_COLORS["default"])
+        is_cur = lv["type"] == "current"
+        dash = () if is_cur else (4, 4)
+        width = 2 if is_cur else 1
+
+        canvas.create_line(44, y, w - 64, y, fill=color, width=width, dash=dash)
+
+        if is_cur:
+            canvas.create_oval(40, y - 5, 50, y + 5, fill=color, outline="")
+
+        canvas.create_text(40, y, anchor="e", text=lv["label"], fill=color,
+                           font=("Consolas", 8))
+        price_str = f"{lv['price']:.2f}" if lv["price"] > 100 else f"{lv['price']:.5f}"
+        canvas.create_text(w - 62, y, anchor="w", text=price_str, fill=color,
+                           font=("Consolas", 8))
+
+    sig_color = {"BUY": "#2ecc71", "SELL": "#e74c3c"}.get(signal, "#f1c40f")
+    canvas.create_text(w // 2, h - 8, text=f"{signal}  {conf:.1f}%",
+                       fill=sig_color, font=("Consolas", 11, "bold"))
+
 
 _SIGNAL_COLOR = {"BUY": "\033[92m", "SELL": "\033[91m", "HOLD": "\033[93m"}
 _RESET = "\033[0m"
@@ -230,7 +281,7 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
 
     reasons = tk.Text(
         right,
-        height=12,
+        height=7,
         bg=colors["panel_alt"],
         fg=colors["text"],
         insertbackground=colors["text"],
@@ -241,8 +292,18 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
     )
     reasons.grid(row=3, column=0, sticky="nsew")
 
+    # Feature 4: grid visualiser canvas
+    right.grid_rowconfigure(4, weight=2)
+    ttk.Label(right, text="Grid Levels", style="Panel.TLabel",
+              font=("Segoe UI Semibold", 10)).grid(row=4, column=0, sticky="w", pady=(8, 2))
+    grid_canvas = tk.Canvas(
+        right, bg=colors["panel_alt"], highlightthickness=0,
+        width=320, height=180,
+    )
+    grid_canvas.grid(row=5, column=0, sticky="nsew")
+
     buttons = ttk.Frame(right, style="Panel.TFrame")
-    buttons.grid(row=4, column=0, sticky="e", pady=(8, 0))
+    buttons.grid(row=6, column=0, sticky="e", pady=(8, 0))
 
     state: dict[str, Any] = {
         "running": True,
@@ -265,15 +326,18 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
         reasons.delete("1.0", tk.END)
         if not snap:
             reasons.insert(tk.END, "No details available.")
+            grid_canvas.delete("all")
             return
         if snap.get("error"):
             reasons.insert(tk.END, f"Error: {snap['error']}")
+            grid_canvas.delete("all")
             return
         sig_data = snap.get("signal", {})
         lines = [
             f"Signal: {sig_data.get('signal', 'HOLD')}",
             f"Confidence: {sig_data.get('confidence', 0.0)}%",
             f"Score: {sig_data.get('score', 0)}",
+            f"Regime: {sig_data.get('regime', 'N/A')}",
             f"Autotrade: {_fmt_autotrade(snap.get('autotrade', {}))}",
             "",
             "Reasons:",
@@ -281,6 +345,12 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
         for idx, reason in enumerate(sig_data.get("reasons", []), start=1):
             lines.append(f"{idx}. {reason}")
         reasons.insert(tk.END, "\n".join(lines))
+
+        # Feature 4: update grid visualiser for selected symbol
+        grid_levels = snap.get("grid_levels", [])
+        sig = str(sig_data.get("signal", "HOLD")).upper()
+        conf = float(sig_data.get("confidence", 0.0))
+        _draw_grid(grid_canvas, grid_levels, sig, conf)
 
     def _on_table_select(_: Any) -> None:
         selection = table.selection()
