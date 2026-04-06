@@ -6,6 +6,7 @@ import logging
 import os
 import subprocess
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -31,6 +32,24 @@ from mt5_trader import MT5AutoTrader
 from trading_controller import TradingController
 
 logger = get_logger(__name__)
+
+
+# ── Slope helper (used by MTF enrichment) ─────────────────────────────────────
+
+def _compute_slope(close: Any, lookback: int = 15) -> float:
+    """Linear regression slope over the last *lookback* bars (×100 for readability)."""
+    import numpy as np
+
+    try:
+        series = close.iloc[-lookback:] if hasattr(close, "iloc") else close[-lookback:]
+        y = [float(v) for v in series]
+        if len(y) < 2:
+            return 0.0
+        x = list(range(len(y)))
+        return float(float(sum((xi - sum(x) / len(x)) * (yi - sum(y) / len(y)) for xi, yi in zip(x, y)) /
+                     max(sum((xi - sum(x) / len(x)) ** 2 for xi in x), 1e-9)) * 100)
+    except Exception:
+        return 0.0
 
 # ── Constants ────────────────────────────────────────────────────────────────
 FTMO_MODE = _cfg.FTMO_MODE
@@ -133,6 +152,173 @@ class _RuntimeRiskManager:
 
 
 risk = _RuntimeRiskManager()
+
+
+# ── Sentiment cache (Task 3) ──────────────────────────────────────────────────
+
+class _SentimentCache:
+    """Background-refreshing cache for news sentiment scores.
+
+    Runs a daemon thread that calls ``SentimentAnalyzer.analyze_sentiment()``
+    every *refresh_minutes* minutes (default 30).  Falls back silently if
+    network calls fail.
+    """
+
+    def __init__(
+        self,
+        newsapi_key: str | None = None,
+        refresh_minutes: float = 30.0,
+    ) -> None:
+        self._newsapi_key = newsapi_key
+        self._refresh_minutes = refresh_minutes
+        self._cache: dict[str, Any] = {}
+        self._lock = threading.Lock()
+        self._thread = threading.Thread(target=self._loop, daemon=True, name="sentiment-cache")
+
+    def start(self) -> None:
+        self._thread.start()
+        logger.info("Sentiment cache started (refresh every %.0f min)", self._refresh_minutes)
+
+    def _loop(self) -> None:
+        while True:
+            self._refresh()
+            time.sleep(self._refresh_minutes * 60)
+
+    def _refresh(self) -> None:
+        try:
+            from news_sentiment import SentimentAnalyzer  # optional dep
+            analyzer = SentimentAnalyzer(self._newsapi_key)
+            result = analyzer.analyze_sentiment(
+                include_forexfactory=True,
+                include_newsapi=bool(self._newsapi_key),
+            )
+            with self._lock:
+                self._cache = result
+            logger.debug("Sentiment refreshed: %d currencies", len(result))
+        except Exception as exc:
+            logger.warning("Sentiment refresh failed: %s", exc)
+
+    def get(self) -> dict[str, Any]:
+        with self._lock:
+            return dict(self._cache)
+
+
+# ── Claude validator (Task 2) ─────────────────────────────────────────────────
+
+class _ClaudeValidator:
+    """Wraps ``ClaudeAIIntegration.validate_signal()`` for use in the loop.
+
+    Enabled only when *api_key* is supplied (or ``CLAUDE_API_KEY`` env var set).
+    Falls back silently on errors.
+    """
+
+    def __init__(self, api_key: str | None = None) -> None:
+        self._api_key = api_key or os.getenv("CLAUDE_API_KEY")
+        self._enabled = bool(self._api_key)
+        self._integration: Any = None
+        if self._enabled:
+            logger.info("Claude AI validator enabled")
+
+    def validate(self, snapshot: dict[str, Any]) -> dict[str, Any]:
+        """Validate/refine the snapshot signal using Claude AI (best-effort)."""
+        if not self._enabled:
+            return snapshot
+        try:
+            from claude_ai import ClaudeAIIntegration, ClaudeAIClient
+            if self._integration is None:
+                self._integration = ClaudeAIIntegration(
+                    api_key=self._api_key, enabled=True
+                )
+            sig_data = snapshot.get("signal", {})
+            engine_signal = str(sig_data.get("signal", "HOLD"))
+            engine_conf = float(sig_data.get("confidence", 50.0))
+
+            market_data = ClaudeAIClient.format_market_data(
+                symbol=snapshot.get("symbol", ""),
+                current_price=float(snapshot.get("last_close", 0.0)),
+                rsi=float(snapshot.get("indicators", {}).get("rsi", 50.0)),
+                macd_hist=float(snapshot.get("indicators", {}).get("macd_hist", 0.0)),
+                bb_position=float(snapshot.get("indicators", {}).get("bb_pos", 0.5) * 100),
+                slope=float(snapshot.get("indicators", {}).get("slope", 0.0)),
+                multiframe_signal=snapshot.get("mtf", {}).get("weighted_signal"),
+                sentiment_score=snapshot.get("sentiment", {}).get("avg"),
+            )
+            refined_sig, refined_conf, reason = self._integration.validate_signal(
+                symbol=snapshot.get("symbol", ""),
+                engine_signal=engine_signal,
+                engine_confidence=engine_conf,
+                market_data=market_data,
+            )
+            sig_data["signal"] = refined_sig
+            sig_data["confidence"] = round(min(85.0, max(33.0, refined_conf)), 2)
+            sig_data.setdefault("reasons", []).append(f"Claude: {reason}")
+            snapshot["claude_validated"] = True
+        except Exception as exc:
+            logger.debug("Claude validation skipped: %s", exc)
+        return snapshot
+
+
+# ── Alert manager (Task 5) ────────────────────────────────────────────────────
+
+class AlertManager:
+    """Detects signal changes between cycles and fires callbacks.
+
+    Usage::
+
+        alerts = AlertManager()
+        alerts.on_alert(lambda a: print(a))   # register a listener
+
+        # after each cycle:
+        alerts.check(snapshots)
+    """
+
+    def __init__(self) -> None:
+        self._prev: dict[str, str] = {}
+        self._history: list[dict[str, Any]] = []
+        self._callbacks: list[Any] = []
+        self._lock = threading.Lock()
+
+    def on_alert(self, callback: Any) -> None:
+        """Register a callable that receives each new alert dict."""
+        self._callbacks.append(callback)
+
+    def check(self, snapshots: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Compare signals to previous cycle; return list of change alerts."""
+        new_alerts: list[dict[str, Any]] = []
+        for snap in snapshots:
+            sym = snap.get("symbol", "")
+            sig = str(snap.get("signal", {}).get("signal", "HOLD")).upper()
+            prev = self._prev.get(sym, "")
+            if prev and sig != prev:
+                alert = {
+                    "type": "signal_change",
+                    "symbol": sym,
+                    "from_signal": prev,
+                    "to_signal": sig,
+                    "confidence": snap.get("signal", {}).get("confidence", 0.0),
+                    "ts": time.time(),
+                }
+                new_alerts.append(alert)
+                logger.info(
+                    "ALERT  %s  %s → %s  (conf %.1f%%)",
+                    sym, prev, sig, alert["confidence"],
+                )
+            self._prev[sym] = sig
+
+        if new_alerts:
+            with self._lock:
+                self._history.extend(new_alerts)
+                self._history = self._history[-200:]
+            for cb in self._callbacks:
+                try:
+                    cb(new_alerts)
+                except Exception:
+                    pass
+        return new_alerts
+
+    def recent(self, n: int = 20) -> list[dict[str, Any]]:
+        with self._lock:
+            return list(self._history[-n:])
 
 
 # ── MT5 helpers ───────────────────────────────────────────────────────────────
@@ -269,12 +455,64 @@ def _analyse_symbol(
     # Feature 4: grid levels for the visualiser
     grid_levels = compute_grid_levels(latest)
 
+    # Indicator summary — exposed for Claude validation and dashboard display
+    indicators_summary: dict[str, Any] = {
+        "rsi": round(float(latest.get("rsi", 50.0)), 2),
+        "stoch_k": round(float(latest.get("stoch_k", 50.0)), 2),
+        "macd_hist": round(float(latest.get("macd_hist", 0.0)), 6),
+        "bb_pos": round(float(latest.get("bb_pos", 0.5)), 3),
+        "adx": round(float(latest.get("adx", 0.0)), 2),
+        "atr_pct": round(float(latest.get("atr_pct", 0.0)), 5),
+        "slope": round(_compute_slope(data["close"]), 4),
+    }
+
+    # Task 1: Multi-timeframe analysis (best-effort; silent on MT5 import failure)
+    mtf: dict[str, Any] = {}
+    try:
+        from multi_timeframe import MultiTimeframeAnalyzer
+        tf_inds = {
+            tf: {
+                "rsi": indicators_summary["rsi"],
+                "macd_hist": indicators_summary["macd_hist"],
+                "bb_position": indicators_summary["bb_pos"] * 100,
+                "slope": indicators_summary["slope"],
+            }
+            for tf in ("M1", "M5", "H1")
+        }
+        mtf_result = MultiTimeframeAnalyzer(symbol).analyze(tf_inds)
+        mtf = {
+            "weighted_signal": mtf_result.weighted_signal,
+            "weighted_confidence": round(mtf_result.weighted_confidence, 1),
+            "confirmation_signal": mtf_result.confirmation_signal,
+            "confirmation_strength": mtf_result.confirmation_strength,
+        }
+        # Adjust base signal confidence on strong confirmation
+        sig_dict = signal_to_dict(signal)
+        if mtf_result.confirmation_strength >= 2:
+            if mtf_result.confirmation_signal == sig_dict["signal"]:
+                new_conf = min(85.0, sig_dict["confidence"] * 1.08)
+                sig_dict["confidence"] = round(new_conf, 2)
+                sig_dict["reasons"].append(
+                    f"MTF confirmation {mtf_result.confirmation_strength}/3"
+                )
+            elif mtf_result.confirmation_signal not in ("HOLD", sig_dict["signal"]):
+                sig_dict["signal"] = "HOLD"
+                sig_dict["confidence"] = 45.0
+                sig_dict["reasons"].append(
+                    f"MTF conflict: {mtf_result.confirmation_signal}"
+                )
+    except Exception as _mtf_exc:
+        logger.debug("MTF enrichment skipped for %s: %s", symbol, _mtf_exc)
+        sig_dict = signal_to_dict(signal)
+
     return {
         "symbol": symbol,
         "timeframe": cfg.get("timeframe", "M5"),
         "last_close": round(float(latest["close"]), 6),
         "lstm_delta": round(float(lstm_delta), 6),
-        "signal": signal_to_dict(signal),
+        "signal": sig_dict,
+        "indicators": indicators_summary,
+        "mtf": mtf,
         "grid_levels": grid_levels,
         "rows": int(len(data)),
     }
@@ -315,10 +553,53 @@ def _build_multi_snapshots(
     return [results[sym] for sym in symbols]
 
 
+def _enrich_with_sentiment(
+    snapshot: dict[str, Any],
+    sentiment_map: dict[str, Any],
+) -> dict[str, Any]:
+    """Overlay news sentiment onto signal confidence (Task 3)."""
+    sym = snapshot.get("symbol", "")
+    base_ccy = sym[:3] if len(sym) >= 3 else sym
+    score = sentiment_map.get(base_ccy)
+    if score is None:
+        return snapshot
+
+    avg = float(score.average_sentiment)
+    snapshot["sentiment"] = {
+        "currency": base_ccy,
+        "avg": round(avg, 3),
+        "positive": score.positive_count,
+        "negative": score.negative_count,
+        "high_impact": score.high_impact_count,
+    }
+
+    sig_data = snapshot.get("signal", {})
+    sig = str(sig_data.get("signal", "HOLD")).upper()
+    conf = float(sig_data.get("confidence", 50.0))
+    reasons: list[str] = sig_data.get("reasons", [])
+
+    if sig == "BUY":
+        if avg < -0.3:
+            sig_data["confidence"] = round(max(33.0, conf * 0.90), 2)
+            reasons.append(f"News sentiment bearish ({avg:+.2f}) — caution")
+        elif avg > 0.3:
+            sig_data["confidence"] = round(min(85.0, conf * 1.05), 2)
+            reasons.append(f"News sentiment bullish ({avg:+.2f}) — confirms BUY")
+    elif sig == "SELL":
+        if avg > 0.3:
+            sig_data["confidence"] = round(max(33.0, conf * 0.90), 2)
+            reasons.append(f"News sentiment bullish ({avg:+.2f}) — caution")
+        elif avg < -0.3:
+            sig_data["confidence"] = round(min(85.0, conf * 1.05), 2)
+            reasons.append(f"News sentiment bearish ({avg:+.2f}) — confirms SELL")
+
+    return snapshot
+
+
 # ── AppRuntime ────────────────────────────────────────────────────────────────
 
 class AppRuntime:
-    """Manages MT5 data fetching and per-symbol trading state."""
+    """Manages MT5 data fetching, per-symbol trading state, and enrichment pipeline."""
 
     def __init__(self, cfg: dict[str, Any]) -> None:
         self.cfg = cfg
@@ -329,6 +610,22 @@ class AppRuntime:
         self.allow_same_signal = bool(autotrade_cfg.get("allow_same_signal", False))
         self.last_trade_ts: dict[str, float] = {sym: 0.0 for sym in self.symbols}
         self.last_trade_signal: dict[str, str] = {sym: "" for sym in self.symbols}
+
+        # Task 3: optional news sentiment cache
+        newsapi_key: str | None = cfg.get("newsapi_key") or os.getenv("NEWSAPI_KEY")
+        self._sentiment_cache: _SentimentCache | None = None
+        if cfg.get("sentiment_enabled", False):
+            self._sentiment_cache = _SentimentCache(
+                newsapi_key=newsapi_key,
+                refresh_minutes=float(cfg.get("sentiment_refresh_minutes", 30)),
+            )
+            self._sentiment_cache.start()
+
+        # Task 2: optional Claude AI validator
+        self._claude = _ClaudeValidator(api_key=cfg.get("claude_api_key"))
+
+        # Task 5: signal-change alert manager
+        self.alerts = AlertManager()
 
     def _create_traders(self, autotrade_cfg: dict[str, Any]) -> dict[str, MT5AutoTrader]:
         magic_base = int(autotrade_cfg.get("magic", 20260327))
@@ -348,7 +645,7 @@ class AppRuntime:
         }
 
     def next_snapshots(self) -> list[dict[str, Any]]:
-        """Fetch all symbols then analyse in parallel."""
+        """Fetch all symbols, run enrichment pipeline, apply autotrade logic."""
         _sync_risk_from_mt5()
         raw_data = batch_fetch(
             symbols=self.symbols,
@@ -356,9 +653,23 @@ class AppRuntime:
             bars=int(self.cfg.get("bars", 700)),
         )
         snapshots = _build_multi_snapshots(self.cfg, raw_data)
+
+        # Task 3: news sentiment overlay
+        if self._sentiment_cache:
+            sentiment_map = self._sentiment_cache.get()
+            snapshots = [_enrich_with_sentiment(s, sentiment_map) for s in snapshots]
+
+        # Task 2: Claude AI validation
+        snapshots = [self._claude.validate(s) for s in snapshots]
+
+        # Trade signals
         for snap in snapshots:
             sym = snap.get("symbol", "")
             snap["autotrade"] = self._maybe_trade(sym, snap)
+
+        # Task 5: fire alerts for signal changes
+        self.alerts.check(snapshots)
+
         return snapshots
 
     def next_snapshot(self) -> dict[str, Any]:
@@ -435,6 +746,7 @@ def _run_continuous_loop(
     runtime: AppRuntime,
     interval: float,
     push_fn: Any = None,
+    push_alerts_fn: Any = None,
 ) -> None:
     """Robust continuous trading loop with pause/stop support.
 
@@ -469,12 +781,21 @@ def _run_continuous_loop(
         print(status)
         print(f"Next update in {interval:.1f}s  |  [Ctrl+C to stop]")
 
-        # Feature 2: push snapshot to WebSocket dashboard if running
+        # Feature 2: push snapshots to WebSocket dashboard
         if push_fn is not None:
             try:
                 push_fn(snapshots)
             except Exception:
                 pass
+
+        # Task 5: push any new alerts to dashboard
+        if push_alerts_fn is not None:
+            new_alerts = runtime.alerts.recent(5)
+            if new_alerts:
+                try:
+                    push_alerts_fn(new_alerts)
+                except Exception:
+                    pass
 
         # Sleep in short increments so pause/stop is responsive
         deadline = time.monotonic() + interval
@@ -501,11 +822,15 @@ def main() -> None:
 
     # Feature 2: start WebSocket dashboard if requested
     push_fn = None
+    push_alerts_fn = None
     if args.dashboard or args.gui:
         try:
-            from dashboard import start_dashboard, push_state
+            from dashboard import start_dashboard, push_state, push_alerts
             start_dashboard(controller=controller, port=args.dashboard_port)
             push_fn = push_state
+            push_alerts_fn = push_alerts
+            # Wire alert manager to push to dashboard in real time
+            runtime.alerts.on_alert(push_alerts)
         except Exception as exc:
             logger.warning("Dashboard could not start: %s", exc)
 
@@ -513,7 +838,9 @@ def main() -> None:
         if args.gui:
             run_live_gui(runtime.next_snapshots, interval_seconds=interval)
         elif args.continuous:
-            _run_continuous_loop(runtime, interval, push_fn=push_fn)
+            _run_continuous_loop(
+                runtime, interval, push_fn=push_fn, push_alerts_fn=push_alerts_fn
+            )
         else:
             snapshots = runtime.next_snapshots()
             render_console(snapshots)

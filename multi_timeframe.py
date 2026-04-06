@@ -6,7 +6,20 @@ from dataclasses import dataclass
 from typing import Optional, Dict, Tuple
 import logging
 
-import MetaTrader5 as mt5
+try:
+    import MetaTrader5 as mt5  # type: ignore
+
+    _MT5_TIMEFRAME_M1 = mt5.TIMEFRAME_M1
+    _MT5_TIMEFRAME_M5 = mt5.TIMEFRAME_M5
+    _MT5_TIMEFRAME_H1 = mt5.TIMEFRAME_H1
+    _MT5_AVAILABLE = True
+except Exception:
+    mt5 = None  # type: ignore
+    _MT5_TIMEFRAME_M1 = 1
+    _MT5_TIMEFRAME_M5 = 5
+    _MT5_TIMEFRAME_H1 = 16385
+    _MT5_AVAILABLE = False
+
 import pandas as pd
 import numpy as np
 
@@ -42,9 +55,9 @@ class MultiTimeframeAnalyzer:
         self.symbol = symbol
         self.weights = {"M1": 0.40, "M5": 0.35, "H1": 0.25}
         self.timeframes = {
-            "M1": mt5.TIMEFRAME_M1,
-            "M5": mt5.TIMEFRAME_M5,
-            "H1": mt5.TIMEFRAME_H1,
+            "M1": _MT5_TIMEFRAME_M1,
+            "M5": _MT5_TIMEFRAME_M5,
+            "H1": _MT5_TIMEFRAME_H1,
         }
 
     def analyze(self, from_indicators: Dict[str, Dict]) -> MultiTimeframeResult:
@@ -236,6 +249,9 @@ class MultiTimeframeAnalyzer:
             Dict with keys "M1", "M5", "H1", each containing computed indicators.
         """
         result = {}
+        if not _MT5_AVAILABLE or mt5 is None:
+            logger.warning("MT5 not available — fetch_multi_timeframe_data skipped")
+            return None
         for tf_name, tf_enum in self.timeframes.items():
             rates = mt5.copy_rates_from_pos(self.symbol, tf_enum, 0, bars)
             if rates is None or len(rates) == 0:

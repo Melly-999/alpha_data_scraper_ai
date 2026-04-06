@@ -16,35 +16,37 @@ AI assistant guidance for the `alpha_data_scraper_ai` repository.
 
 ```
 alpha_data_scraper_ai/
-├── main.py                     # Primary CLI entry point
+├── main.py                     # CLI entry point + enrichment pipeline (MTF, sentiment, Claude, alerts)
 ├── ai_engine.py                # Central AI orchestrator (AIEngine, EngineConfig, UnifiedSignal)
 ├── claude_ai.py                # Anthropic Claude API client (ClaudeAIClient, ClaudeSignal)
+├── trading_controller.py       # Thread-safe loop control (TradingController: start/stop/pause)
+├── dashboard.py                # FastAPI WebSocket dashboard (live signals, grid, backtest, alerts)
 ├── example_runner.py           # Full pipeline demonstration
 ├── grok_alpha_advanced.py      # Advanced GUI-based trading terminal (legacy)
 │
 ├── mt5_fetcher.py              # OHLCV data from MT5 or synthetic fallback
 ├── mt5_trader.py               # Order execution (dry-run + live, MT5AutoTrader)
-├── multi_timeframe.py          # M1/M5/H1 weighted signal fusion
+├── multi_timeframe.py          # M1/M5/H1 weighted signal fusion (MT5 import optional)
 ├── news_sentiment.py           # ForexFactory scraping + NewsAPI sentiment
 │
-├── indicators.py               # Base indicators: RSI, Stoch, MACD, Bollinger Bands
-├── signal_generator.py         # BUY/SELL/HOLD signal generation (SignalResult)
+├── indicators.py               # Base indicators: RSI, Stoch, MACD, BB [legacy; use strategy/]
+├── signal_generator.py         # BUY/SELL/HOLD signal generation [legacy; use strategy/]
 ├── lstm_model.py               # LSTM pipeline for price prediction (LSTMPipeline)
 ├── calculator.py               # Position sizing (position_size())
 ├── rate_limiter.py             # Token-bucket rate limiter
 ├── secrets_manager.py          # Secrets loading from env/files
 ├── metrics_server.py           # Prometheus exporter (TradingBotMetrics)
-├── backtest.py                 # BacktestEngine, BacktestMetrics, Trade
-├── gui.py                      # Console + Tkinter rendering
+├── backtest.py                 # BacktestEngine, BacktestMetrics, Trade (requires MT5)
+├── gui.py                      # Console + Tkinter rendering + grid canvas visualiser
 │
-├── strategy/                   # Advanced indicators and signals
-│   ├── indicators.py           # ADX, OBV, VWAP, ATR
-│   ├── signal_generator.py     # Regime-aware signal gen (MarketRegime)
+├── strategy/                   # Active indicator + signal modules (used by main pipeline)
+│   ├── indicators.py           # Full indicator set: RSI/Stoch/MACD/BB + ADX/OBV/VWAP/ATR
+│   ├── signal_generator.py     # Regime-aware, adaptive-confidence signal gen (MarketRegime)
 │   └── signals.py              # Additional signal utilities
 ├── ai/
 │   └── lstm_model.py           # Modular LSTM implementation
 ├── core/
-│   ├── config.py               # Central constants and paths
+│   ├── config.py               # Constants: paths, risk params, FTMO_MODE, START_BALANCE
 │   └── logger.py               # Rotating file + console logging
 ├── risk/
 │   └── risk_manager.py         # Pre-trade gates, position sizing (RiskManager, RiskContext)
@@ -59,9 +61,10 @@ alpha_data_scraper_ai/
 │   ├── test_lstm_model.py
 │   ├── test_calculator.py
 │   ├── test_integration_pipeline.py
-│   ├── test_integration_gui_pipeline.py
+│   ├── test_integration_gui_pipeline.py  # requires tkinter — excluded from CI
 │   ├── test_integration_advanced.py
-│   └── test_stress_extended.py
+│   ├── test_stress_extended.py
+│   └── test_new_features.py    # TradingController, dashboard, grid levels, AlertManager
 │
 ├── profiles/                   # Trading config profiles
 │   ├── paper_safe.json         # dry_run: true
@@ -74,8 +77,8 @@ alpha_data_scraper_ai/
 ├── .github/workflows/          # CI/CD: pytest, docker, k8s, security
 │
 ├── config.json                 # Default runtime config (symbol, timeframe, autotrade gates)
-├── requirements.txt            # Full runtime dependencies
-├── requirements-ci.txt         # Minimal CI dependencies (no MT5/tensorflow)
+├── requirements.txt            # Full runtime dependencies (includes websockets)
+├── requirements-ci.txt         # Minimal CI deps (fastapi, uvicorn, websockets; no MT5/tf)
 ├── Dockerfile / Dockerfile.prod
 ├── docker-compose.yml
 ├── .flake8                     # line-length=88, ignores E203/W503
@@ -91,43 +94,55 @@ alpha_data_scraper_ai/
 MT5 API (or Synthetic fallback)
     ↓  batch_fetch()
 OHLCV DataFrame
-    ↓  add_indicators()
-RSI / Stoch / MACD / BB / ADX / OBV / VWAP / ATR
-    ↓  LSTMPipeline.predict()
-Price delta + uncertainty
-    ↓  generate_signal()
-SignalResult (BUY/SELL/HOLD, confidence 33–85%, MarketRegime)
-    ↓  MultiTimeframeAnalyzer
-Weighted M1/M5/H1 fusion
-    ↓  SentimentAnalyzer
-News sentiment overlay
-    ↓  AIEngine → ClaudeAIClient
-UnifiedSignal with Claude validation
-    ↓  RiskManager
-Pre-trade gates (min 70% confidence, daily loss cap, open position cap)
+    ↓  strategy.indicators.add_indicators()          ← full indicator set
+RSI / Stoch / MACD / BB / ADX / OBV / VWAP / ATR / atr_pct / obv_z / vwap_dev
+    ↓  LSTMPipeline.fit() + predict_next_delta()
+Price delta (lstm_delta)
+    ↓  strategy.signal_generator.generate_signal()
+SignalResult (BUY/SELL/HOLD, confidence 33–85%, MarketRegime, adaptive confidence)
+    ↓  compute_grid_levels()
+Grid levels {current, VWAP, BB±, R/S×N}
+    ↓  MultiTimeframeAnalyzer.analyze()              ← Task 1 (enrichment)
+MTF weighted signal + confirmation strength (0-3)
+    ↓  _SentimentCache → _enrich_with_sentiment()    ← Task 3 (background refresh)
+Confidence adjusted by news sentiment score
+    ↓  _ClaudeValidator.validate()                   ← Task 2 (if CLAUDE_API_KEY set)
+ClaudeAIIntegration.validate_signal() → refined signal + reason
+    ↓  AlertManager.check()                          ← Task 5
+Signal-change alerts → push_alerts() → WebSocket toast + /api/alerts
+    ↓  _RuntimeRiskManager.can_trade()
+Pre-trade gates (daily loss cap, max open positions)
     ↓  MT5AutoTrader (dry_run=True by default)
 Order execution / dry-run log
-    ↓  BacktestEngine
-Historical performance metrics
+    ↓  push_state() → dashboard WebSocket /ws        ← Task 2 dashboard
+Browser receives {type:"snapshots"} + {type:"alerts"} frames
 ```
 
 ---
 
 ## Key Classes and Contracts
 
-| Class | File | Key Methods |
+| Class / Function | File | Role |
 |---|---|---|
-| `AIEngine` | `ai_engine.py` | `generate_signal(symbol)` |
-| `EngineConfig` | `ai_engine.py` | dataclass — confidence thresholds, API keys |
-| `ClaudeAIClient` | `claude_ai.py` | `get_signal(context)` |
-| `LSTMPipeline` | `lstm_model.py` | `train(df)`, `predict(df)` |
-| `MultiTimeframeAnalyzer` | `multi_timeframe.py` | `analyze(symbol)` |
-| `SentimentAnalyzer` | `news_sentiment.py` | `get_sentiment(symbol)` |
-| `SignalResult` | `signal_generator.py` | dataclass — `signal`, `confidence`, `regime` |
+| `TradingController` | `trading_controller.py` | Thread-safe start/stop/pause; shared by loop and dashboard API |
+| `AlertManager` | `main.py` | Detects signal changes; fires callbacks; exposes `recent()` |
+| `_SentimentCache` | `main.py` | Background-refreshing news sentiment (daemon thread) |
+| `_ClaudeValidator` | `main.py` | Wraps `ClaudeAIIntegration.validate_signal()` (optional) |
+| `_RuntimeRiskManager` | `main.py` | Stateful balance/loss/position tracking for the live loop |
+| `AppRuntime` | `main.py` | Orchestrates fetch → enrich → trade for all symbols |
+| `compute_grid_levels` | `main.py` | ATR/BB/VWAP price grid for the visualiser |
+| `push_state` / `push_alerts` | `dashboard.py` | Thread-safe state updates consumed by WebSocket clients |
+| `start_dashboard` | `dashboard.py` | Starts FastAPI/uvicorn server in daemon thread |
+| `_run_quick_backtest` | `dashboard.py` | No-MT5 rolling backtest; called by `/api/backtest` |
+| `AIEngine` | `ai_engine.py` | Full multi-source orchestrator (optional; not in hot path) |
+| `ClaudeAIClient` | `claude_ai.py` | Direct Anthropic API calls; `format_market_data()` helper |
+| `LSTMPipeline` | `lstm_model.py` | `fit(features)`, `predict_next_delta(features)` |
+| `MultiTimeframeAnalyzer` | `multi_timeframe.py` | `analyze(from_indicators)` → `MultiTimeframeResult` |
+| `SentimentAnalyzer` | `news_sentiment.py` | `analyze_sentiment()` → `Dict[str, SentimentScore]` |
+| `SignalResult` | `strategy/signal_generator.py` | dataclass — `signal`, `confidence`, `score`, `regime` |
 | `MarketRegime` | `strategy/signal_generator.py` | `TRENDING_UP`, `TRENDING_DOWN`, `RANGING` |
-| `RiskManager` | `risk/risk_manager.py` | `check(signal, context)` |
-| `MT5AutoTrader` | `mt5_trader.py` | `execute(signal)` |
-| `BacktestEngine` | `backtest.py` | `run(df)` → `BacktestMetrics` |
+| `MT5AutoTrader` | `mt5_trader.py` | `maybe_execute(signal, confidence)` → result dict |
+| `BacktestEngine` | `backtest.py` | `backtest(signal_func, start, end)` → `BacktestMetrics` |
 | `TradingBotMetrics` | `metrics_server.py` | Prometheus gauge/counter updates |
 
 Signal confidence is always clamped to `[33, 85]`. The minimum confidence gate for live trade execution is `70` (configurable in `config.json`).
@@ -162,7 +177,12 @@ python -m pytest --cov=. --cov-report=html
 
 # Run the bot (dry-run by default)
 python main.py
-python main.py --symbol EURUSD GBPUSD --continuous --interval 60
+python main.py --continuous --interval 60
+python main.py --continuous --interval 30 --dashboard          # + WebSocket dashboard at :8050
+python main.py --continuous --dashboard --dashboard-port 9000  # custom port
+
+# GUI mode (Tkinter; also starts dashboard)
+python main.py --gui
 
 # Full pipeline demo
 python example_runner.py
@@ -269,14 +289,41 @@ CI installs `requirements-ci.txt` (no heavy ML/MT5 deps). All tests must pass be
 
 ---
 
+## Optional config.json keys (enrichment pipeline)
+
+```jsonc
+{
+  "sentiment_enabled": false,          // enable background news sentiment refresh
+  "sentiment_refresh_minutes": 30,     // how often to refresh (minutes)
+  "newsapi_key": "",                   // NewsAPI key (or set NEWSAPI_KEY env var)
+  "claude_api_key": ""                 // Claude key (or set CLAUDE_API_KEY env var)
+}
+```
+
+---
+
+## Dashboard endpoints
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | GET | Single-page HTML dashboard |
+| `/ws` | WebSocket | Streams `{type:"snapshots", data:[...]}` and `{type:"alerts", data:[...]}` |
+| `/api/control` | POST | `{"action": "resume"|"pause"|"stop"}` → controls `TradingController` |
+| `/api/status` | GET | Returns `{running, stopped, paused}` |
+| `/api/backtest` | POST | `{"symbol","bars","initial_balance"}` → rolling backtest metrics |
+| `/api/alerts` | GET | Last 50 signal-change alerts |
+
+---
+
 ## Graceful Degradation Map
 
 | Dependency | Fallback |
 |---|---|
-| MetaTrader5 | Synthetic OHLCV data (`_synthetic_rates()`, seeded random) |
+| MetaTrader5 | Synthetic OHLCV data (`_synthetic_rates()`, seeded random); `multi_timeframe.py` gracefully skips MT5 import |
 | TensorFlow/LSTM | `NaiveSequenceModel` (last-value prediction) |
-| Claude AI | Skip validation, use local signal confidence only |
-| NewsAPI / ForexFactory | Skip sentiment, neutral score (0.0) |
+| Claude AI | `_ClaudeValidator` skips silently; signal unchanged |
+| NewsAPI / ForexFactory | `_SentimentCache` logs warning; sentiment overlay skipped (neutral) |
+| `fastapi`/`uvicorn` | Dashboard startup fails with helpful error; trading loop continues unaffected |
 
 ---
 
