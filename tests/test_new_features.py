@@ -5,9 +5,7 @@ import threading
 import time
 from typing import Any
 
-import numpy as np
 import pandas as pd
-import pytest
 
 
 # ── TradingController ─────────────────────────────────────────────────────────
@@ -156,7 +154,7 @@ class TestComputeGridLevels:
 
     @staticmethod
     def _import():
-        import importlib, sys
+        import sys
         # Temporarily stub gui so main.py can import without tkinter
         if "gui" not in sys.modules:
             import types
@@ -171,14 +169,14 @@ class TestComputeGridLevels:
         fn = self._import()
         row = pd.Series({"close": 1.0823, "atr": 0.0005})
         levels = fn(row)
-        types = [l["type"] for l in levels]
+        types = [lv["type"] for lv in levels]
         assert "current" in types
 
     def test_contains_support_and_resistance(self):
         fn = self._import()
         row = pd.Series({"close": 1.0823, "atr": 0.0005})
         levels = fn(row)
-        types = [l["type"] for l in levels]
+        types = [lv["type"] for lv in levels]
         assert "support" in types
         assert "resistance" in types
 
@@ -186,14 +184,14 @@ class TestComputeGridLevels:
         fn = self._import()
         row = pd.Series({"close": 1.0823, "atr": 0.0005})
         levels = fn(row)
-        prices = [l["price"] for l in levels]
+        prices = [lv["price"] for lv in levels]
         assert prices == sorted(prices, reverse=True)
 
     def test_vwap_included_when_positive(self):
         fn = self._import()
         row = pd.Series({"close": 1.0823, "atr": 0.0005, "vwap": 1.0800})
         levels = fn(row)
-        types = [l["type"] for l in levels]
+        types = [lv["type"] for lv in levels]
         assert "vwap" in types
 
     def test_bb_levels_included(self):
@@ -203,7 +201,7 @@ class TestComputeGridLevels:
             "bb_upper": 1.0870, "bb_lower": 1.0780,
         })
         levels = fn(row)
-        types = [l["type"] for l in levels]
+        types = [lv["type"] for lv in levels]
         assert types.count("resistance") >= 1
         assert types.count("support") >= 1
 
@@ -226,7 +224,8 @@ class TestComputeGridLevels:
 class TestAlertManager:
     @staticmethod
     def _import():
-        import importlib, sys, types
+        import sys
+        import types
         if "gui" not in sys.modules:
             stub = types.ModuleType("gui")
             stub.render_console = lambda *a, **k: None  # type: ignore

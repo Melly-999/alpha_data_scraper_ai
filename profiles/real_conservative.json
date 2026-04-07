@@ -4,6 +4,7 @@
   "bars": 700,
   "lookback": 30,
   "epochs": 2,
+  "interval": 10.0,
   "autotrade": {
     "enabled": true,
     "dry_run": false,
@@ -15,7 +16,9 @@
     "magic": 20260328,
     "cooldown_seconds": 180,
     "allow_same_signal": false
-  }
+  },
+  "sentiment_enabled": true,
+  "sentiment_refresh_minutes": 30,
+  "newsapi_key": "",
+  "claude_api_key": ""
 }
-
-

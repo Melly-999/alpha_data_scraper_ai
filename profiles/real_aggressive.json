@@ -16,7 +16,9 @@
     "magic": 20260329,
     "cooldown_seconds": 45,
     "allow_same_signal": true
-  }
+  },
+  "sentiment_enabled": true,
+  "sentiment_refresh_minutes": 15,
+  "newsapi_key": "",
+  "claude_api_key": ""
 }
-
-

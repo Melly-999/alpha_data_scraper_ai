@@ -1,4 +1,7 @@
-"""Multi-timeframe signal analysis: M1, M5, H1 with weighted and confirmation strategies."""
+"""Multi-timeframe signal analysis: M1, M5, H1.
+
+Provides weighted and confirmation-based signal fusion strategies.
+"""
 
 from __future__ import annotations
 
@@ -212,19 +215,6 @@ class MultiTimeframeAnalyzer:
         m1_sig = signals.get("M1", TimeframeSignal("M1", "HOLD", 50, 50, 0, 50, 0))
         m5_sig = signals.get("M5", TimeframeSignal("M5", "HOLD", 50, 50, 0, 50, 0))
         h1_sig = signals.get("H1", TimeframeSignal("H1", "HOLD", 50, 50, 0, 50, 0))
-
-        # Count agreement on BUY
-        buy_count = sum(
-            1
-            for sig in [m1_sig, m5_sig, h1_sig]
-            if sig.signal == "BUY"
-        )
-        # Count agreement on SELL
-        sell_count = sum(
-            1
-            for sig in [m1_sig, m5_sig, h1_sig]
-            if sig.signal == "SELL"
-        )
 
         # Confirmation requires M5 & H1 (higher timeframes) to agree
         m5_h1_buy = m5_sig.signal == "BUY" and h1_sig.signal == "BUY"

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
-import logging
 import os
 import subprocess
 import sys
@@ -18,8 +18,11 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 # ── Core imports ──────────────────────────────────────────────────────────────
+from contextlib import nullcontext
+
 from core import config as _cfg
-from core.logger import get_logger
+from core.logger import get_logger, setup_logging
+from secrets_manager import get_secrets
 from gui import render_console, run_live_gui
 
 # Feature 3: smarter scoring — use strategy versions for all indicator/signal work
@@ -38,18 +41,20 @@ logger = get_logger(__name__)
 
 def _compute_slope(close: Any, lookback: int = 15) -> float:
     """Linear regression slope over the last *lookback* bars (×100 for readability)."""
-    import numpy as np
-
     try:
         series = close.iloc[-lookback:] if hasattr(close, "iloc") else close[-lookback:]
         y = [float(v) for v in series]
         if len(y) < 2:
             return 0.0
         x = list(range(len(y)))
-        return float(float(sum((xi - sum(x) / len(x)) * (yi - sum(y) / len(y)) for xi, yi in zip(x, y)) /
-                     max(sum((xi - sum(x) / len(x)) ** 2 for xi in x), 1e-9)) * 100)
+        x_mean = sum(x) / len(x)
+        y_mean = sum(y) / len(y)
+        cov = sum((xi - x_mean) * (yi - y_mean) for xi, yi in zip(x, y))
+        var = max(sum((xi - x_mean) ** 2 for xi in x), 1e-9)
+        return float(cov / var * 100)
     except Exception:
         return 0.0
+
 
 # ── Constants ────────────────────────────────────────────────────────────────
 FTMO_MODE = _cfg.FTMO_MODE
@@ -173,11 +178,15 @@ class _SentimentCache:
         self._refresh_minutes = refresh_minutes
         self._cache: dict[str, Any] = {}
         self._lock = threading.Lock()
-        self._thread = threading.Thread(target=self._loop, daemon=True, name="sentiment-cache")
+        self._thread = threading.Thread(
+            target=self._loop, daemon=True, name="sentiment-cache"
+        )
 
     def start(self) -> None:
         self._thread.start()
-        logger.info("Sentiment cache started (refresh every %.0f min)", self._refresh_minutes)
+        logger.info(
+            "Sentiment cache started (refresh every %.0f min)", self._refresh_minutes
+        )
 
     def _loop(self) -> None:
         while True:
@@ -213,7 +222,7 @@ class _ClaudeValidator:
     """
 
     def __init__(self, api_key: str | None = None) -> None:
-        self._api_key = api_key or os.getenv("CLAUDE_API_KEY")
+        self._api_key = api_key or get_secrets().claude_api_key
         self._enabled = bool(self._api_key)
         self._integration: Any = None
         if self._enabled:
@@ -238,7 +247,9 @@ class _ClaudeValidator:
                 current_price=float(snapshot.get("last_close", 0.0)),
                 rsi=float(snapshot.get("indicators", {}).get("rsi", 50.0)),
                 macd_hist=float(snapshot.get("indicators", {}).get("macd_hist", 0.0)),
-                bb_position=float(snapshot.get("indicators", {}).get("bb_pos", 0.5) * 100),
+                bb_position=float(
+                    snapshot.get("indicators", {}).get("bb_pos", 0.5) * 100
+                ),
                 slope=float(snapshot.get("indicators", {}).get("slope", 0.0)),
                 multiframe_signal=snapshot.get("mtf", {}).get("weighted_signal"),
                 sentiment_score=snapshot.get("sentiment", {}).get("avg"),
@@ -303,6 +314,7 @@ class AlertManager:
                     "ALERT  %s  %s → %s  (conf %.1f%%)",
                     sym, prev, sig, alert["confidence"],
                 )
+                self._append_csv(alert)
             self._prev[sym] = sig
 
         if new_alerts:
@@ -319,6 +331,32 @@ class AlertManager:
     def recent(self, n: int = 20) -> list[dict[str, Any]]:
         with self._lock:
             return list(self._history[-n:])
+
+    def _append_csv(self, alert: dict[str, Any]) -> None:
+        """Append a signal-change event to logs/signal_history.csv."""
+        from datetime import datetime, timezone
+
+        log_dir = Path("logs")
+        try:
+            log_dir.mkdir(parents=True, exist_ok=True)
+            csv_path = log_dir / "signal_history.csv"
+            write_header = not csv_path.exists()
+            with csv_path.open("a", newline="", encoding="utf-8") as fh:
+                writer = csv.writer(fh)
+                if write_header:
+                    writer.writerow([
+                        "timestamp", "symbol",
+                        "from_signal", "to_signal", "confidence",
+                    ])
+                writer.writerow([
+                    datetime.fromtimestamp(alert["ts"], tz=timezone.utc).isoformat(),
+                    alert["symbol"],
+                    alert["from_signal"],
+                    alert["to_signal"],
+                    alert["confidence"],
+                ])
+        except Exception as exc:
+            logger.debug("CSV log write failed: %s", exc)
 
 
 # ── MT5 helpers ───────────────────────────────────────────────────────────────
@@ -417,8 +455,12 @@ def compute_grid_levels(
         levels.append({"price": bb_lower, "label": "BB↓", "type": "support"})
 
     for i in range(1, n_levels + 1):
-        levels.append({"price": close + i * atr, "label": f"R{i}", "type": "resistance"})
-        levels.append({"price": close - i * atr, "label": f"S{i}", "type": "support"})
+        levels.append(
+            {"price": close + i * atr, "label": f"R{i}", "type": "resistance"}
+        )
+        levels.append(
+            {"price": close - i * atr, "label": f"S{i}", "type": "support"}
+        )
 
     levels.sort(key=lambda x: x["price"], reverse=True)
     return levels
@@ -437,6 +479,22 @@ def _analyse_symbol(
     strategy.signal_generator (regime-aware, adaptive confidence).
     Feature 4: appends grid_levels to the snapshot.
     """
+    try:
+        from metrics_server import get_metrics
+        _met = get_metrics()
+    except Exception:
+        _met = None
+
+    with (_met.time_analysis(symbol) if _met else nullcontext()):
+        return _analyse_symbol_inner(symbol, raw, cfg, _met)
+
+
+def _analyse_symbol_inner(
+    symbol: str,
+    raw: Any,
+    cfg: dict[str, Any],
+    _met: Any,
+) -> dict[str, Any]:
     # Feature 3: full indicator set including ADX, OBV, VWAP, ATR
     data = add_indicators(raw)
 
@@ -504,6 +562,12 @@ def _analyse_symbol(
     except Exception as _mtf_exc:
         logger.debug("MTF enrichment skipped for %s: %s", symbol, _mtf_exc)
         sig_dict = signal_to_dict(signal)
+
+    if _met:
+        try:
+            _met.record_signal(symbol, sig_dict["signal"], sig_dict["confidence"])
+        except Exception:
+            pass
 
     return {
         "symbol": symbol,
@@ -612,7 +676,7 @@ class AppRuntime:
         self.last_trade_signal: dict[str, str] = {sym: "" for sym in self.symbols}
 
         # Task 3: optional news sentiment cache
-        newsapi_key: str | None = cfg.get("newsapi_key") or os.getenv("NEWSAPI_KEY")
+        newsapi_key: str | None = cfg.get("newsapi_key") or get_secrets().news_api_key
         self._sentiment_cache: _SentimentCache | None = None
         if cfg.get("sentiment_enabled", False):
             self._sentiment_cache = _SentimentCache(
@@ -627,7 +691,9 @@ class AppRuntime:
         # Task 5: signal-change alert manager
         self.alerts = AlertManager()
 
-    def _create_traders(self, autotrade_cfg: dict[str, Any]) -> dict[str, MT5AutoTrader]:
+    def _create_traders(
+        self, autotrade_cfg: dict[str, Any]
+    ) -> dict[str, MT5AutoTrader]:
         magic_base = int(autotrade_cfg.get("magic", 20260327))
         return {
             sym: MT5AutoTrader(
@@ -695,22 +761,30 @@ class AppRuntime:
             return {"status": "no_trade_signal", "signal": signal}
 
         now_ts = time.time()
-        if self.cooldown_seconds > 0 and (now_ts - self.last_trade_ts.get(symbol, 0.0)) < self.cooldown_seconds:
+        elapsed = now_ts - self.last_trade_ts.get(symbol, 0.0)
+        if self.cooldown_seconds > 0 and elapsed < self.cooldown_seconds:
             return {
                 "status": "cooldown",
-                "seconds_left": round(self.cooldown_seconds - (now_ts - self.last_trade_ts[symbol]), 1),
+                "seconds_left": round(self.cooldown_seconds - elapsed, 1),
             }
 
-        if not self.allow_same_signal and signal == self.last_trade_signal.get(symbol, ""):
+        prev_signal = self.last_trade_signal.get(symbol, "")
+        if not self.allow_same_signal and signal == prev_signal:
             return {"status": "same_signal_blocked", "signal": signal}
 
         lot = risk.calculate_lot_size(risk.current_balance, sl_pips=100)
         trader.volume = lot
         result = trader.maybe_execute(signal=signal, confidence=confidence)
         if result.get("status") in {"placed", "dry_run"}:
+            risk._open_positions += 1  # track open position before registering
             risk.register_trade(float(result.get("profit", 0.0)))
             self.last_trade_ts[symbol] = now_ts
             self.last_trade_signal[symbol] = signal
+            try:
+                from metrics_server import get_metrics
+                get_metrics().set_active_positions(risk._open_positions)
+            except Exception:
+                pass
         return result
 
 
@@ -809,14 +883,26 @@ def _run_continuous_loop(
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def main() -> None:
+    setup_logging()
+
     print(f"FTMO MODE: {FTMO_MODE}")
     print(f"Max daily loss: {START_BALANCE * (MAX_DAILY_LOSS_PCT / 100):.2f}")
 
     args = _parse_args()
     cfg = _load_config(args.config)
+
+    try:
+        from metrics_server import start_metrics_server
+        start_metrics_server()
+    except Exception as _mex:
+        logger.debug("Metrics server not started: %s", _mex)
+
     runtime = AppRuntime(cfg)
 
-    interval = float(args.interval) if args.interval is not None else float(cfg.get("interval", 5.0))
+    interval = (
+        float(args.interval) if args.interval is not None
+        else float(cfg.get("interval", 5.0))
+    )
     if (args.gui or args.continuous) and interval <= 0:
         raise ValueError("--interval must be > 0 for GUI or continuous mode")
 
