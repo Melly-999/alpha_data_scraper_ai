@@ -1,6 +1,7 @@
 numpy
 pandas
 matplotlib
+mplfinance
 scikit-learn
 ta
 pytest
