@@ -40,7 +40,6 @@ jobs:
           modules = [
               'numpy',
               'pandas',
-              'ta',
               'sklearn',
               'indicators',
               'lstm_model',

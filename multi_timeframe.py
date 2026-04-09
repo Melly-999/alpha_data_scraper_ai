@@ -16,6 +16,7 @@ logger = logging.getLogger("MultiTimeframe")
 @dataclass
 class TimeframeSignal:
     """Signal for a single timeframe."""
+
     timeframe: str  # "M1", "M5", "H1"
     signal: str  # "BUY", "SELL", "HOLD"
     confidence: float  # 0-100
@@ -28,6 +29,7 @@ class TimeframeSignal:
 @dataclass
 class MultiTimeframeResult:
     """Combined multi-timeframe analysis result."""
+
     weighted_signal: str  # "BUY", "SELL", "HOLD"
     weighted_confidence: float
     confirmation_signal: str  # "BUY", "SELL", "HOLD"
@@ -156,9 +158,9 @@ class MultiTimeframeAnalyzer:
         Returns:
             (combined_signal, combined_confidence)
         """
-        buy_score = 0
-        sell_score = 0
-        total_weight = 0
+        buy_score = 0.0
+        sell_score = 0.0
+        total_weight = 0.0
 
         for tf in ["M1", "M5", "H1"]:
             if tf not in signals:
@@ -200,19 +202,6 @@ class MultiTimeframeAnalyzer:
         m5_sig = signals.get("M5", TimeframeSignal("M5", "HOLD", 50, 50, 0, 50, 0))
         h1_sig = signals.get("H1", TimeframeSignal("H1", "HOLD", 50, 50, 0, 50, 0))
 
-        # Count agreement on BUY
-        buy_count = sum(
-            1
-            for sig in [m1_sig, m5_sig, h1_sig]
-            if sig.signal == "BUY"
-        )
-        # Count agreement on SELL
-        sell_count = sum(
-            1
-            for sig in [m1_sig, m5_sig, h1_sig]
-            if sig.signal == "SELL"
-        )
-
         # Confirmation requires M5 & H1 (higher timeframes) to agree
         m5_h1_buy = m5_sig.signal == "BUY" and h1_sig.signal == "BUY"
         m5_h1_sell = m5_sig.signal == "SELL" and h1_sig.signal == "SELL"
@@ -226,9 +215,7 @@ class MultiTimeframeAnalyzer:
         else:
             return "HOLD", 0
 
-    def fetch_multi_timeframe_data(
-        self, bars: int = 100
-    ) -> Optional[Dict[str, Dict]]:
+    def fetch_multi_timeframe_data(self, bars: int = 100) -> Optional[Dict[str, Dict]]:
         """
         Fetch OHLC data for M1, M5, H1 and compute indicators for each.
 

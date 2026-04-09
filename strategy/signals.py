@@ -14,7 +14,9 @@ def _require_ohlc(df: pd.DataFrame) -> pd.DataFrame:
     needed = {"open", "high", "low", "close"}
     missing = needed - set(out.columns)
     if missing:
-        raise ValueError(f"DataFrame must contain columns {sorted(needed)}, missing: {sorted(missing)}")
+        raise ValueError(
+            f"DataFrame must contain columns {sorted(needed)}, missing: {sorted(missing)}"
+        )
     return out
 
 

@@ -10,6 +10,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 try:
     import tensorflow as tf  # type: ignore
+
     _TF_AVAILABLE = True
 except Exception:  # pragma: no cover - optional runtime dependency
     tf = None
@@ -18,7 +19,10 @@ except Exception:  # pragma: no cover - optional runtime dependency
 
 # ── Sequence builder ──────────────────────────────────────────────────────────
 
-def build_sequences(values: np.ndarray, lookback: int, target_idx: int = 0) -> tuple[np.ndarray, np.ndarray]:
+
+def build_sequences(
+    values: np.ndarray, lookback: int, target_idx: int = 0
+) -> tuple[np.ndarray, np.ndarray]:
     x, y = [], []
     for i in range(lookback, len(values)):
         x.append(values[i - lookback : i])
@@ -28,15 +32,20 @@ def build_sequences(values: np.ndarray, lookback: int, target_idx: int = 0) -> t
 
 # ── Naive fallback (no TF dependency) ────────────────────────────────────────
 
+
 class NaiveSequenceModel:
     """Last-value carry-forward — used when TensorFlow is unavailable."""
+
     def predict(self, x: np.ndarray, verbose: int = 0) -> np.ndarray:
         return x[:, -1, 0]  # shape (batch,)
 
 
 # ── Attention-augmented model factory ─────────────────────────────────────────
 
-def _build_attention_lstm(input_shape: tuple[int, int], seed: int = 0) -> "tf.keras.Model":
+
+def _build_attention_lstm(
+    input_shape: tuple[int, int], seed: int = 0
+) -> "tf.keras.Model":
     """Stacked LSTM with scaled dot-product self-attention.
 
     Architecture
@@ -64,15 +73,15 @@ def _build_attention_lstm(input_shape: tuple[int, int], seed: int = 0) -> "tf.ke
     dim = 32
     scale = tf.math.sqrt(tf.cast(dim, tf.float32))
     query = tf.keras.layers.Dense(dim)(x)
-    key   = tf.keras.layers.Dense(dim)(x)
+    key = tf.keras.layers.Dense(dim)(x)
     value = tf.keras.layers.Dense(dim)(x)
 
-    scores  = tf.matmul(query, key, transpose_b=True) / scale
+    scores = tf.matmul(query, key, transpose_b=True) / scale
     weights = tf.keras.layers.Softmax(axis=-1)(scores)
     context = tf.matmul(weights, value)
 
-    pooled  = tf.keras.layers.GlobalAveragePooling1D()(context)
-    hidden  = tf.keras.layers.Dense(16, activation="relu")(pooled)
+    pooled = tf.keras.layers.GlobalAveragePooling1D()(context)
+    hidden = tf.keras.layers.Dense(16, activation="relu")(pooled)
     outputs = tf.keras.layers.Dense(1)(hidden)
 
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
@@ -81,6 +90,7 @@ def _build_attention_lstm(input_shape: tuple[int, int], seed: int = 0) -> "tf.ke
 
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
+
 
 @dataclass
 class LSTMPipeline:
@@ -95,6 +105,7 @@ class LSTMPipeline:
                        Ensemble predictions are averaged; std-dev is available
                        via ``prediction_uncertainty()`` for position sizing.
     """
+
     lookback: int = 30
     epochs: int = 3
     batch_size: int = 16
@@ -126,7 +137,10 @@ class LSTMPipeline:
         x, y = build_sequences(scaled, self.lookback, target_idx=self.target_idx)
 
         if len(x) < 10 or not _TF_AVAILABLE:
-            warnings.warn("Insufficient data or TensorFlow unavailable. Using naive fallback model.", UserWarning)
+            warnings.warn(
+                "Insufficient data or TensorFlow unavailable. Using naive fallback model.",
+                UserWarning,
+            )
             self._models = [NaiveSequenceModel()]
             return
 
@@ -137,14 +151,18 @@ class LSTMPipeline:
             try:
                 m = _build_attention_lstm(input_shape, seed=seed)
                 m.fit(
-                    x, y,
+                    x,
+                    y,
                     epochs=self.epochs,
                     batch_size=self.batch_size,
                     verbose=0,
                 )
                 self._models.append(m)
             except Exception as e:
-                warnings.warn(f"LSTM training failed for seed {seed}: {e}. Falling back to naive model.", UserWarning)
+                warnings.warn(
+                    f"LSTM training failed for seed {seed}: {e}. Falling back to naive model.",
+                    UserWarning,
+                )
                 self._models = [NaiveSequenceModel()]
                 return
 
@@ -196,9 +214,7 @@ class LSTMPipeline:
         x_last = self._prepare_input(values)
         raw_preds = self._raw_predictions(x_last)
 
-        unscaled = [
-            self._unscale(p, values) for p in raw_preds
-        ]
+        unscaled = [self._unscale(p, values) for p in raw_preds]
         return float(np.std(unscaled))
 
     # ── Private helpers ────────────────────────────────────────────────────────
@@ -211,8 +227,7 @@ class LSTMPipeline:
     def _raw_predictions(self, x_last: np.ndarray) -> list[float]:
         """Collect raw (scaled) predictions from every ensemble member."""
         return [
-            float(m.predict(x_last, verbose=0).reshape(-1)[0])
-            for m in self._models
+            float(m.predict(x_last, verbose=0).reshape(-1)[0]) for m in self._models
         ]
 
     def _unscale(self, pred_scaled_close: float, values: np.ndarray) -> float:

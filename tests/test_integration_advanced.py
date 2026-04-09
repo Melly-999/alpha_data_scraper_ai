@@ -4,6 +4,7 @@ Advanced integration tests for trading pipeline modules.
 Tests multi_timeframe + backtest + claude_ai together using mocks.
 No live network calls, no MetaTrader5 required — runs in CI.
 """
+
 from __future__ import annotations
 
 import json
@@ -31,13 +32,13 @@ from multi_timeframe import (  # noqa: E402
     TimeframeSignal,
     MultiTimeframeResult,
 )
-from backtest import BacktestEngine, BacktestMetrics, Trade  # noqa: E402
+from backtest import BacktestEngine, BacktestMetrics  # noqa: E402
 from claude_ai import ClaudeAIClient, ClaudeAIIntegration, ClaudeSignal  # noqa: E402
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_ohlcv(n: int = 300, seed: int = 42) -> pd.DataFrame:
     """Deterministic OHLCV DataFrame."""
@@ -102,10 +103,6 @@ def mtf_analyzer() -> MultiTimeframeAnalyzer:
     return MultiTimeframeAnalyzer(symbol="EURUSD")
 
 
-class TestMultiTimeframeAnalysis:
-    """Test multi-timeframe analysis functionality"""
-
-
 # ---------------------------------------------------------------------------
 # 1. MultiTimeframeAnalyzer tests
 # ---------------------------------------------------------------------------
@@ -148,7 +145,9 @@ class TestMultiTimeframeAnalysis:
         result = mtf_analyzer.analyze(indicator_data)
         assert result.weighted_signal in {"BUY", "HOLD"}
 
-    def test_bearish_indicators_produce_sell_or_hold(self, mtf_analyzer, bearish_indicator_data):
+    def test_bearish_indicators_produce_sell_or_hold(
+        self, mtf_analyzer, bearish_indicator_data
+    ):
         """Strongly overbought RSI + negative MACD should lean SELL, not BUY."""
         result = mtf_analyzer.analyze(bearish_indicator_data)
         assert result.weighted_signal in {"SELL", "HOLD"}
@@ -230,7 +229,9 @@ class TestBacktestIntegration:
     def test_trade_count_consistency(self, ohlcv):
         metrics = self._run(lambda df: ("BUY", 70), df=ohlcv)
         if metrics and metrics.total_trades > 0:
-            assert metrics.winning_trades + metrics.losing_trades == metrics.total_trades
+            assert (
+                metrics.winning_trades + metrics.losing_trades == metrics.total_trades
+            )
 
     def test_win_rate_formula(self, ohlcv):
         metrics = self._run(lambda df: ("BUY", 70), df=ohlcv)
@@ -325,13 +326,22 @@ class TestClaudeAIIntegration:
             ClaudeAIClient()
 
     def test_claude_signal_dataclass(self):
-        sig = ClaudeSignal(signal="BUY", confidence=90, risk="HIGH", reason="Strong momentum")
+        sig = ClaudeSignal(
+            signal="BUY", confidence=90, risk="HIGH", reason="Strong momentum"
+        )
         assert sig.signal == "BUY"
         assert sig.confidence == 90
         assert sig.risk == "HIGH"
 
     def test_get_signal_buy(self):
-        raw = json.dumps({"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "RSI oversold"})
+        raw = json.dumps(
+            {
+                "signal": "BUY",
+                "confidence": 80,
+                "risk": "MEDIUM",
+                "reason": "RSI oversold",
+            }
+        )
         client = ClaudeAIClient(api_key="test")
         with patch.object(client, "_call_api", return_value=raw):
             sig = client.get_trading_signal({"symbol": "EURUSD", "rsi": 35.0})
@@ -340,7 +350,14 @@ class TestClaudeAIIntegration:
         assert sig.confidence == 80
 
     def test_get_signal_sell(self):
-        raw = json.dumps({"signal": "SELL", "confidence": 75, "risk": "MEDIUM", "reason": "RSI overbought"})
+        raw = json.dumps(
+            {
+                "signal": "SELL",
+                "confidence": 75,
+                "risk": "MEDIUM",
+                "reason": "RSI overbought",
+            }
+        )
         client = ClaudeAIClient(api_key="test")
         with patch.object(client, "_call_api", return_value=raw):
             sig = client.get_trading_signal({"symbol": "GBPUSD", "rsi": 75.0})
@@ -363,14 +380,18 @@ class TestClaudeAIIntegration:
 
     def test_markdown_wrapped_json_parsed(self):
         """Claude sometimes wraps JSON in markdown code fences."""
-        raw = '```json\n{"signal":"BUY","confidence":70,"risk":"LOW","reason":"ok"}\n```'
+        raw = (
+            '```json\n{"signal":"BUY","confidence":70,"risk":"LOW","reason":"ok"}\n```'
+        )
         client = ClaudeAIClient(api_key="test")
         with patch.object(client, "_call_api", return_value=raw):
             sig = client.get_trading_signal({"symbol": "EURUSD"})
         assert sig.signal == "BUY"
 
     def test_portfolio_signal_batch(self):
-        raw_buy = json.dumps({"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "ok"})
+        raw_buy = json.dumps(
+            {"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "ok"}
+        )
         client = ClaudeAIClient(api_key="test")
         portfolio = {
             "EURUSD": {"symbol": "EURUSD", "rsi": 35},
@@ -397,7 +418,9 @@ class TestClaudeAIIntegration:
         assert conf == 75.0
 
     def test_integration_agreement_boosts_confidence(self):
-        raw = json.dumps({"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "agrees"})
+        raw = json.dumps(
+            {"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "agrees"}
+        )
         integration = ClaudeAIIntegration(api_key="test", enabled=True)
         with patch.object(integration.client, "_call_api", return_value=raw):
             sig, conf, reason = integration.validate_signal(
@@ -410,7 +433,9 @@ class TestClaudeAIIntegration:
         assert conf > 65.0
 
     def test_integration_conflict_returns_hold(self):
-        raw = json.dumps({"signal": "SELL", "confidence": 75, "risk": "MEDIUM", "reason": "bearish"})
+        raw = json.dumps(
+            {"signal": "SELL", "confidence": 75, "risk": "MEDIUM", "reason": "bearish"}
+        )
         integration = ClaudeAIIntegration(api_key="test", enabled=True)
         with patch.object(integration.client, "_call_api", return_value=raw):
             sig, conf, reason = integration.validate_signal(
@@ -435,7 +460,9 @@ class TestClaudeAIIntegration:
         assert conf == 60.0
 
     def test_integration_independent_signal(self):
-        raw = json.dumps({"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "ok"})
+        raw = json.dumps(
+            {"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "ok"}
+        )
         integration = ClaudeAIIntegration(api_key="test", enabled=True)
         with patch.object(integration.client, "_call_api", return_value=raw):
             sig = integration.get_independent_signal({"symbol": "EURUSD", "rsi": 32})
@@ -515,16 +542,30 @@ class TestFullPipeline:
 
     def test_pipeline_with_ten_symbols(self):
         symbols = [
-            "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURJPY",
-            "XAUUSD", "WTI", "NVDA", "GOOGL", "USTECH100",
+            "EURUSD",
+            "GBPUSD",
+            "USDJPY",
+            "AUDUSD",
+            "EURJPY",
+            "XAUUSD",
+            "WTI",
+            "NVDA",
+            "GOOGL",
+            "USTECH100",
         ]
         for sym in symbols:
             analyzer = MultiTimeframeAnalyzer(symbol=sym)
             result = analyzer.analyze(
                 {
-                    "M1": _make_indicators(rsi=50, macd_hist=0.0, bb_pos=0.5, slope=0.0),
-                    "M5": _make_indicators(rsi=50, macd_hist=0.0, bb_pos=0.5, slope=0.0),
-                    "H1": _make_indicators(rsi=50, macd_hist=0.0, bb_pos=0.5, slope=0.0),
+                    "M1": _make_indicators(
+                        rsi=50, macd_hist=0.0, bb_pos=0.5, slope=0.0
+                    ),
+                    "M5": _make_indicators(
+                        rsi=50, macd_hist=0.0, bb_pos=0.5, slope=0.0
+                    ),
+                    "H1": _make_indicators(
+                        rsi=50, macd_hist=0.0, bb_pos=0.5, slope=0.0
+                    ),
                 }
             )
             assert result.weighted_signal in {"BUY", "SELL", "HOLD"}
