@@ -1,0 +1,110 @@
+name: Auto-Commit Trading Results
+
+on:
+  schedule:
+    # Run every hour during trading hours (9 AM - 5 PM UTC)
+    - cron: '0 9-16 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      run_now:
+        description: 'Run trading bot now'
+        required: false
+        default: 'true'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  trading-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create results directory
+        run: mkdir -p results logs
+
+      - name: Run trading bot (dry-run)
+        env:
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          MT5_LOGIN: ${{ secrets.MT5_LOGIN }}
+          MT5_PASSWORD: ${{ secrets.MT5_PASSWORD }}
+          MT5_SERVER: ${{ secrets.MT5_SERVER }}
+        run: |
+          python main.py \
+            --symbol EURUSD GBPUSD USDJPY \
+            --interval 300 \
+            --dry-run \
+            2>&1 | tee logs/trading_$(date +%Y%m%d_%H%M%S).log
+
+      - name: Collect trading results
+        if: always()
+        run: |
+          python - <<'PYTHON'
+          import json
+          import os
+          from datetime import datetime
+          from pathlib import Path
+
+          # Aggregate results
+          results = {
+              "timestamp": datetime.utcnow().isoformat(),
+              "workflow_run": os.environ.get("GITHUB_RUN_ID", "local"),
+              "commit_sha": os.environ.get("GITHUB_SHA", "unknown"),
+              "status": "completed"
+          }
+
+          # Save consolidated results
+          Path("results").mkdir(exist_ok=True)
+          with open("results/trading_metrics.json", "w") as f:
+              json.dump(results, f, indent=2)
+
+          print("✅ Results collected")
+          PYTHON
+
+      - name: Configure git
+        run: |
+          git config --local user.email "alpha-bot@github.com"
+          git config --local user.name "Alpha Trading Bot"
+
+      - name: Commit trading results
+        id: commit
+        continue-on-error: true
+        run: |
+          git add results/ logs/ || echo "No results to commit"
+          git diff --cached --quiet || git commit -m "📊 Auto-trade cycle: $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)"
+          echo "committed=true" >> $GITHUB_OUTPUT
+
+      - name: Push changes
+        if: steps.commit.outputs.committed == 'true'
+        run: |
+          git push origin main
+
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## 🤖 Trading Bot Auto-Commit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Cycle complete: $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)" >> $GITHUB_STEP_SUMMARY
+          echo "📝 Results saved to \`results/\` directory" >> $GITHUB_STEP_SUMMARY
+          echo "📋 Logs saved to \`logs/\` directory" >> $GITHUB_STEP_SUMMARY

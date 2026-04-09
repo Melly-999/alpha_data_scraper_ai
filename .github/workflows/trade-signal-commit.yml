@@ -1,0 +1,119 @@
+name: Trade Signal Alert & Commit
+
+on:
+  repository_dispatch:
+    types: [trade-signal]
+  workflow_dispatch:
+    inputs:
+      signal:
+        description: 'Trade signal (BUY/SELL/HOLD)'
+        required: true
+        type: choice
+        options:
+          - BUY
+          - SELL
+          - HOLD
+      symbol:
+        description: 'Trading symbol'
+        required: true
+        default: 'EURUSD'
+      confidence:
+        description: 'Signal confidence (0-100)'
+        required: true
+        default: '75'
+
+permissions:
+  contents: write
+  issues: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  handle-signal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install PyGithub
+
+      - name: Create signal record
+        env:
+          SIGNAL_DATA: ${{ toJson(github.event.client_payload) || format('{{"signal": "{0}", "symbol": "{1}", "confidence": {2}}}', inputs.signal, inputs.symbol, inputs.confidence) }}
+        run: |
+          python - <<'PYTHON'
+          import json
+          import os
+          from datetime import datetime
+          from pathlib import Path
+
+          signal_data = json.loads(os.environ.get("SIGNAL_DATA", "{}"))
+          signal_data["timestamp"] = datetime.utcnow().isoformat()
+          
+          Path("results/signals").mkdir(parents=True, exist_ok=True)
+          
+          signal_file = f"results/signals/{signal_data.get('symbol', 'UNKNOWN')}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+          with open(signal_file, "w") as f:
+              json.dump(signal_data, f, indent=2)
+          
+          print(f"✅ Signal recorded: {signal_file}")
+          PYTHON
+
+      - name: Configure git
+        run: |
+          git config --local user.email "alpha-bot@github.com"
+          git config --local user.name "Alpha Trading Bot"
+
+      - name: Commit signal
+        id: commit
+        continue-on-error: true
+        run: |
+          git add results/signals/ || echo "No signals to commit"
+          git diff --cached --quiet || git commit -m "🚀 Signal: ${{ inputs.signal || fromJson(github.event.client_payload).signal }} ${{ inputs.symbol || fromJson(github.event.client_payload).symbol }} (confidence: ${{ inputs.confidence || fromJson(github.event.client_payload).confidence }}%)"
+          echo "committed=true" >> $GITHUB_OUTPUT
+
+      - name: Push changes
+        if: steps.commit.outputs.committed == 'true'
+        run: git push origin main
+
+      - name: Create issue for high-confidence signals
+        if: steps.commit.outputs.committed == 'true' && (inputs.confidence != '' && inputs.confidence >= 80)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const signal = '${{ inputs.signal || fromJson(github.event.client_payload).signal }}';
+            const symbol = '${{ inputs.symbol || fromJson(github.event.client_payload).symbol }}';
+            const confidence = '${{ inputs.confidence || fromJson(github.event.client_payload).confidence }}';
+            
+            if (confidence >= 80) {
+              github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🚀 HIGH CONFIDENCE ${signal} Signal: ${symbol} (${confidence}%)`,
+                body: `
+## Trade Alert
+- **Signal**: ${signal}
+- **Symbol**: ${symbol}
+- **Confidence**: ${confidence}%
+- **Timestamp**: ${new Date().toISOString()}
+
+### Next Steps
+- Review in [results/signals](../results/signals)
+- Check risk management gates
+- Update trading log
+                `,
+                labels: ['auto-signal', 'high-confidence', signal.toLowerCase()]
+              });
+            }
