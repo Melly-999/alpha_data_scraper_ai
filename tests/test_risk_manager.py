@@ -7,10 +7,10 @@ import pytest
 from risk.risk_manager import RiskContext, RiskManager
 from core import config
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _manager(balance=10_000.0, open_positions=0, daily_pnl_pct=0.0) -> RiskManager:
     ctx = RiskContext(
@@ -24,6 +24,7 @@ def _manager(balance=10_000.0, open_positions=0, daily_pnl_pct=0.0) -> RiskManag
 # ---------------------------------------------------------------------------
 # Blocking gates
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("signal", ["HOLD", "NEUTRAL", "", "hold", "buy"])
 def test_non_actionable_signal_is_blocked(signal: str) -> None:
@@ -104,6 +105,7 @@ def test_positive_daily_pnl_is_not_blocked_by_loss_gate() -> None:
 # Happy path — trade allowed
 # ---------------------------------------------------------------------------
 
+
 def test_valid_buy_is_allowed() -> None:
     mgr = _manager(balance=10_000.0, open_positions=0, daily_pnl_pct=0.0)
     result = mgr.evaluate(signal="BUY", confidence=80)
@@ -131,6 +133,7 @@ def test_lot_size_is_rounded_to_two_decimals() -> None:
 # Lot size calculation
 # ---------------------------------------------------------------------------
 
+
 def test_lot_size_formula() -> None:
     """Verify _lot_size_for_risk() matches the expected formula."""
     balance = 50_000.0
@@ -148,7 +151,7 @@ def test_lot_size_formula() -> None:
 
 
 def test_lot_size_capped_by_max_position_size() -> None:
-    """With a very large balance the result should hit the MAX_POSITION_SIZE_LOTS cap."""
+    """Very large balance → result hits the MAX_POSITION_SIZE_LOTS cap."""
     ctx = RiskContext(balance=1_000_000_000.0, open_positions=0, daily_pnl_pct=0.0)
     mgr = RiskManager(ctx=ctx)
     assert mgr._lot_size_for_risk() <= config.MAX_POSITION_SIZE_LOTS
@@ -163,6 +166,7 @@ def test_lot_size_floored_at_zero_for_zero_balance() -> None:
 # ---------------------------------------------------------------------------
 # Default context uses config values
 # ---------------------------------------------------------------------------
+
 
 def test_default_context_uses_config_balance() -> None:
     mgr = RiskManager()  # no ctx → uses defaults

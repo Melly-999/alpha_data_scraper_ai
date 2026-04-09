@@ -6,10 +6,10 @@ import pytest
 
 from indicators import _ema, _rsi, _stochastic, add_indicators
 
-
 # ---------------------------------------------------------------------------
 # Existing tests
 # ---------------------------------------------------------------------------
+
 
 def test_add_indicators_has_expected_columns(sample_ohlcv: pd.DataFrame) -> None:
     out = add_indicators(sample_ohlcv)
@@ -37,6 +37,7 @@ def test_add_indicators_no_nan_after_cleanup(sample_ohlcv: pd.DataFrame) -> None
 # ---------------------------------------------------------------------------
 # _ema — exponential moving average
 # ---------------------------------------------------------------------------
+
 
 def test_ema_output_length_matches_input() -> None:
     s = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0])
@@ -70,6 +71,7 @@ def test_ema_span_1_equals_series() -> None:
 # _rsi — relative strength index
 # ---------------------------------------------------------------------------
 
+
 def test_rsi_values_in_range(sample_ohlcv: pd.DataFrame) -> None:
     rsi = _rsi(sample_ohlcv["close"], period=14)
     valid = rsi.dropna()
@@ -99,6 +101,7 @@ def test_rsi_output_length_matches_input(sample_ohlcv: pd.DataFrame) -> None:
 # ---------------------------------------------------------------------------
 # _stochastic — stochastic oscillator
 # ---------------------------------------------------------------------------
+
 
 def test_stochastic_returns_two_series(sample_ohlcv: pd.DataFrame) -> None:
     k, d = _stochastic(sample_ohlcv["high"], sample_ohlcv["low"], sample_ohlcv["close"])
@@ -135,6 +138,7 @@ def test_stochastic_output_length_matches_input(sample_ohlcv: pd.DataFrame) -> N
 # ---------------------------------------------------------------------------
 # add_indicators — edge cases
 # ---------------------------------------------------------------------------
+
 
 def test_add_indicators_too_few_rows_returns_empty() -> None:
     """A 5-row frame cannot produce enough history; result should be empty."""

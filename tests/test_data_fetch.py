@@ -15,10 +15,10 @@ if "yfinance" not in sys.modules:
 
 from data.fetch import _yahoo_ticker, fetch_ohlc  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # _yahoo_ticker — ticker format conversions
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize(
     "symbol, expected",
@@ -48,6 +48,7 @@ def test_yahoo_ticker_conversion(symbol: str, expected: str) -> None:
 # fetch_ohlc — invalid timeframe
 # ---------------------------------------------------------------------------
 
+
 def test_fetch_ohlc_invalid_timeframe_raises() -> None:
     with pytest.raises(ValueError, match="Unsupported timeframe"):
         fetch_ohlc("EURUSD", timeframe="W1")
@@ -62,6 +63,7 @@ def test_fetch_ohlc_invalid_timeframe_message_includes_valid_options() -> None:
 # fetch_ohlc — empty data raises RuntimeError
 # ---------------------------------------------------------------------------
 
+
 def test_fetch_ohlc_empty_response_raises_runtime_error() -> None:
     with patch("data.fetch.yf.download", return_value=pd.DataFrame()):
         with pytest.raises(RuntimeError):
@@ -71,6 +73,7 @@ def test_fetch_ohlc_empty_response_raises_runtime_error() -> None:
 # ---------------------------------------------------------------------------
 # fetch_ohlc — normal response returns correct columns
 # ---------------------------------------------------------------------------
+
 
 def _mock_ohlc_df(n: int = 50) -> pd.DataFrame:
     """Minimal yfinance-style response (flat columns, DatetimeIndex)."""
@@ -117,6 +120,7 @@ def test_fetch_ohlc_no_nan_rows() -> None:
 # fetch_ohlc — multi-index column handling
 # ---------------------------------------------------------------------------
 
+
 def _mock_multiindex_df(n: int = 30) -> pd.DataFrame:
     """Simulate yfinance multi-ticker response with MultiIndex columns."""
     idx = pd.date_range("2025-01-01", periods=n, freq="1h")
@@ -144,6 +148,7 @@ def test_fetch_ohlc_flattens_multiindex_columns() -> None:
 # ---------------------------------------------------------------------------
 # fetch_ohlc — default timeframe from config
 # ---------------------------------------------------------------------------
+
 
 def test_fetch_ohlc_uses_default_timeframe_when_none_given() -> None:
     """Should not raise for the valid default timeframe from config."""

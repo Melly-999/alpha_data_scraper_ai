@@ -27,6 +27,7 @@ def test_lstm_pipeline_predict_delta(sample_ohlcv: pd.DataFrame) -> None:
 # NaiveSequenceModel
 # ---------------------------------------------------------------------------
 
+
 def test_naive_model_returns_last_timestep_value() -> None:
     """predict(x) should return x[:, -1, 0:1] — the last time-step, first feature."""
     model = NaiveSequenceModel()
@@ -51,6 +52,7 @@ def test_naive_model_batch_of_samples() -> None:
 # LSTMPipeline fallback: too-few sequences
 # ---------------------------------------------------------------------------
 
+
 def test_fit_falls_back_to_naive_when_too_few_rows() -> None:
     """When build_sequences produces <10 sequences, NaiveSequenceModel is used."""
     # With lookback=30 and only 35 rows we get 5 sequences (<10)
@@ -68,6 +70,7 @@ def test_fit_falls_back_to_naive_when_too_few_rows() -> None:
 # ---------------------------------------------------------------------------
 # LSTMPipeline fallback: TensorFlow absent
 # ---------------------------------------------------------------------------
+
 
 def test_fit_falls_back_to_naive_when_tf_is_none(sample_ohlcv: pd.DataFrame) -> None:
     """When tf is patched to None the pipeline uses NaiveSequenceModel."""
@@ -87,6 +90,7 @@ def test_fit_falls_back_to_naive_when_tf_is_none(sample_ohlcv: pd.DataFrame) -> 
 # ---------------------------------------------------------------------------
 # LSTMPipeline.predict_next_delta — guard conditions
 # ---------------------------------------------------------------------------
+
 
 def test_predict_returns_zero_when_model_not_fitted() -> None:
     """predict_next_delta must return 0.0 when model/scaler are None."""

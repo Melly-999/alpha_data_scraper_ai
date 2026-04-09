@@ -10,10 +10,10 @@ import pytest
 
 from rate_limiter import RateLimiter, claude_limiter, mt5_limiter, news_api_limiter
 
-
 # ---------------------------------------------------------------------------
 # Constructor validation
 # ---------------------------------------------------------------------------
+
 
 def test_negative_rate_raises() -> None:
     with pytest.raises(ValueError, match="calls_per_second"):
@@ -38,6 +38,7 @@ def test_valid_construction() -> None:
 # ---------------------------------------------------------------------------
 # try_acquire
 # ---------------------------------------------------------------------------
+
 
 def test_try_acquire_succeeds_when_tokens_available() -> None:
     rl = RateLimiter(calls_per_second=1.0, burst=1)
@@ -69,6 +70,7 @@ def test_try_acquire_reduces_available_tokens() -> None:
 # acquire with timeout
 # ---------------------------------------------------------------------------
 
+
 def test_acquire_returns_true_when_token_available() -> None:
     rl = RateLimiter(calls_per_second=10.0, burst=1)
     assert rl.acquire(timeout=1.0) is True
@@ -96,6 +98,7 @@ def test_acquire_without_timeout_consumes_token() -> None:
 # available_tokens property
 # ---------------------------------------------------------------------------
 
+
 def test_available_tokens_equals_burst_on_construction() -> None:
     rl = RateLimiter(calls_per_second=1.0, burst=5)
     assert rl.available_tokens == 5.0
@@ -117,6 +120,7 @@ def test_available_tokens_does_not_exceed_burst() -> None:
 # Context manager
 # ---------------------------------------------------------------------------
 
+
 def test_context_manager_acquires_and_exits() -> None:
     rl = RateLimiter(calls_per_second=100.0, burst=1)
     with rl:
@@ -134,6 +138,7 @@ def test_context_manager_returns_self() -> None:
 # ---------------------------------------------------------------------------
 # limit decorator
 # ---------------------------------------------------------------------------
+
 
 def test_limit_decorator_calls_function() -> None:
     rl = RateLimiter(calls_per_second=100.0, burst=1)
@@ -179,6 +184,7 @@ def test_limit_decorator_blocks_when_no_tokens() -> None:
 # Thread safety
 # ---------------------------------------------------------------------------
 
+
 def test_concurrent_try_acquire_does_not_exceed_burst() -> None:
     burst = 5
     rl = RateLimiter(calls_per_second=0.001, burst=burst)  # very slow refill
@@ -202,6 +208,7 @@ def test_concurrent_try_acquire_does_not_exceed_burst() -> None:
 # ---------------------------------------------------------------------------
 # Factory functions
 # ---------------------------------------------------------------------------
+
 
 def test_claude_limiter_returns_rate_limiter() -> None:
     rl = claude_limiter()
@@ -238,6 +245,7 @@ def test_mt5_limiter_custom_rate() -> None:
 # ---------------------------------------------------------------------------
 # Token refill logic
 # ---------------------------------------------------------------------------
+
 
 def test_tokens_refill_over_time() -> None:
     # Start with a fully-drained limiter then check that tokens grow

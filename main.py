@@ -337,9 +337,8 @@ def _clear_console() -> None:
     
     Optimization: Command string determined once at module load (CLEAR_COMMAND constant).
     """
-    subprocess.run(
-        CLEAR_COMMAND,
-        shell=True,
+    subprocess.run(  # noqa: S603
+        [CLEAR_COMMAND],
         check=False,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
