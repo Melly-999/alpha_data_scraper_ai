@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import tkinter as tk
-from tkinter import ttk
 from typing import Any
 
 
@@ -85,6 +83,9 @@ def render_console(payload: Any) -> None:
 
 
 def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
+    import tkinter as tk  # noqa: PLC0415 — intentionally lazy; tkinter is optional
+    from tkinter import ttk  # noqa: PLC0415
+
     root = tk.Tk()
     root.title("Alpha AI Control Deck")
     root.geometry("1200x760")
