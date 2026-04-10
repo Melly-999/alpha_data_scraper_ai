@@ -77,9 +77,13 @@ jobs:
         run: |
           python --version
           black --version
-          black --check --diff . > /tmp/black.diff 2>&1 || {
+          # Explicitly pass all settings to ignore any external pyproject.toml
+          black --check --diff \
+            --line-length 88 \
+            --target-version py312 \
+            . > /tmp/black.diff 2>&1 || {
             DIFF=$(cat /tmp/black.diff)
-            echo "::error title=Black formatting::$(echo "$DIFF" | head -c 65000)"
+            echo "::error title=Black formatting::$(printf '%s' "$DIFF" | head -c 65000)"
             echo "## Black formatting failures" >> "$GITHUB_STEP_SUMMARY"
             printf '%s\n' "$DIFF" >> "$GITHUB_STEP_SUMMARY"
             exit 1
