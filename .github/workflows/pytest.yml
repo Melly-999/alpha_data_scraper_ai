@@ -78,20 +78,13 @@ jobs:
         run: |
           python --version
           black --version
-          black .
-          git diff > /tmp/black.diff
-          if [ -s /tmp/black.diff ]; then
-            echo "=== FILES REFORMATTED BY BLACK ==="
-            cat /tmp/black.diff
+          black --check --diff . 2>&1 | tee /tmp/black.diff || {
+            echo "## Black formatting failures" >> "$GITHUB_STEP_SUMMARY"
+            echo '```diff' >> "$GITHUB_STEP_SUMMARY"
+            cat /tmp/black.diff >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
             exit 1
-          fi
-
-      - name: Upload black diff artifact
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: black-formatting-diff
-          path: /tmp/black.diff
+          }
 
       - name: Run flake8
         run: flake8 .
