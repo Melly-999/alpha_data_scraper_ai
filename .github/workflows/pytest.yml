@@ -73,30 +73,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-ci.txt
 
-      - name: Diagnose workspace
-        run: |
-          pip show black
-          echo "=== All Python files in workspace (incl untracked) ==="
-          FILES=$(find . -name "*.py" | grep -v "__pycache__\|.git\|.venv" | sort)
-          COUNT=$(echo "$FILES" | wc -l)
-          echo "$FILES"
-          echo "Total: $COUNT files"
-          echo "=== Git status ==="
-          git status --short
-          echo "=== pyproject.toml content ==="
-          cat pyproject.toml
-
       - name: Run black
         run: |
-          black --line-length 88 --target-version py312 .
-          git diff > /tmp/black.diff
-          if [ -s /tmp/black.diff ]; then
+          # Only check git-tracked Python files to avoid formatting untracked workspace files
+          TRACKED=$(git ls-files "*.py")
+          echo "Checking $(echo "$TRACKED" | wc -l) tracked Python files"
+          echo "$TRACKED" | xargs black --check --diff \
+            --line-length 88 --target-version py312 \
+            > /tmp/black.diff 2>&1 || {
             DIFF=$(cat /tmp/black.diff)
             echo "::error title=Black diff::$(printf '%s' "$DIFF" | head -c 65000)"
-            echo "## Black reformatted files" >> "$GITHUB_STEP_SUMMARY"
             printf '%s\n' "$DIFF" >> "$GITHUB_STEP_SUMMARY"
             exit 1
-          fi
+          }
 
       - name: Run flake8
         run: flake8 .
