@@ -79,7 +79,19 @@ jobs:
           python --version
           black --version
           black .
-          git diff --exit-code || (echo "=== FILES BLACK REFORMATTED ===" && git diff && exit 1)
+          git diff > /tmp/black.diff
+          if [ -s /tmp/black.diff ]; then
+            echo "=== FILES REFORMATTED BY BLACK ==="
+            cat /tmp/black.diff
+            exit 1
+          fi
+
+      - name: Upload black diff artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: black-formatting-diff
+          path: /tmp/black.diff
 
       - name: Run flake8
         run: flake8 .
