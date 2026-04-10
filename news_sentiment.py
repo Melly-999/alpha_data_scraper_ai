@@ -212,12 +212,12 @@ class NewsAPIClient:
             all_news = []
             for currency in currencies:
                 query = f"{currency} forex OR trading OR economy"
-                params = {
+                params: dict[str, str] = {
                     "q": query,
                     "sortBy": "publishedAt",
                     "language": "en",
                     "apiKey": self.api_key,
-                    "pageSize": 20,
+                    "pageSize": "20",
                 }
 
                 response = requests.get(self.BASE_URL, params=params, timeout=10)

@@ -188,7 +188,7 @@ class LSTMPipeline:
         x_last = self._prepare_input(values)
         raw_preds = self._raw_predictions(x_last)
 
-        pred_unscaled = self._unscale(np.mean(raw_preds), values)
+        pred_unscaled = self._unscale(float(np.mean(raw_preds)), values)
         return pred_unscaled - float(values[-1, self.target_idx])
 
     def prediction_uncertainty(

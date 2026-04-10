@@ -321,8 +321,8 @@ class BacktestEngine:
         annual_return = total_return * (365 / period_days)
 
         win_rate = len(winning) / len(pnl_pcts) if pnl_pcts else 0.0
-        avg_win = np.mean(winning) if winning else 0.0
-        avg_loss = np.mean(losing) if losing else 0.0
+        avg_win = float(np.mean(winning)) if winning else 0.0
+        avg_loss = float(np.mean(losing)) if losing else 0.0
 
         # Sharpe ratio
         if len(pnl_pcts) > 1:
@@ -381,7 +381,7 @@ class BacktestEngine:
 
         # Duration: from peak to recovery
         peak_idx = np.argmax(equity[: max_dd_idx + 1]) if max_dd_idx > 0 else 0
-        recovery_idx = max_dd_idx
+        recovery_idx: int = int(max_dd_idx)
         for i in range(max_dd_idx + 1, len(equity)):
             if equity[i] >= equity[peak_idx]:
                 recovery_idx = i
