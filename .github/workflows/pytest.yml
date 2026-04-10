@@ -73,20 +73,28 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-ci.txt
 
-      - name: Verify black version
+      - name: Diagnose workspace
         run: |
           pip show black
-          echo "Python files found:"
-          find . -name "*.py" | grep -v "__pycache__\|.git\|.venv" | sort
+          echo "=== All Python files in workspace (incl untracked) ==="
+          FILES=$(find . -name "*.py" | grep -v "__pycache__\|.git\|.venv" | sort)
+          COUNT=$(echo "$FILES" | wc -l)
+          echo "$FILES"
+          echo "Total: $COUNT files"
+          echo "=== Git status ==="
+          git status --short
+          echo "=== pyproject.toml content ==="
+          cat pyproject.toml
 
       - name: Run black
         run: |
           black --line-length 88 --target-version py312 .
           git diff > /tmp/black.diff
           if [ -s /tmp/black.diff ]; then
-            echo "::error title=Black reformatted files::$(cat /tmp/black.diff | head -c 65000)"
-            echo "## Black reformatted these files" >> "$GITHUB_STEP_SUMMARY"
-            cat /tmp/black.diff >> "$GITHUB_STEP_SUMMARY"
+            DIFF=$(cat /tmp/black.diff)
+            echo "::error title=Black diff::$(printf '%s' "$DIFF" | head -c 65000)"
+            echo "## Black reformatted files" >> "$GITHUB_STEP_SUMMARY"
+            printf '%s\n' "$DIFF" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
 
