@@ -7,8 +7,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict
 import logging
 
-import requests  # type: ignore[import-untyped]
-from bs4 import BeautifulSoup  # type: ignore[import-untyped]
+import requests
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger("NewsSentiment")
 

@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
 
-import requests  # type: ignore[import-untyped]
+import requests
 
 logger = logging.getLogger("ClaudeAI")
 
