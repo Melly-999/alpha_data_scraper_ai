@@ -114,7 +114,7 @@ class GitHubIntegration:
                 logger.info("ℹ️ No changes to commit")
                 return None
 
-            result = subprocess.run(
+            subprocess.run(
                 ["git", "commit", "-m", message],
                 cwd=self.repo_path,
                 check=True,
