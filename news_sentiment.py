@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict
 import logging
-import re
 
 import requests
 from bs4 import BeautifulSoup
@@ -17,6 +16,7 @@ logger = logging.getLogger("NewsSentiment")
 @dataclass
 class NewsItem:
     """Single news event."""
+
     source: str  # "ForexFactory" or "NewsAPI"
     title: str
     content: str
@@ -30,6 +30,7 @@ class NewsItem:
 @dataclass
 class SentimentScore:
     """Aggregated sentiment score."""
+
     currency: str
     positive_count: int
     neutral_count: int
@@ -192,7 +193,9 @@ class NewsAPIClient:
         """Initialize with NewsAPI key."""
         self.api_key = api_key
 
-    def fetch_forex_news(self, currencies: List[str] = None) -> Optional[List[NewsItem]]:
+    def fetch_forex_news(
+        self, currencies: Optional[List[str]] = None
+    ) -> Optional[List[NewsItem]]:
         """
         Fetch news about forex currencies.
 
@@ -209,12 +212,12 @@ class NewsAPIClient:
             all_news = []
             for currency in currencies:
                 query = f"{currency} forex OR trading OR economy"
-                params = {
+                params: dict[str, str] = {
                     "q": query,
                     "sortBy": "publishedAt",
                     "language": "en",
                     "apiKey": self.api_key,
-                    "pageSize": 20,
+                    "pageSize": "20",
                 }
 
                 response = requests.get(self.BASE_URL, params=params, timeout=10)

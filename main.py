@@ -14,8 +14,8 @@ from typing import Any
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
-from utils.config import *  # noqa: F403
-from utils.risk_manager import RiskManager
+from utils.config import *  # noqa: F403,E402
+from utils.risk_manager import RiskManager  # noqa: E402
 
 risk = RiskManager()
 
@@ -37,19 +37,27 @@ def _sync_risk_from_mt5() -> None:
         mt5.shutdown()
 
 
-from gui import render_console, run_live_gui
-from indicators import add_indicators
-from lstm_model import LSTMPipeline
-from mt5_fetcher import batch_fetch
-from mt5_trader import MT5AutoTrader
-from signal_generator import generate_signal, signal_to_dict
+from gui import render_console, run_live_gui  # noqa: E402
+from indicators import add_indicators  # noqa: E402
+from lstm_model import LSTMPipeline  # noqa: E402
+from mt5_fetcher import batch_fetch  # noqa: E402
+from mt5_trader import MT5AutoTrader  # noqa: E402
+from signal_generator import generate_signal, signal_to_dict  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
 # Configuration constants
 DEFAULT_SYMBOLS = [
-    "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "EURJPY",
-    "XAUUSD", "WTI", "NVDA", "GOOGL", "USTECH100",
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "AUDUSD",
+    "EURJPY",
+    "XAUUSD",
+    "WTI",
+    "NVDA",
+    "GOOGL",
+    "USTECH100",
 ]
 DEFAULT_CONFIG = {
     "symbols": DEFAULT_SYMBOLS,
@@ -86,54 +94,54 @@ CLEAR_COMMAND = "cls" if os.name == "nt" else "clear"
 
 def _load_config(path: str = "config.json") -> dict[str, Any]:
     """Load config from file with fallback to defaults; merge nested autotrade settings.
-    
+
     Optimization: reads file only once; cached defaults.
     """
     cfg_path = Path(path)
-    
+
     # Start with defaults
     config = DEFAULT_CONFIG.copy()
-    
+
     # Return defaults if file missing or empty
     if not cfg_path.exists():
         return config
-    
+
     text = cfg_path.read_text(encoding="utf-8").strip()
     if not text:
         return config
-    
+
     try:
         loaded = json.loads(text)
     except json.JSONDecodeError as e:
         logger.warning(f"Invalid JSON in {path}: {e}. Using defaults.")
         return config
-    
+
     # Merge top-level config
     config.update(loaded)
-    
+
     # Merge autotrade sub-config if present
     if isinstance(loaded.get("autotrade"), dict):
         autotrade = DEFAULT_CONFIG.get("autotrade", {}).copy()
         autotrade.update(loaded["autotrade"])
         config["autotrade"] = autotrade
-    
+
     # Backward compat: "symbol" (str) → "symbols" (list)
     if "symbol" in loaded and "symbols" not in loaded:
         config["symbols"] = [loaded["symbol"]]
-    
+
     # Normalize symbols to list
     symbols = config.get("symbols", DEFAULT_SYMBOLS)
     if isinstance(symbols, str):
         config["symbols"] = [symbols]
     elif not symbols:
         config["symbols"] = DEFAULT_SYMBOLS
-    
+
     return config
 
 
 class AppRuntime:
     """Fetches MT5 snapshots and manages per-symbol trading state.
-    
+
     Optimizations:
     - Caches traders dict keyed by symbol (avoid repeated lookups)
     - Thread-safe trade state tracking with last_trade_ts/signal dicts
@@ -144,27 +152,27 @@ class AppRuntime:
         self.cfg = cfg
         autotrade_cfg = cfg.get("autotrade", {})
         self.symbols: list[str] = list(cfg.get("symbols", DEFAULT_SYMBOLS))
-        
+
         # Create traders once; reuse for all snapshots
-        self.traders: dict[str, MT5AutoTrader] = self._create_traders(
-            autotrade_cfg
-        )
-        
+        self.traders: dict[str, MT5AutoTrader] = self._create_traders(autotrade_cfg)
+
         self.cooldown_seconds = int(autotrade_cfg.get("cooldown_seconds", 60))
         self.allow_same_signal = bool(autotrade_cfg.get("allow_same_signal", False))
-        
+
         # Per-symbol trade state (thread-safe dict ops in Python)
         self.last_trade_ts: dict[str, float] = {sym: 0.0 for sym in self.symbols}
         self.last_trade_signal: dict[str, str] = {sym: "" for sym in self.symbols}
 
-    def _create_traders(self, autotrade_cfg: dict[str, Any]) -> dict[str, MT5AutoTrader]:
+    def _create_traders(
+        self, autotrade_cfg: dict[str, Any]
+    ) -> dict[str, MT5AutoTrader]:
         """Create MT5AutoTrader instances for all symbols.
-        
+
         Replaces lambda with explicit method for clarity and reusability.
         """
         traders = {}
         magic_base = int(autotrade_cfg.get("magic", 20260327))
-        
+
         for idx, sym in enumerate(self.symbols):
             traders[sym] = MT5AutoTrader(
                 symbol=sym,
@@ -178,7 +186,6 @@ class AppRuntime:
                 magic=magic_base + idx,
             )
         return traders
-
 
     def next_snapshots(self) -> list[dict[str, Any]]:
         """Fetch all symbols (one MT5 session) then analyse in parallel."""
@@ -226,7 +233,9 @@ class AppRuntime:
                 "seconds_left": round(self.cooldown_seconds - (now_ts - last_ts), 1),
             }
 
-        if not self.allow_same_signal and signal == self.last_trade_signal.get(symbol, ""):
+        if not self.allow_same_signal and signal == self.last_trade_signal.get(
+            symbol, ""
+        ):
             return {"status": "same_signal_blocked", "signal": signal}
 
         lot = risk.calculate_lot_size(risk.current_balance, sl_pips=100)
@@ -246,26 +255,25 @@ def _analyse_symbol(
     cfg: dict[str, Any],
 ) -> dict[str, Any]:
     """Run indicators + LSTM + signal generation for one symbol (CPU-bound).
-    
+
     Optimizations:
     - Use module-level LSTM_FEATURE_COLS constant (avoid recreation)
     - Extract features once instead of per-column selection
     """
     data = add_indicators(raw)
-    
+
     # Extract feature columns once (constant defined at module level)
     features: Any = data[LSTM_FEATURE_COLS]
-    
+
     pipeline = LSTMPipeline(
-        lookback=int(cfg.get("lookback", 30)),
-        epochs=int(cfg.get("epochs", 2))
+        lookback=int(cfg.get("lookback", 30)), epochs=int(cfg.get("epochs", 2))
     )
     pipeline.fit(features)
     lstm_delta = pipeline.predict_next_delta(features, close_col_index=0)
-    
+
     latest = data.iloc[-1]
     signal = generate_signal(latest, lstm_delta=lstm_delta)
-    
+
     return {
         "symbol": symbol,
         "timeframe": cfg.get("timeframe", "M5"),
@@ -281,7 +289,7 @@ def _build_multi_snapshots(
     raw_data: dict[str, Any],
 ) -> list[dict[str, Any]]:
     """Analyse all symbols in parallel using a thread pool (CPU-bound LSTM work).
-    
+
     Optimizations:
     - Use MAX_WORKERS constant (tune once, reuse everywhere)
     - Specific exception handling instead of broad Exception catch
@@ -289,13 +297,13 @@ def _build_multi_snapshots(
     """
     symbols = list(raw_data.keys())
     results: dict[str, dict[str, Any]] = {}
-    
+
     with ThreadPoolExecutor(max_workers=min(len(symbols), MAX_WORKERS)) as pool:
         futures = {
             pool.submit(_analyse_symbol, sym, raw_data[sym], cfg): sym
             for sym in symbols
         }
-        
+
         for future in as_completed(futures):
             sym = futures[future]
             try:
@@ -327,19 +335,18 @@ def _build_multi_snapshots(
                         "reasons": ["Unexpected error - see logs"],
                     },
                 }
-    
+
     # Preserve original symbol order: symbols list is source of truth
     return [results[sym] for sym in symbols]
 
 
 def _clear_console() -> None:
     """Clear terminal screen (platform-aware).
-    
+
     Optimization: Command string determined once at module load (CLEAR_COMMAND constant).
     """
-    subprocess.run(
-        CLEAR_COMMAND,
-        shell=True,
+    subprocess.run(  # noqa: S603
+        [CLEAR_COMMAND],
         check=False,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -375,21 +382,21 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     """Main entry point: parse args, load config, run snapshots."""
-    print("FTMO MODE:", FTMO_MODE)
-    print("Max daily loss:", START_BALANCE * (MAX_DAILY_LOSS_PCT / 100))
+    print("FTMO MODE:", FTMO_MODE)  # noqa: F405
+    print("Max daily loss:", START_BALANCE * (MAX_DAILY_LOSS_PCT / 100))  # noqa: F405
 
     args = _parse_args()
     cfg = _load_config(args.config)
     runtime = AppRuntime(cfg)
-    
+
     # Resolve interval: CLI override > config file > default
     interval = float(args.interval) if args.interval else cfg.get("interval", 5.0)
     interval = float(interval)
-    
+
     # Validate interval for interactive modes
     if (args.gui or args.continuous) and interval <= 0:
         raise ValueError("--interval must be > 0 for GUI or continuous mode")
-    
+
     try:
         if args.gui:
             run_live_gui(runtime.next_snapshots, interval_seconds=interval)
@@ -407,7 +414,7 @@ def main() -> None:
 
 def _run_continuous_loop(runtime: AppRuntime, interval: float) -> None:
     """Run snapshot loop continuously until interrupted.
-    
+
     Extracted to keep main() clean and reduce nesting.
     """
     logger.info(f"Starting continuous loop ({interval:.1f}s interval)")
@@ -427,5 +434,3 @@ def _run_continuous_loop(runtime: AppRuntime, interval: float) -> None:
 
 if __name__ == "__main__":
     main()
-
-

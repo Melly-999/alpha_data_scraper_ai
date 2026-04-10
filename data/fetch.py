@@ -52,10 +52,14 @@ def fetch_ohlc(
     tf = timeframe or DEFAULT_TIMEFRAME
     interval = _TIMEFRAME_TO_INTERVAL.get(tf)
     if interval is None:
-        raise ValueError(f"Unsupported timeframe {tf!r}; use one of {sorted(_TIMEFRAME_TO_INTERVAL)}")
+        raise ValueError(
+            f"Unsupported timeframe {tf!r}; use one of {sorted(_TIMEFRAME_TO_INTERVAL)}"
+        )
 
     ticker = _yahoo_ticker(symbol)
-    logger.info("Fetching OHLC ticker=%s interval=%s period=%s", ticker, interval, period)
+    logger.info(
+        "Fetching OHLC ticker=%s interval=%s period=%s", ticker, interval, period
+    )
 
     df = yf.download(
         ticker,

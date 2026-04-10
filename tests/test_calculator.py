@@ -7,13 +7,17 @@ from calculator import position_size
 
 def test_standard_case() -> None:
     # $10 000, 1% risk, 200 pts SL, $1/pt/lot → $100 / $200 = 0.50 lots
-    result = position_size(balance=10_000, risk_pct=0.01, sl_points=200, point_value=1.0)
+    result = position_size(
+        balance=10_000, risk_pct=0.01, sl_points=200, point_value=1.0
+    )
     assert result == 0.50
 
 
 def test_minimum_lot_floor() -> None:
     # Very large SL → below 0.01 → clamp to 0.01
-    result = position_size(balance=100, risk_pct=0.001, sl_points=10_000, point_value=10.0)
+    result = position_size(
+        balance=100, risk_pct=0.001, sl_points=10_000, point_value=10.0
+    )
     assert result == 0.01
 
 

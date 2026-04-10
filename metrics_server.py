@@ -38,6 +38,7 @@ try:
         Info,
         start_http_server,
     )
+
     _PROMETHEUS_AVAILABLE = True
 except ImportError:  # pragma: no cover
     _PROMETHEUS_AVAILABLE = False
@@ -206,7 +207,9 @@ if __name__ == "__main__":
     symbols = ["EURUSD", "GBPUSD", "USDJPY", "XAUUSD"]
     signals = ["BUY", "SELL", "HOLD"]
 
-    print("Metrics server running on :8080/metrics — generating dummy data…  Ctrl-C to stop.")
+    print(
+        "Metrics server running on :8080/metrics — generating dummy data…  Ctrl-C to stop."
+    )
     while True:
         for sym in symbols:
             sig = random.choice(signals)

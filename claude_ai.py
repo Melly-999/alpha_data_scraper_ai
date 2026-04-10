@@ -19,6 +19,7 @@ logger = logging.getLogger("ClaudeAI")
 @dataclass
 class ClaudeSignal:
     """Claude AI generated trading signal."""
+
     signal: str  # "BUY", "SELL", "HOLD"
     confidence: int  # 0-100
     risk: str  # "LOW", "MEDIUM", "HIGH"
@@ -79,7 +80,9 @@ class ClaudeAIClient:
             logger.error(f"Claude AI request failed: {e}")
             return None
 
-    def get_portfolio_signal(self, portfolio_data: Dict[str, Dict]) -> Optional[Dict[str, ClaudeSignal]]:
+    def get_portfolio_signal(
+        self, portfolio_data: Dict[str, Dict]
+    ) -> Optional[Dict[str, ClaudeSignal]]:
         """
         Get signals for entire portfolio.
 
@@ -99,7 +102,7 @@ class ClaudeAIClient:
     def _build_prompt(self, market_data: Dict[str, Any]) -> str:
         """Build trading analysis prompt for Claude."""
         symbol = market_data.get("symbol", "UNKNOWN")
-        
+
         # Format market data for readability
         data_str = json.dumps(market_data, indent=2, default=str)
 
@@ -195,7 +198,9 @@ IMPORTANT:
             )
 
         except (json.JSONDecodeError, ValueError, KeyError) as e:
-            logger.error(f"Failed to parse Claude response: {e}\nResponse: {response_text}")
+            logger.error(
+                f"Failed to parse Claude response: {e}\nResponse: {response_text}"
+            )
             # Return neutral signal on parse error
             return ClaudeSignal(
                 signal="HOLD",
@@ -294,17 +299,29 @@ class ClaudeAIIntegration:
             # Combine signals
             if engine_signal == claude_sig.signal:
                 # Agreement: boost confidence
-                refined_conf = min(100, (engine_confidence + claude_sig.confidence) / 2 * 1.1)
-                return engine_signal, refined_conf, f"Claude confirms ({claude_sig.reason})"
+                refined_conf = min(
+                    100, (engine_confidence + claude_sig.confidence) / 2 * 1.1
+                )
+                return (
+                    engine_signal,
+                    refined_conf,
+                    f"Claude confirms ({claude_sig.reason})",
+                )
             else:
                 # Disagreement: reduce to HOLD
-                return "HOLD", 50.0, f"Conflict: Engine {engine_signal} vs Claude {claude_sig.signal}"
+                return (
+                    "HOLD",
+                    50.0,
+                    f"Conflict: Engine {engine_signal} vs Claude {claude_sig.signal}",
+                )
 
         except Exception as e:
             logger.error(f"Signal validation failed: {e}")
             return engine_signal, engine_confidence, "Validation error"
 
-    def get_independent_signal(self, market_data: Dict[str, Any]) -> Optional[ClaudeSignal]:
+    def get_independent_signal(
+        self, market_data: Dict[str, Any]
+    ) -> Optional[ClaudeSignal]:
         """Get completely independent signal from Claude."""
         if not self.enabled or not self.client:
             return None

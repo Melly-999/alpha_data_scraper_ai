@@ -5,8 +5,8 @@ import warnings
 import numpy as np
 import pandas as pd
 
-
 # ── Core helpers ──────────────────────────────────────────────────────────────
+
 
 def _ema(series: pd.Series, span: int) -> pd.Series:
     return series.ewm(span=span, adjust=False).mean()
@@ -33,6 +33,7 @@ def _stochastic(
 
 
 # ── New indicators ────────────────────────────────────────────────────────────
+
 
 def _atr(
     high: pd.Series,
@@ -115,6 +116,7 @@ def _vwap(
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
+
 def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     """Compute all technical indicators and append as new columns.
 
@@ -133,7 +135,9 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
         vwap_dev   — (close − vwap) / vwap × 100; negative = below fair value
     """
     if len(df) < 2:
-        warnings.warn("DataFrame has fewer than 2 rows; cannot compute indicators.", UserWarning)
+        warnings.warn(
+            "DataFrame has fewer than 2 rows; cannot compute indicators.", UserWarning
+        )
         return df.copy()
 
     frame = df.copy()
@@ -141,7 +145,9 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     # ── Original ──────────────────────────────────────────────────────────────
     frame["rsi"] = _rsi(frame["close"], period=14)
 
-    stoch_k, stoch_d = _stochastic(frame["high"], frame["low"], frame["close"], period=14)
+    stoch_k, stoch_d = _stochastic(
+        frame["high"], frame["low"], frame["close"], period=14
+    )
     frame["stoch_k"] = stoch_k
     frame["stoch_d"] = stoch_d
 
@@ -167,7 +173,9 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     frame["atr_pct"] = frame["atr"] / (frame["close"].abs() + 1e-12)
 
     # ── ADX ───────────────────────────────────────────────────────────────────
-    adx, plus_di, minus_di = _adx(frame["high"], frame["low"], frame["close"], period=14)
+    adx, plus_di, minus_di = _adx(
+        frame["high"], frame["low"], frame["close"], period=14
+    )
     frame["adx"] = adx
     frame["plus_di"] = plus_di
     frame["minus_di"] = minus_di
@@ -180,7 +188,9 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
     # ── VWAP deviation ────────────────────────────────────────────────────────
     frame["vwap"] = _vwap(frame["high"], frame["low"], frame["close"], frame["volume"])
-    frame["vwap_dev"] = (frame["close"] - frame["vwap"]) / (frame["vwap"].abs() + 1e-12) * 100
+    frame["vwap_dev"] = (
+        (frame["close"] - frame["vwap"]) / (frame["vwap"].abs() + 1e-12) * 100
+    )
 
     frame = frame.replace([np.inf, -np.inf], np.nan).dropna().reset_index(drop=True)
     return frame

@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import tkinter as tk
-from tkinter import ttk
 from typing import Any
-
 
 _SIGNAL_COLOR = {"BUY": "\033[92m", "SELL": "\033[91m", "HOLD": "\033[93m"}
 _RESET = "\033[0m"
@@ -85,6 +82,9 @@ def render_console(payload: Any) -> None:
 
 
 def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
+    import tkinter as tk  # noqa: PLC0415 — intentionally lazy; tkinter is optional
+    from tkinter import ttk  # noqa: PLC0415
+
     root = tk.Tk()
     root.title("Alpha AI Control Deck")
     root.geometry("1200x760")
@@ -115,12 +115,30 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
     style.configure("PanelAlt.TFrame", background=colors["panel_alt"])
     style.configure("Deck.TLabel", background=colors["bg"], foreground=colors["text"])
     style.configure("Muted.TLabel", background=colors["bg"], foreground=colors["muted"])
-    style.configure("Panel.TLabel", background=colors["panel"], foreground=colors["text"])
-    style.configure("CardLabel.TLabel", background=colors["panel_alt"], foreground=colors["muted"])
-    style.configure("CardValue.TLabel", background=colors["panel_alt"], foreground=colors["text"], font=("Segoe UI Semibold", 17))
-    style.configure("Deck.TButton", background=colors["panel_alt"], foreground=colors["text"], borderwidth=1)
-    style.map("Deck.TButton", background=[("active", "#1b2940"), ("pressed", "#22334f")])
-    style.configure("Deck.TEntry", fieldbackground=colors["panel_alt"], foreground=colors["text"])
+    style.configure(
+        "Panel.TLabel", background=colors["panel"], foreground=colors["text"]
+    )
+    style.configure(
+        "CardLabel.TLabel", background=colors["panel_alt"], foreground=colors["muted"]
+    )
+    style.configure(
+        "CardValue.TLabel",
+        background=colors["panel_alt"],
+        foreground=colors["text"],
+        font=("Segoe UI Semibold", 17),
+    )
+    style.configure(
+        "Deck.TButton",
+        background=colors["panel_alt"],
+        foreground=colors["text"],
+        borderwidth=1,
+    )
+    style.map(
+        "Deck.TButton", background=[("active", "#1b2940"), ("pressed", "#22334f")]
+    )
+    style.configure(
+        "Deck.TEntry", fieldbackground=colors["panel_alt"], foreground=colors["text"]
+    )
 
     style.configure(
         "Deck.Treeview",
@@ -130,7 +148,12 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
         rowheight=26,
         borderwidth=0,
     )
-    style.configure("Deck.Treeview.Heading", background="#1a2638", foreground="#d6deea", relief="flat")
+    style.configure(
+        "Deck.Treeview.Heading",
+        background="#1a2638",
+        foreground="#d6deea",
+        relief="flat",
+    )
     style.map("Deck.Treeview.Heading", background=[("active", "#22324a")])
 
     layout = ttk.Frame(root, style="Deck.TFrame", padding=12)
@@ -139,19 +162,34 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
     layout.grid_columnconfigure(1, weight=3)
     layout.grid_rowconfigure(2, weight=1)
 
-    title = ttk.Label(layout, text="Alpha AI Live Control Deck", style="Deck.TLabel", font=("Segoe UI Semibold", 20))
+    title = ttk.Label(
+        layout,
+        text="Alpha AI Live Control Deck",
+        style="Deck.TLabel",
+        font=("Segoe UI Semibold", 20),
+    )
     title.grid(row=0, column=0, sticky="w")
-    subtitle = ttk.Label(layout, text="Multi-instrument stream, signal intensity, and autotrade status", style="Muted.TLabel")
+    subtitle = ttk.Label(
+        layout,
+        text="Multi-instrument stream, signal intensity, and autotrade status",
+        style="Muted.TLabel",
+    )
     subtitle.grid(row=1, column=0, sticky="w", pady=(0, 8))
 
     controls = ttk.Frame(layout, style="Deck.TFrame")
     controls.grid(row=0, column=1, rowspan=2, sticky="e")
 
-    ttk.Label(controls, text="Interval (s)", style="Muted.TLabel").pack(side=tk.LEFT, padx=(0, 6))
+    ttk.Label(controls, text="Interval (s)", style="Muted.TLabel").pack(
+        side=tk.LEFT, padx=(0, 6)
+    )
     interval_var = tk.StringVar(value=f"{interval_seconds:.1f}")
-    ttk.Entry(controls, textvariable=interval_var, width=6, style="Deck.TEntry").pack(side=tk.LEFT, padx=(0, 10))
+    ttk.Entry(controls, textvariable=interval_var, width=6, style="Deck.TEntry").pack(
+        side=tk.LEFT, padx=(0, 10)
+    )
     running_var = tk.StringVar(value="RUNNING")
-    ttk.Label(controls, textvariable=running_var, style="Deck.TLabel").pack(side=tk.LEFT, padx=(0, 10))
+    ttk.Label(controls, textvariable=running_var, style="Deck.TLabel").pack(
+        side=tk.LEFT, padx=(0, 10)
+    )
 
     cards = ttk.Frame(layout, style="Deck.TFrame")
     cards.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 10))
@@ -178,10 +216,21 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
     left.grid_rowconfigure(1, weight=1)
     left.grid_columnconfigure(0, weight=1)
 
-    ttk.Label(left, text="Live Market Table", style="Panel.TLabel", font=("Segoe UI Semibold", 12)).grid(row=0, column=0, sticky="w", pady=(0, 8))
+    ttk.Label(
+        left,
+        text="Live Market Table",
+        style="Panel.TLabel",
+        font=("Segoe UI Semibold", 12),
+    ).grid(row=0, column=0, sticky="w", pady=(0, 8))
 
     columns = ("symbol", "close", "signal", "conf", "score", "delta", "autotrade")
-    table = ttk.Treeview(left, columns=columns, show="headings", style="Deck.Treeview", selectmode="browse")
+    table = ttk.Treeview(
+        left,
+        columns=columns,
+        show="headings",
+        style="Deck.Treeview",
+        selectmode="browse",
+    )
     table.grid(row=1, column=0, sticky="nsew")
 
     headings = {
@@ -221,12 +270,21 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
     right.grid_rowconfigure(3, weight=1)
     right.grid_columnconfigure(0, weight=1)
 
-    ttk.Label(right, text="Selected Instrument", style="Panel.TLabel", font=("Segoe UI Semibold", 12)).grid(row=0, column=0, sticky="w")
+    ttk.Label(
+        right,
+        text="Selected Instrument",
+        style="Panel.TLabel",
+        font=("Segoe UI Semibold", 12),
+    ).grid(row=0, column=0, sticky="w")
     selected_var = tk.StringVar(value="-")
-    ttk.Label(right, textvariable=selected_var, style="Panel.TLabel", font=("Segoe UI", 16)).grid(row=1, column=0, sticky="w", pady=(0, 8))
+    ttk.Label(
+        right, textvariable=selected_var, style="Panel.TLabel", font=("Segoe UI", 16)
+    ).grid(row=1, column=0, sticky="w", pady=(0, 8))
 
     status_var = tk.StringVar(value="Waiting for first update...")
-    ttk.Label(right, textvariable=status_var, style="Muted.TLabel", wraplength=360).grid(row=2, column=0, sticky="w", pady=(0, 8))
+    ttk.Label(
+        right, textvariable=status_var, style="Muted.TLabel", wraplength=360
+    ).grid(row=2, column=0, sticky="w", pady=(0, 8))
 
     reasons = tk.Text(
         right,
@@ -307,7 +365,12 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
         for snap in snapshots:
             symbol = str(snap.get("symbol", "?"))
             if snap.get("error"):
-                table.insert("", tk.END, values=(symbol, "-", "ERR", "-", "-", "-", snap.get("error")), tags=("ERROR",))
+                table.insert(
+                    "",
+                    tk.END,
+                    values=(symbol, "-", "ERR", "-", "-", "-", snap.get("error")),
+                    tags=("ERROR",),
+                )
                 continue
 
             sig_data = snap.get("signal", {})
@@ -353,7 +416,9 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
             payload = get_payload()
             _render_payload(payload)
             next_interval = _current_interval()
-            status_var.set(f"Live updates every {next_interval:.1f}s. Last refresh successful.")
+            status_var.set(
+                f"Live updates every {next_interval:.1f}s. Last refresh successful."
+            )
         except Exception as exc:
             status_var.set(f"Update error: {exc}")
 
@@ -379,9 +444,15 @@ def run_live_gui(get_payload: Any, interval_seconds: float = 2.0) -> None:
             root.after_cancel(state["after_id"])
             state["after_id"] = None
 
-    ttk.Button(buttons, text="Start", command=_start, style="Deck.TButton").pack(side=tk.LEFT, padx=(0, 6))
-    ttk.Button(buttons, text="Pause", command=_stop, style="Deck.TButton").pack(side=tk.LEFT, padx=(0, 6))
-    ttk.Button(buttons, text="Refresh Now", command=_refresh_once, style="Deck.TButton").pack(side=tk.LEFT)
+    ttk.Button(buttons, text="Start", command=_start, style="Deck.TButton").pack(
+        side=tk.LEFT, padx=(0, 6)
+    )
+    ttk.Button(buttons, text="Pause", command=_stop, style="Deck.TButton").pack(
+        side=tk.LEFT, padx=(0, 6)
+    )
+    ttk.Button(
+        buttons, text="Refresh Now", command=_refresh_once, style="Deck.TButton"
+    ).pack(side=tk.LEFT)
 
     _refresh_loop()
     root.mainloop()

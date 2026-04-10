@@ -24,6 +24,7 @@ logger = logging.getLogger("AIEngine")
 @dataclass
 class EngineConfig:
     """AI Engine configuration."""
+
     symbols: List[str] = field(default_factory=lambda: ["EURUSD", "GBPUSD", "USDJPY"])
     timeframe: str = "M5"
     bars: int = 100
@@ -41,6 +42,7 @@ class EngineConfig:
 @dataclass
 class UnifiedSignal:
     """Unified trading signal from all sources."""
+
     symbol: str
     timestamp: datetime
     primary_signal: str  # "BUY", "SELL", "HOLD"
@@ -72,7 +74,9 @@ class AIEngine:
             SentimentAnalyzer(config.newsapi_key) if config.use_news_sentiment else None
         )
         self.last_signals: Dict[str, UnifiedSignal] = {}
-        self.signal_history: Dict[str, List[UnifiedSignal]] = {sym: [] for sym in self.symbols}
+        self.signal_history: Dict[str, List[UnifiedSignal]] = {
+            sym: [] for sym in self.symbols
+        }
         self._lock = threading.Lock()
         self._running = False
         self._thread: Optional[threading.Thread] = None
@@ -173,11 +177,17 @@ class AIEngine:
             )
 
         # 2. News sentiment analysis
-        sentiment_score = sentiment_map.get(symbol.replace("USD", "").split(symbol[-3:])[0])
+        sentiment_score = sentiment_map.get(
+            symbol.replace("USD", "").split(symbol[-3:])[0]
+        )
         news_signal = None
         if sentiment_score and self.sentiment_analyzer:
-            news_signal = self.sentiment_analyzer.get_currency_signal(symbol, sentiment_score)
-            reasoning.append(f"News sentiment: {sentiment_score.average_sentiment:.2f} → {news_signal}")
+            news_signal = self.sentiment_analyzer.get_currency_signal(
+                symbol, sentiment_score
+            )
+            reasoning.append(
+                f"News sentiment: {sentiment_score.average_sentiment:.2f} → {news_signal}"
+            )
 
         # 3. Composite signal generation
         primary_signal, primary_conf = self._generate_composite_signal(
@@ -260,7 +270,6 @@ class AIEngine:
 
         # Adjust by news sentiment
         if news_signal and sentiment_score:
-            avg_sentiment = sentiment_score.average_sentiment
             if news_signal == "BUY" and signal == "BUY":
                 confidence = min(100, confidence + 5)  # Boost
             elif news_signal == "BUY" and signal == "SELL":

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from typing import Optional, List, Dict, Callable, Tuple
+from datetime import datetime, timedelta
+from typing import Optional, List, Callable, Tuple
 import logging
 
 import MetaTrader5 as mt5
@@ -17,6 +17,7 @@ logger = logging.getLogger("Backtest")
 @dataclass
 class Trade:
     """Single trade record."""
+
     entry_time: datetime
     entry_price: float
     exit_time: Optional[datetime] = None
@@ -30,6 +31,7 @@ class Trade:
 @dataclass
 class BacktestMetrics:
     """Comprehensive backtest performance metrics."""
+
     total_trades: int
     winning_trades: int
     losing_trades: int
@@ -313,12 +315,14 @@ class BacktestEngine:
         winning = [p for p in pnl_pcts if p > 0]
         losing = [p for p in pnl_pcts if p < 0]
 
-        total_return = ((self.balance - self.initial_balance) / self.initial_balance) * 100
+        total_return = (
+            (self.balance - self.initial_balance) / self.initial_balance
+        ) * 100
         annual_return = total_return * (365 / period_days)
 
         win_rate = len(winning) / len(pnl_pcts) if pnl_pcts else 0.0
-        avg_win = np.mean(winning) if winning else 0.0
-        avg_loss = np.mean(losing) if losing else 0.0
+        avg_win = float(np.mean(winning)) if winning else 0.0
+        avg_loss = float(np.mean(losing)) if losing else 0.0
 
         # Sharpe ratio
         if len(pnl_pcts) > 1:
@@ -377,7 +381,7 @@ class BacktestEngine:
 
         # Duration: from peak to recovery
         peak_idx = np.argmax(equity[: max_dd_idx + 1]) if max_dd_idx > 0 else 0
-        recovery_idx = max_dd_idx
+        recovery_idx: int = int(max_dd_idx)
         for i in range(max_dd_idx + 1, len(equity)):
             if equity[i] >= equity[peak_idx]:
                 recovery_idx = i

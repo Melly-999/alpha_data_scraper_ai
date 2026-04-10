@@ -114,22 +114,19 @@ class GitHubIntegration:
                 logger.info("ℹ️ No changes to commit")
                 return None
 
-            result = subprocess.run(
+            subprocess.run(
                 ["git", "commit", "-m", message],
                 cwd=self.repo_path,
                 check=True,
                 capture_output=True,
             )
-            commit_sha = (
-                subprocess.run(
-                    ["git", "rev-parse", "HEAD"],
-                    cwd=self.repo_path,
-                    capture_output=True,
-                    text=True,
-                    check=True,
-                )
-                .stdout.strip()[:7]
-            )
+            commit_sha = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=self.repo_path,
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.strip()[:7]
             logger.info(f"✅ Committed: {commit_sha} - {message}")
             return commit_sha
         except subprocess.CalledProcessError as e:

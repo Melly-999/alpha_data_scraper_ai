@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Optional
@@ -90,11 +89,7 @@ class Secrets:
 
     def validate(self) -> None:
         """Raise SecretsValidationError if any required secret is missing."""
-        missing = [
-            name
-            for name in self._REQUIRED
-            if getattr(self, name) is None
-        ]
+        missing = [name for name in self._REQUIRED if getattr(self, name) is None]
         if missing:
             raise SecretsValidationError(
                 f"Missing required secrets: {', '.join(sorted(missing))}. "

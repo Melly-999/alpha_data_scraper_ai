@@ -8,8 +8,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-
 # ── Market regime ─────────────────────────────────────────────────────────────
+
 
 class MarketRegime(str, Enum):
     """Market regime classification driven by ADX and directional indicators.
@@ -18,6 +18,7 @@ class MarketRegime(str, Enum):
     TRENDING_DOWN — ADX ≥ 20 and -DI ≥ +DI (bears in control)
     RANGING       — ADX < 20 (no dominant trend; mean-reversion conditions)
     """
+
     TRENDING_UP = "TRENDING_UP"
     TRENDING_DOWN = "TRENDING_DOWN"
     RANGING = "RANGING"
@@ -31,10 +32,13 @@ def detect_regime(adx: float, plus_di: float, minus_di: float) -> MarketRegime:
     """
     if adx < 20:
         return MarketRegime.RANGING
-    return MarketRegime.TRENDING_UP if plus_di >= minus_di else MarketRegime.TRENDING_DOWN
+    return (
+        MarketRegime.TRENDING_UP if plus_di >= minus_di else MarketRegime.TRENDING_DOWN
+    )
 
 
 # ── Adaptive confidence ───────────────────────────────────────────────────────
+
 
 def _adaptive_confidence(
     base_confidence: float,
@@ -65,6 +69,7 @@ def _adaptive_confidence(
 
 # ── Signal result ─────────────────────────────────────────────────────────────
 
+
 @dataclass
 class SignalResult:
     signal: str
@@ -75,6 +80,7 @@ class SignalResult:
 
 
 # ── Core signal generation ────────────────────────────────────────────────────
+
 
 def generate_signal(
     latest: pd.Series,
@@ -106,7 +112,10 @@ def generate_signal(
         try:
             return float(latest.get(key, default))
         except (TypeError, ValueError):
-            warnings.warn(f"Could not convert '{key}' to float, using default {default}", UserWarning)
+            warnings.warn(
+                f"Could not convert '{key}' to float, using default {default}",
+                UserWarning,
+            )
             return default
 
     # ── RSI ───────────────────────────────────────────────────────────────────
@@ -154,14 +163,20 @@ def generate_signal(
     if lstm_uncertainty > 0 and abs(lstm_delta) > 1e-6:
         if lstm_uncertainty > 2 * abs(lstm_delta):
             lstm_weight = 1
-            reasons.append(f"LSTM weight reduced due to high uncertainty (Δ={lstm_delta:.5f}, unc={lstm_uncertainty:.5f})")
+            reasons.append(
+                f"LSTM weight reduced due to high uncertainty (Δ={lstm_delta:.5f}, unc={lstm_uncertainty:.5f})"
+            )
     if lstm_delta > 0:
         score += lstm_weight
-        unc_note = f", uncertainty={lstm_uncertainty:.5f}" if lstm_uncertainty > 0 else ""
+        unc_note = (
+            f", uncertainty={lstm_uncertainty:.5f}" if lstm_uncertainty > 0 else ""
+        )
         reasons.append(f"LSTM predicts upside (Δ={lstm_delta:.5f}{unc_note})")
     elif lstm_delta < 0:
         score -= lstm_weight
-        unc_note = f", uncertainty={lstm_uncertainty:.5f}" if lstm_uncertainty > 0 else ""
+        unc_note = (
+            f", uncertainty={lstm_uncertainty:.5f}" if lstm_uncertainty > 0 else ""
+        )
         reasons.append(f"LSTM predicts downside (Δ={lstm_delta:.5f}{unc_note})")
 
     # ── NEW: ADX regime ───────────────────────────────────────────────────────
@@ -172,10 +187,14 @@ def generate_signal(
 
     if regime == MarketRegime.TRENDING_UP:
         score += 1
-        reasons.append(f"ADX trending up (+DI={plus_di:.1f} > -DI={minus_di:.1f}, ADX={adx:.1f})")
+        reasons.append(
+            f"ADX trending up (+DI={plus_di:.1f} > -DI={minus_di:.1f}, ADX={adx:.1f})"
+        )
     elif regime == MarketRegime.TRENDING_DOWN:
         score -= 1
-        reasons.append(f"ADX trending down (-DI={minus_di:.1f} > +DI={plus_di:.1f}, ADX={adx:.1f})")
+        reasons.append(
+            f"ADX trending down (-DI={minus_di:.1f} > +DI={plus_di:.1f}, ADX={adx:.1f})"
+        )
     else:
         reasons.append(f"Market ranging — ADX={adx:.1f} (< 20)")
 
@@ -193,10 +212,14 @@ def generate_signal(
     vwap_dev = get_float("vwap_dev", 0.0)
     if vwap_dev < -2.0:
         score += 1
-        reasons.append(f"Price significantly below VWAP ({vwap_dev:+.2f}%) — potential mean-reversion up")
+        reasons.append(
+            f"Price significantly below VWAP ({vwap_dev:+.2f}%) — potential mean-reversion up"
+        )
     elif vwap_dev > 2.0:
         score -= 1
-        reasons.append(f"Price significantly above VWAP ({vwap_dev:+.2f}%) — potential mean-reversion down")
+        reasons.append(
+            f"Price significantly above VWAP ({vwap_dev:+.2f}%) — potential mean-reversion down"
+        )
 
     # ── Decision ──────────────────────────────────────────────────────────────
     if score >= 2:

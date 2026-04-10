@@ -12,13 +12,13 @@ This script demonstrates the full workflow of the trading system:
 6. Run backtest to validate strategy
 7. Execute trades (demo mode)
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import logging
 import os
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -29,11 +29,10 @@ except ImportError:
 
 from ai_engine import AIEngine, EngineConfig
 from multi_timeframe import MultiTimeframeAnalyzer
-from news_sentiment import SentimentAnalyzer, ForexFactoryScraper, NewsAPIClient
+from news_sentiment import ForexFactoryScraper, NewsAPIClient
 from backtest import BacktestEngine, BacktestMetrics
 from claude_ai import ClaudeAIClient, ClaudeAIIntegration
 from calculator import position_size
-
 
 # Configure logging
 logging.basicConfig(
@@ -279,13 +278,17 @@ class TradingPipelineRunner:
                         engine_signal=engine_signal.primary_signal,
                         engine_confidence=engine_signal.confidence,
                         market_data={
-                            "close": market_data[symbol]["M1"]["close"].tail(10).tolist()
-                            if "M1" in market_data[symbol]
-                            else [],
+                            "close": (
+                                market_data[symbol]["M1"]["close"].tail(10).tolist()
+                                if "M1" in market_data[symbol]
+                                else []
+                            ),
                         },
                     )
                     validated_signals[symbol] = validated
-                    logger.info(f"  Claude Signal: {validated.signal} (conf: {validated.confidence})")
+                    logger.info(
+                        f"  Claude Signal: {validated.signal} (conf: {validated.confidence})"
+                    )
                 except Exception as e:
                     logger.error(f"Error validating {symbol}: {e}")
                     validated_signals[symbol] = engine_signal
@@ -323,10 +326,12 @@ class TradingPipelineRunner:
                 # Create signal function from validated signal
                 if symbol in validated_signals:
                     signal_val = validated_signals[symbol].signal
-                    
+
                     def signal_func(ohlcv):
                         return signal_val
+
                 else:
+
                     def signal_func(ohlcv):
                         return "HOLD"
 
@@ -339,7 +344,7 @@ class TradingPipelineRunner:
                 )
 
                 backtest_results[symbol] = metrics
-                logger.info(f"  Backtest Results:")
+                logger.info("  Backtest Results:")
                 logger.info(f"    Win Rate: {metrics.win_rate:.1f}%")
                 logger.info(f"    Sharpe Ratio: {metrics.sharpe_ratio:.2f}")
                 logger.info(f"    Max Drawdown: {metrics.max_drawdown:.1f}%")
@@ -383,7 +388,9 @@ class TradingPipelineRunner:
                 logger.info(f"  Reason: {signal.reason}")
 
                 if not self.config.get("demo_mode", True):
-                    logger.info(f"  [EXECUTING] Would execute {signal.signal} on {symbol}")
+                    logger.info(
+                        f"  [EXECUTING] Would execute {signal.signal} on {symbol}"
+                    )
                     # Would execute here with actual MT5 order
                 else:
                     logger.info(f"  [DEMO] Would execute {signal.signal} on {symbol}")
@@ -411,7 +418,9 @@ class TradingPipelineRunner:
             unified_signals = self.step_4_ai_engine_unified_signals(mt_results)
 
             # Step 5: Claude validation
-            validated_signals = self.step_5_claude_validation(market_data, unified_signals)
+            validated_signals = self.step_5_claude_validation(
+                market_data, unified_signals
+            )
 
             # Step 6: Backtesting
             backtest_results = self.step_6_backtesting(market_data, validated_signals)
@@ -519,7 +528,7 @@ def main():
     )
 
     try:
-        results = runner.run_full_pipeline()
+        runner.run_full_pipeline()
         logger.info("\n✓ Pipeline completed successfully!")
         return 0
     except Exception as e:
