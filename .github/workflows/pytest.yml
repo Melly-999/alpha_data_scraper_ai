@@ -67,7 +67,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12.3'
-          cache: pip
 
       - name: Install quality dependencies
         run: |
@@ -78,15 +77,11 @@ jobs:
         run: |
           python --version
           black --version
-          pip show black
-          echo "=== pyproject.toml ===" && cat pyproject.toml || echo "(no pyproject.toml)"
-          echo "=== git status ===" && git status --short
-          black --check --diff --verbose . > /tmp/black.diff 2>&1 || {
-            cat /tmp/black.diff
+          black --check --diff . > /tmp/black.diff 2>&1 || {
+            DIFF=$(cat /tmp/black.diff)
+            echo "::error title=Black formatting::$(echo "$DIFF" | head -c 65000)"
             echo "## Black formatting failures" >> "$GITHUB_STEP_SUMMARY"
-            echo '```diff' >> "$GITHUB_STEP_SUMMARY"
-            cat /tmp/black.diff >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            printf '%s\n' "$DIFF" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           }
 
