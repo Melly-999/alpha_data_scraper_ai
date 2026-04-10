@@ -12,6 +12,7 @@ pre-commit
 memory-profiler
 tensorflow; python_version < "3.13"
 MetaTrader5; platform_system == "Windows" and python_version < "3.13"
+anthropic>=0.40.0
 requests
 beautifulsoup4
 lxml

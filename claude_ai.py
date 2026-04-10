@@ -1,6 +1,17 @@
 """
-Claude AI Direct Integration - Use Claude-3 Sonnet for trading signal generation.
-Integrates with existing AI engine or works standalone.
+Claude AI Direct Integration — official Anthropic SDK.
+
+Features
+--------
+* **Prompt caching** — the system prompt is marked with ``cache_control`` so
+  Anthropic caches it after the first call (≈90 % token savings on repeats).
+* **Streaming** — opt-in via ``use_streaming=True``; surfaces tokens
+  progressively and avoids HTTP timeouts on long responses.
+* **Adaptive thinking** — opt-in via ``use_thinking=True``; enables Claude's
+  internal reasoning for deeper market analysis (Opus 4.6).
+* **Structured outputs** — ``get_trading_signal_structured()`` uses
+  ``client.messages.parse()`` + Pydantic so the API enforces the JSON schema
+  and the SDK validates the object automatically; no manual parsing needed.
 """
 
 from __future__ import annotations
@@ -9,16 +20,29 @@ import json
 import logging
 import os
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
-import requests
+try:
+    import anthropic
+    from pydantic import BaseModel as _BaseModel
+
+    _SDK_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    _SDK_AVAILABLE = False
+    _BaseModel = object  # type: ignore[assignment,misc]
 
 logger = logging.getLogger("ClaudeAI")
+
+
+# ---------------------------------------------------------------------------
+# Public types
+# ---------------------------------------------------------------------------
 
 
 @dataclass
 class ClaudeSignal:
     """Claude AI generated trading signal."""
+
     signal: str  # "BUY", "SELL", "HOLD"
     confidence: int  # 0-100
     risk: str  # "LOW", "MEDIUM", "HIGH"
@@ -26,157 +50,254 @@ class ClaudeSignal:
     raw_response: Optional[str] = None
 
 
+# ---------------------------------------------------------------------------
+# Pydantic schema — used by get_trading_signal_structured()
+# ---------------------------------------------------------------------------
+
+
+class _SignalSchema(_BaseModel):
+    """Strict JSON schema passed to client.messages.parse()."""
+
+    signal: str
+    confidence: int
+    risk: str
+    reason: str
+
+
+# ---------------------------------------------------------------------------
+# Module-level constants
+# ---------------------------------------------------------------------------
+
+_MODEL = "claude-opus-4-6"
+_MAX_TOKENS = 2048  # enough for thinking + compact JSON signal
+
+# Stable system prompt — cached via cache_control to cut repeated token costs.
+# Keep this text frozen; any change here resets the cache.
+_SYSTEM = """\
+You are a professional hedge fund trading system specialising in forex markets.
+Analyse technical indicators and market conditions to produce actionable
+trading signals.
+
+Rules:
+- If signals conflict, lean toward HOLD
+- Raise confidence only when multiple indicators agree
+- Risk reflects position size: HIGH=risky, MEDIUM=moderate, LOW=safe
+- Confidence and risk must balance (high confidence + high risk = aggressive)"""
+
+# User-turn template — volatile data goes here, after the cached system block.
+_USER_TEMPLATE = """\
+SYMBOL: {symbol}
+
+MARKET DATA:
+{data}
+
+ANALYSIS TASK:
+1. Analyse RSI, MACD, Bollinger Bands
+2. Consider multi-timeframe confluence (M1/M5/H1)
+3. Factor in news sentiment if available
+4. Evaluate risk/reward ratio
+5. Assess trend strength and momentum
+
+Respond with VALID JSON ONLY (no markdown, no code blocks):
+{{
+  "signal": "BUY|SELL|HOLD",
+  "confidence": <integer 0-100>,
+  "risk": "LOW|MEDIUM|HIGH",
+  "reason": "<2-3 sentence analysis>"
+}}"""
+
+
+def _system_block() -> List[Dict[str, Any]]:
+    """Return the cached system content block."""
+    return [
+        {
+            "type": "text",
+            "text": _SYSTEM,
+            "cache_control": {"type": "ephemeral"},
+        }
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Client
+# ---------------------------------------------------------------------------
+
+
 class ClaudeAIClient:
-    """Direct integration with Claude API for trading signal generation."""
+    """Anthropic SDK client for trading signal generation.
 
-    BASE_URL = "https://api.anthropic.com/v1/messages"
-    MODEL = "claude-3-sonnet-20240229"
-    MAX_TOKENS = 300
+    Args:
+        api_key: Anthropic API key. Falls back to ``CLAUDE_API_KEY`` env var.
+        use_streaming: Stream responses (avoids timeout on long outputs).
+        use_thinking: Enable adaptive thinking for deeper analysis.
+    """
 
-    def __init__(self, api_key: Optional[str] = None):
-        """
-        Initialize Claude AI client.
+    MODEL = _MODEL
+    MAX_TOKENS = _MAX_TOKENS
 
-        Args:
-            api_key: Anthropic API key. If None, reads from CLAUDE_API_KEY env var.
-        """
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        *,
+        use_streaming: bool = False,
+        use_thinking: bool = False,
+    ) -> None:
         self.api_key = api_key or os.getenv("CLAUDE_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "CLAUDE_API_KEY not provided and CLAUDE_API_KEY environment variable not set"
+                "CLAUDE_API_KEY not provided and "
+                "CLAUDE_API_KEY environment variable not set"
             )
+        self.use_streaming = use_streaming
+        self.use_thinking = use_thinking
+        self._sdk: Optional[Any] = (
+            anthropic.Anthropic(api_key=self.api_key)
+            if _SDK_AVAILABLE
+            else None  # pragma: no cover
+        )
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
 
     def get_trading_signal(self, market_data: Dict[str, Any]) -> Optional[ClaudeSignal]:
-        """
-        Get trading signal from Claude AI based on market data.
-
-        Args:
-            market_data: Dict with keys like:
-                - symbol: str
-                - current_price: float
-                - rsi: float
-                - macd_hist: float
-                - bb_position: float
-                - news_sentiment: str
-                - multiframe_signal: str
-                - etc.
-
-        Returns:
-            ClaudeSignal or None on error.
-        """
+        """Return a trading signal for *market_data*, or None on error."""
         prompt = self._build_prompt(market_data)
-
         try:
-            response = self._call_api(prompt)
-            if not response:
+            text = self._call_api(prompt)
+            if not text:
                 return None
-
-            signal = self._parse_response(response)
-            signal.raw_response = response
-            return signal
-
-        except Exception as e:
-            logger.error(f"Claude AI request failed: {e}")
+            sig = self._parse_response(text)
+            sig.raw_response = text
+            return sig
+        except Exception as exc:
+            logger.error("Claude AI request failed: %s", exc)
             return None
 
-    def get_portfolio_signal(self, portfolio_data: Dict[str, Dict]) -> Optional[Dict[str, ClaudeSignal]]:
-        """
-        Get signals for entire portfolio.
+    def get_trading_signal_structured(
+        self, market_data: Dict[str, Any]
+    ) -> Optional[ClaudeSignal]:
+        """Return a signal via the SDK's structured-output path.
 
-        Args:
-            portfolio_data: Dict keyed by symbol, each with market data.
+        Uses ``client.messages.parse()`` with :class:`_SignalSchema` so the
+        API enforces the JSON schema and the SDK validates the response object
+        — no manual JSON parsing or markdown-stripping needed.
 
-        Returns:
-            Dict[symbol -> ClaudeSignal] or None on error.
+        Falls back to :meth:`get_trading_signal` if the SDK is unavailable.
         """
-        signals = {}
+        if not _SDK_AVAILABLE or self._sdk is None:  # pragma: no cover
+            return self.get_trading_signal(market_data)
+
+        prompt = self._build_prompt(market_data)
+        kwargs: Dict[str, Any] = {
+            "model": self.MODEL,
+            "max_tokens": self.MAX_TOKENS,
+            "system": _system_block(),
+            "messages": [{"role": "user", "content": prompt}],
+        }
+        if self.use_thinking:
+            kwargs["thinking"] = {"type": "adaptive"}
+
+        try:
+            response = self._sdk.messages.parse(output_format=_SignalSchema, **kwargs)
+            parsed: _SignalSchema = response.parsed_output
+            sig = ClaudeSignal(
+                signal=parsed.signal.upper(),
+                confidence=int(parsed.confidence),
+                risk=parsed.risk.upper(),
+                reason=parsed.reason,
+            )
+            for block in response.content:
+                if block.type == "text":
+                    sig.raw_response = block.text
+                    break
+            return sig
+        except anthropic.BadRequestError:
+            # Refusal or schema enforcement failure — degrade gracefully
+            logger.warning("Structured output failed; retrying via text path")
+            return self.get_trading_signal(market_data)
+        except Exception as exc:
+            logger.error("Structured signal request failed: %s", exc)
+            return None
+
+    def get_portfolio_signal(
+        self, portfolio_data: Dict[str, Dict]
+    ) -> Optional[Dict[str, ClaudeSignal]]:
+        """Return a signal for every symbol in *portfolio_data*."""
+        signals: Dict[str, ClaudeSignal] = {}
         for symbol, data in portfolio_data.items():
             sig = self.get_trading_signal(data)
             if sig:
                 signals[symbol] = sig
         return signals
 
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
     def _build_prompt(self, market_data: Dict[str, Any]) -> str:
-        """Build trading analysis prompt for Claude."""
+        """Format the user-turn prompt from *market_data*."""
         symbol = market_data.get("symbol", "UNKNOWN")
-        
-        # Format market data for readability
         data_str = json.dumps(market_data, indent=2, default=str)
-
-        prompt = f"""You are a professional hedge fund trading system analyzing forex markets.
-
-SYMBOL: {symbol}
-
-MARKET DATA:
-{data_str}
-
-ANALYSIS TASK:
-1. Analyze technical indicators (RSI, MACD, Bollinger Bands)
-2. Consider multi-timeframe confluence (M1/M5/H1)
-3. Factor in news sentiment if available
-4. Evaluate risk/reward ratio
-5. Assess trend strength and momentum
-
-RESPOND WITH VALID JSON ONLY (no markdown, no code blocks):
-{{
-  "signal": "BUY|SELL|HOLD",
-  "confidence": <integer 0-100>,
-  "risk": "LOW|MEDIUM|HIGH",
-  "reason": "<2-3 sentence analysis>"
-}}
-
-IMPORTANT:
-- If conflicting signals, lean toward HOLD
-- Higher confidence only if multiple indicators align
-- Risk should reflect position size: HIGH=risky, MEDIUM=moderate, LOW=safe
-- confidence + risk must be balanced (high conf + high risk = aggressive)"""
-
-        return prompt
+        return _USER_TEMPLATE.format(symbol=symbol, data=data_str)
 
     def _call_api(self, prompt: str) -> Optional[str]:
-        """Call Claude API and return response text."""
-        headers = {
-            "x-api-key": self.api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        }
+        """Call the Claude API and return the text response.
 
-        body = {
+        Applies:
+
+        * **Prompt caching** — ``cache_control`` on the system block cuts
+          repeated-call token costs by ≈90 % after the first cache write.
+        * **Streaming** — when ``use_streaming=True`` the SDK streams tokens
+          and assembles the final message via ``stream.get_final_message()``.
+        * **Adaptive thinking** — when ``use_thinking=True`` Claude reasons
+          internally before answering; thinking blocks are skipped when
+          extracting the text reply.
+        """
+        if not _SDK_AVAILABLE or self._sdk is None:  # pragma: no cover
+            logger.error("anthropic SDK not installed; cannot call API")
+            return None
+
+        kwargs: Dict[str, Any] = {
             "model": self.MODEL,
             "max_tokens": self.MAX_TOKENS,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
+            "system": _system_block(),
+            "messages": [{"role": "user", "content": prompt}],
         }
+        if self.use_thinking:
+            kwargs["thinking"] = {"type": "adaptive"}
 
         try:
-            response = requests.post(
-                self.BASE_URL,
-                headers=headers,
-                json=body,
-                timeout=30,
-            )
-            response.raise_for_status()
+            if self.use_streaming:
+                with self._sdk.messages.stream(**kwargs) as stream:
+                    msg = stream.get_final_message()
+            else:
+                msg = self._sdk.messages.create(**kwargs)
 
-            data = response.json()
-            # Extract text from response
-            if "content" in data and len(data["content"]) > 0:
-                return data["content"][0].get("text", "")
+            for block in msg.content:
+                if block.type == "text":
+                    return block.text
 
-            logger.error(f"Unexpected API response structure: {data}")
+            logger.error("No text block in Claude response")
             return None
 
-        except requests.exceptions.RequestException as e:
-            logger.error(f"API request error: {e}")
-            return None
+        except anthropic.AuthenticationError:
+            logger.error("Invalid Claude API key")
+        except anthropic.RateLimitError as exc:
+            logger.error("Claude rate limited: %s", exc)
+        except anthropic.APIStatusError as exc:
+            logger.error("Claude API error %s: %s", exc.status_code, exc.message)
+        except anthropic.APIConnectionError as exc:
+            logger.error("Claude connection error: %s", exc)
+        return None
 
     def _parse_response(self, response_text: str) -> ClaudeSignal:
-        """Parse Claude's JSON response into ClaudeSignal."""
+        """Parse Claude's JSON reply into a :class:`ClaudeSignal`.
+
+        Handles markdown code-fence wrapping defensively; used by
+        :meth:`get_trading_signal` (the text-based path).
+        """
         try:
-            # Clean response (remove markdown code blocks if present)
             text = response_text.strip()
             if text.startswith("```json"):
                 text = text[7:]
@@ -186,17 +307,18 @@ IMPORTANT:
                 text = text[:-3]
 
             data = json.loads(text.strip())
-
             return ClaudeSignal(
                 signal=str(data.get("signal", "HOLD")).upper(),
                 confidence=int(data.get("confidence", 50)),
                 risk=str(data.get("risk", "MEDIUM")).upper(),
                 reason=str(data.get("reason", "No reason provided")),
             )
-
-        except (json.JSONDecodeError, ValueError, KeyError) as e:
-            logger.error(f"Failed to parse Claude response: {e}\nResponse: {response_text}")
-            # Return neutral signal on parse error
+        except (json.JSONDecodeError, ValueError, KeyError) as exc:
+            logger.error(
+                "Failed to parse Claude response: %s\nResponse: %s",
+                exc,
+                response_text,
+            )
             return ClaudeSignal(
                 signal="HOLD",
                 confidence=30,
@@ -215,15 +337,10 @@ IMPORTANT:
         multiframe_signal: Optional[str] = None,
         sentiment_score: Optional[float] = None,
         news_signal: Optional[str] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Dict[str, Any]:
-        """
-        Format market data for Claude analysis.
-
-        Returns:
-            Dict ready for get_trading_signal()
-        """
-        data = {
+        """Build a market-data dict ready for :meth:`get_trading_signal`."""
+        data: Dict[str, Any] = {
             "symbol": symbol,
             "current_price": current_price,
             "rsi": round(rsi, 2),
@@ -231,33 +348,41 @@ IMPORTANT:
             "bb_position": round(bb_position, 2),
             "slope": round(slope, 5),
         }
-
         if multiframe_signal:
             data["multiframe_signal"] = multiframe_signal
         if sentiment_score is not None:
             data["sentiment_score"] = round(sentiment_score, 2)
         if news_signal:
             data["news_signal"] = news_signal
-
-        # Include any additional kwargs
         data.update(kwargs)
-
         return data
 
 
+# ---------------------------------------------------------------------------
+# Integration layer
+# ---------------------------------------------------------------------------
+
+
 class ClaudeAIIntegration:
-    """Integration layer between Claude AI and AI Engine."""
+    """Integration layer between Claude AI and the AI Engine."""
 
-    def __init__(self, api_key: Optional[str] = None, enabled: bool = True):
-        """
-        Initialize Claude integration.
-
-        Args:
-            api_key: Anthropic API key.
-            enabled: Whether to use Claude for secondary validation.
-        """
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        enabled: bool = True,
+        use_streaming: bool = False,
+        use_thinking: bool = False,
+    ) -> None:
         self.enabled = enabled
-        self.client = ClaudeAIClient(api_key) if enabled else None
+        self.client: Optional[ClaudeAIClient] = (
+            ClaudeAIClient(
+                api_key,
+                use_streaming=use_streaming,
+                use_thinking=use_thinking,
+            )
+            if enabled
+            else None
+        )
 
     def validate_signal(
         self,
@@ -266,51 +391,51 @@ class ClaudeAIIntegration:
         engine_confidence: float,
         market_data: Dict[str, Any],
     ) -> tuple[str, float, str]:
-        """
-        Validate/refine engine signal using Claude AI.
+        """Validate/refine an engine signal using Claude AI.
 
-        Args:
-            symbol: Currency pair
-            engine_signal: Signal from AI Engine (BUY/SELL/HOLD)
-            engine_confidence: Confidence from AI Engine (0-100)
-            market_data: Market data dict
-
-        Returns:
-            (refined_signal, refined_confidence, reason)
+        Returns ``(signal, confidence, reason)``.
         """
         if not self.enabled or not self.client:
             return engine_signal, engine_confidence, "Claude validation disabled"
 
         try:
-            # Add engine signal to context
-            market_data["engine_signal"] = engine_signal
-            market_data["engine_confidence"] = engine_confidence
-            market_data["symbol"] = symbol
-
-            claude_sig = self.client.get_trading_signal(market_data)
+            ctx = {
+                **market_data,
+                "engine_signal": engine_signal,
+                "engine_confidence": engine_confidence,
+                "symbol": symbol,
+            }
+            claude_sig = self.client.get_trading_signal(ctx)
             if not claude_sig:
                 return engine_signal, engine_confidence, "Claude analysis failed"
 
-            # Combine signals
             if engine_signal == claude_sig.signal:
-                # Agreement: boost confidence
-                refined_conf = min(100, (engine_confidence + claude_sig.confidence) / 2 * 1.1)
-                return engine_signal, refined_conf, f"Claude confirms ({claude_sig.reason})"
-            else:
-                # Disagreement: reduce to HOLD
-                return "HOLD", 50.0, f"Conflict: Engine {engine_signal} vs Claude {claude_sig.signal}"
-
-        except Exception as e:
-            logger.error(f"Signal validation failed: {e}")
+                refined_conf = min(
+                    100.0,
+                    (engine_confidence + claude_sig.confidence) / 2 * 1.1,
+                )
+                return (
+                    engine_signal,
+                    refined_conf,
+                    f"Claude confirms ({claude_sig.reason})",
+                )
+            return (
+                "HOLD",
+                50.0,
+                f"Conflict: Engine {engine_signal} vs Claude {claude_sig.signal}",
+            )
+        except Exception as exc:
+            logger.error("Signal validation failed: %s", exc)
             return engine_signal, engine_confidence, "Validation error"
 
-    def get_independent_signal(self, market_data: Dict[str, Any]) -> Optional[ClaudeSignal]:
-        """Get completely independent signal from Claude."""
+    def get_independent_signal(
+        self, market_data: Dict[str, Any]
+    ) -> Optional[ClaudeSignal]:
+        """Get a completely independent signal from Claude."""
         if not self.enabled or not self.client:
             return None
-
         try:
             return self.client.get_trading_signal(market_data)
-        except Exception as e:
-            logger.error(f"Failed to get independent signal: {e}")
+        except Exception as exc:
+            logger.error("Failed to get independent signal: %s", exc)
             return None
