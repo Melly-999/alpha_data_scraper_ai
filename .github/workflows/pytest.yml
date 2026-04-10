@@ -75,10 +75,7 @@ jobs:
           pip install -r requirements-ci.txt
 
       - name: Run black
-        run: |
-          echo "Black version: $(black --version)"
-          echo "Python version: $(python --version)"
-          black --diff . || (echo "BLACK DIFF ABOVE — reformatting needed" && exit 1)
+        run: black --check .
 
       - name: Run flake8
         run: flake8 .
