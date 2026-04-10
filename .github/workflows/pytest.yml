@@ -78,7 +78,10 @@ jobs:
         run: |
           python --version
           black --version
-          black --check --diff . > /tmp/black.diff 2>&1 || {
+          pip show black
+          echo "=== pyproject.toml ===" && cat pyproject.toml || echo "(no pyproject.toml)"
+          echo "=== git status ===" && git status --short
+          black --check --diff --verbose . > /tmp/black.diff 2>&1 || {
             cat /tmp/black.diff
             echo "## Black formatting failures" >> "$GITHUB_STEP_SUMMARY"
             echo '```diff' >> "$GITHUB_STEP_SUMMARY"
