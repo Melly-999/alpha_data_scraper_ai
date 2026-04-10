@@ -74,17 +74,21 @@ jobs:
           pip install -r requirements-ci.txt
 
       - name: Verify black version
-        run: pip show black
+        run: |
+          pip show black
+          echo "Python files found:"
+          find . -name "*.py" | grep -v "__pycache__\|.git\|.venv" | sort
 
       - name: Run black
         run: |
-          black --check --diff --line-length 88 --target-version py312 . > /tmp/black.diff 2>&1 || {
-            DIFF=$(cat /tmp/black.diff)
-            echo "::error title=Black formatting::$(printf '%s' "$DIFF" | head -c 65000)"
-            echo "## Black formatting failures" >> "$GITHUB_STEP_SUMMARY"
-            printf '%s\n' "$DIFF" >> "$GITHUB_STEP_SUMMARY"
+          black --line-length 88 --target-version py312 .
+          git diff > /tmp/black.diff
+          if [ -s /tmp/black.diff ]; then
+            echo "::error title=Black reformatted files::$(cat /tmp/black.diff | head -c 65000)"
+            echo "## Black reformatted these files" >> "$GITHUB_STEP_SUMMARY"
+            cat /tmp/black.diff >> "$GITHUB_STEP_SUMMARY"
             exit 1
-          }
+          fi
 
       - name: Run flake8
         run: flake8 .
