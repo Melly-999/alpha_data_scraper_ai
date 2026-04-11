@@ -1,0 +1,62 @@
+name: Deploy to Kubernetes
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Determine image tag
+        id: tag
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=sha-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set image tag in kustomization
+        working-directory: k8s
+        run: |
+          kustomize edit set image grok-alpha-ai=ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.tag }}
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -k k8s/
+          kubectl -n trading rollout status deployment/trading-bot --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          kubectl -n trading get pods -l app=trading-bot
+          kubectl -n trading get svc trading-bot-svc
