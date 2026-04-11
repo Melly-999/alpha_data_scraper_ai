@@ -44,14 +44,17 @@ def _compute_slope(close: Any, lookback: int = 15) -> float:
     try:
         series = close.iloc[-lookback:] if hasattr(close, "iloc") else close[-lookback:]
         y = [float(v) for v in series]
-        if len(y) < 2:
+        n = len(y)
+        if n < 2:
             return 0.0
-        x = list(range(len(y)))
-        x_mean = sum(x) / len(x)
-        y_mean = sum(y) / len(y)
-        cov = sum((xi - x_mean) * (yi - y_mean) for xi, yi in zip(x, y))
-        var = max(sum((xi - x_mean) ** 2 for xi in x), 1e-9)
-        return float(cov / var * 100)
+        x_mean = (n - 1) / 2.0  # mean of range(n) is always (n-1)/2; no iteration
+        y_mean = sum(y) / n
+        cov = var = 0.0
+        for i, yi in enumerate(y):
+            dx = i - x_mean
+            cov += dx * (yi - y_mean)
+            var += dx * dx
+        return float(cov / max(var, 1e-9) * 100)
     except Exception:
         return 0.0
 
@@ -99,8 +102,9 @@ LSTM_FEATURE_COLS = [
 MAX_WORKERS = 6
 CLEAR_COMMAND = "cls" if os.name == "nt" else "clear"
 
-# Feature 5: global controller instance (shared with dashboard API)
+# Global singletons shared across modules/threads
 controller = TradingController()
+_metrics: Any = None  # set to TradingBotMetrics instance after start_metrics_server()
 
 
 # ── Runtime risk manager ──────────────────────────────────────────────────────
@@ -141,6 +145,14 @@ class _RuntimeRiskManager:
         raw = risk_amt / max(loss_per_lot, 1e-9)
         return round(min(MAX_POSITION_SIZE_LOTS, max(0.01, raw)), 2)
 
+    def open_trade(self) -> None:
+        """Increment the open-position counter when a new trade is placed."""
+        self._open_positions += 1
+
+    @property
+    def open_positions(self) -> int:
+        return self._open_positions
+
     def register_trade(self, profit: float) -> None:
         self._daily_pnl += profit
         self.current_balance += profit
@@ -159,7 +171,7 @@ class _RuntimeRiskManager:
 risk = _RuntimeRiskManager()
 
 
-# ── Sentiment cache (Task 3) ──────────────────────────────────────────────────
+# ── Sentiment cache ───────────────────────────────────────────────────────────
 
 class _SentimentCache:
     """Background-refreshing cache for news sentiment scores.
@@ -212,7 +224,7 @@ class _SentimentCache:
             return dict(self._cache)
 
 
-# ── Claude validator (Task 2) ─────────────────────────────────────────────────
+# ── Claude validator ─────────────────────────────────────────────────────────
 
 class _ClaudeValidator:
     """Wraps ``ClaudeAIIntegration.validate_signal()`` for use in the loop.
@@ -269,7 +281,7 @@ class _ClaudeValidator:
         return snapshot
 
 
-# ── Alert manager (Task 5) ────────────────────────────────────────────────────
+# ── Alert manager ────────────────────────────────────────────────────────────
 
 class AlertManager:
     """Detects signal changes between cycles and fires callbacks.
@@ -288,6 +300,9 @@ class AlertManager:
         self._history: list[dict[str, Any]] = []
         self._callbacks: list[Any] = []
         self._lock = threading.Lock()
+        _log_dir = Path("logs")
+        _log_dir.mkdir(parents=True, exist_ok=True)
+        self._csv_path = _log_dir / "signal_history.csv"
 
     def on_alert(self, callback: Any) -> None:
         """Register a callable that receives each new alert dict."""
@@ -324,8 +339,8 @@ class AlertManager:
             for cb in self._callbacks:
                 try:
                     cb(new_alerts)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug("Alert callback failed: %s", exc)
         return new_alerts
 
     def recent(self, n: int = 20) -> list[dict[str, Any]]:
@@ -336,14 +351,10 @@ class AlertManager:
         """Append a signal-change event to logs/signal_history.csv."""
         from datetime import datetime, timezone
 
-        log_dir = Path("logs")
         try:
-            log_dir.mkdir(parents=True, exist_ok=True)
-            csv_path = log_dir / "signal_history.csv"
-            write_header = not csv_path.exists()
-            with csv_path.open("a", newline="", encoding="utf-8") as fh:
+            with self._csv_path.open("a", newline="", encoding="utf-8") as fh:
                 writer = csv.writer(fh)
-                if write_header:
+                if fh.tell() == 0:  # empty file — write header first
                     writer.writerow([
                         "timestamp", "symbol",
                         "from_signal", "to_signal", "confidence",
@@ -473,113 +484,93 @@ def _analyse_symbol(
     raw: Any,
     cfg: dict[str, Any],
 ) -> dict[str, Any]:
-    """Run strategy indicators + LSTM + smarter signal generation for one symbol.
+    """Run strategy indicators + LSTM + signal generation for one symbol.
 
-    Feature 3: uses strategy.indicators (adds ADX/OBV/VWAP/ATR) and
-    strategy.signal_generator (regime-aware, adaptive confidence).
-    Feature 4: appends grid_levels to the snapshot.
+    Uses strategy.indicators (ADX/OBV/VWAP/ATR), regime-aware signal generator,
+    multi-timeframe confirmation, and ATR/BB/VWAP grid levels for the visualiser.
     """
-    try:
-        from metrics_server import get_metrics
-        _met = get_metrics()
-    except Exception:
-        _met = None
+    with (_metrics.time_analysis(symbol) if _metrics else nullcontext()):
+        data = add_indicators(raw)
 
-    with (_met.time_analysis(symbol) if _met else nullcontext()):
-        return _analyse_symbol_inner(symbol, raw, cfg, _met)
+        features: Any = data[LSTM_FEATURE_COLS]
+        pipeline = LSTMPipeline(
+            lookback=int(cfg.get("lookback", 30)),
+            epochs=int(cfg.get("epochs", 2)),
+        )
+        pipeline.fit(features)
+        lstm_delta = pipeline.predict_next_delta(features, close_col_index=0)
 
+        latest = data.iloc[-1]
+        signal = generate_signal(latest, lstm_delta=lstm_delta, lstm_uncertainty=0.0)
+        grid_levels = compute_grid_levels(latest)
 
-def _analyse_symbol_inner(
-    symbol: str,
-    raw: Any,
-    cfg: dict[str, Any],
-    _met: Any,
-) -> dict[str, Any]:
-    # Feature 3: full indicator set including ADX, OBV, VWAP, ATR
-    data = add_indicators(raw)
-
-    features: Any = data[LSTM_FEATURE_COLS]
-    pipeline = LSTMPipeline(
-        lookback=int(cfg.get("lookback", 30)),
-        epochs=int(cfg.get("epochs", 2)),
-    )
-    pipeline.fit(features)
-    lstm_delta = pipeline.predict_next_delta(features, close_col_index=0)
-
-    latest = data.iloc[-1]
-    # Feature 3: strategy signal generator with regime + uncertainty-aware LSTM weight
-    signal = generate_signal(latest, lstm_delta=lstm_delta, lstm_uncertainty=0.0)
-
-    # Feature 4: grid levels for the visualiser
-    grid_levels = compute_grid_levels(latest)
-
-    # Indicator summary — exposed for Claude validation and dashboard display
-    indicators_summary: dict[str, Any] = {
-        "rsi": round(float(latest.get("rsi", 50.0)), 2),
-        "stoch_k": round(float(latest.get("stoch_k", 50.0)), 2),
-        "macd_hist": round(float(latest.get("macd_hist", 0.0)), 6),
-        "bb_pos": round(float(latest.get("bb_pos", 0.5)), 3),
-        "adx": round(float(latest.get("adx", 0.0)), 2),
-        "atr_pct": round(float(latest.get("atr_pct", 0.0)), 5),
-        "slope": round(_compute_slope(data["close"]), 4),
-    }
-
-    # Task 1: Multi-timeframe analysis (best-effort; silent on MT5 import failure)
-    mtf: dict[str, Any] = {}
-    try:
-        from multi_timeframe import MultiTimeframeAnalyzer
-        tf_inds = {
-            tf: {
-                "rsi": indicators_summary["rsi"],
-                "macd_hist": indicators_summary["macd_hist"],
-                "bb_position": indicators_summary["bb_pos"] * 100,
-                "slope": indicators_summary["slope"],
-            }
-            for tf in ("M1", "M5", "H1")
+        indicators_summary: dict[str, Any] = {
+            "rsi": round(float(latest.get("rsi", 50.0)), 2),
+            "stoch_k": round(float(latest.get("stoch_k", 50.0)), 2),
+            "macd_hist": round(float(latest.get("macd_hist", 0.0)), 6),
+            "bb_pos": round(float(latest.get("bb_pos", 0.5)), 3),
+            "adx": round(float(latest.get("adx", 0.0)), 2),
+            "atr_pct": round(float(latest.get("atr_pct", 0.0)), 5),
+            "slope": round(_compute_slope(data["close"]), 4),
         }
-        mtf_result = MultiTimeframeAnalyzer(symbol).analyze(tf_inds)
-        mtf = {
-            "weighted_signal": mtf_result.weighted_signal,
-            "weighted_confidence": round(mtf_result.weighted_confidence, 1),
-            "confirmation_signal": mtf_result.confirmation_signal,
-            "confirmation_strength": mtf_result.confirmation_strength,
-        }
-        # Adjust base signal confidence on strong confirmation
-        sig_dict = signal_to_dict(signal)
-        if mtf_result.confirmation_strength >= 2:
-            if mtf_result.confirmation_signal == sig_dict["signal"]:
-                new_conf = min(85.0, sig_dict["confidence"] * 1.08)
-                sig_dict["confidence"] = round(new_conf, 2)
-                sig_dict["reasons"].append(
-                    f"MTF confirmation {mtf_result.confirmation_strength}/3"
-                )
-            elif mtf_result.confirmation_signal not in ("HOLD", sig_dict["signal"]):
-                sig_dict["signal"] = "HOLD"
-                sig_dict["confidence"] = 45.0
-                sig_dict["reasons"].append(
-                    f"MTF conflict: {mtf_result.confirmation_signal}"
-                )
-    except Exception as _mtf_exc:
-        logger.debug("MTF enrichment skipped for %s: %s", symbol, _mtf_exc)
-        sig_dict = signal_to_dict(signal)
 
-    if _met:
+        # Multi-timeframe confirmation (best-effort; skipped silently without MT5)
+        mtf: dict[str, Any] = {}
         try:
-            _met.record_signal(symbol, sig_dict["signal"], sig_dict["confidence"])
-        except Exception:
-            pass
+            from multi_timeframe import MultiTimeframeAnalyzer
+            tf_inds = {
+                tf: {
+                    "rsi": indicators_summary["rsi"],
+                    "macd_hist": indicators_summary["macd_hist"],
+                    "bb_position": indicators_summary["bb_pos"] * 100,
+                    "slope": indicators_summary["slope"],
+                }
+                for tf in ("M1", "M5", "H1")
+            }
+            mtf_result = MultiTimeframeAnalyzer(symbol).analyze(tf_inds)
+            mtf = {
+                "weighted_signal": mtf_result.weighted_signal,
+                "weighted_confidence": round(mtf_result.weighted_confidence, 1),
+                "confirmation_signal": mtf_result.confirmation_signal,
+                "confirmation_strength": mtf_result.confirmation_strength,
+            }
+            sig_dict = signal_to_dict(signal)
+            if mtf_result.confirmation_strength >= 2:
+                if mtf_result.confirmation_signal == sig_dict["signal"]:
+                    new_conf = min(85.0, sig_dict["confidence"] * 1.08)
+                    sig_dict["confidence"] = round(new_conf, 2)
+                    sig_dict["reasons"].append(
+                        f"MTF confirmation {mtf_result.confirmation_strength}/3"
+                    )
+                elif mtf_result.confirmation_signal not in ("HOLD", sig_dict["signal"]):
+                    sig_dict["signal"] = "HOLD"
+                    sig_dict["confidence"] = 45.0
+                    sig_dict["reasons"].append(
+                        f"MTF conflict: {mtf_result.confirmation_signal}"
+                    )
+        except Exception as _mtf_exc:
+            logger.debug("MTF enrichment skipped for %s: %s", symbol, _mtf_exc)
+            sig_dict = signal_to_dict(signal)
 
-    return {
-        "symbol": symbol,
-        "timeframe": cfg.get("timeframe", "M5"),
-        "last_close": round(float(latest["close"]), 6),
-        "lstm_delta": round(float(lstm_delta), 6),
-        "signal": sig_dict,
-        "indicators": indicators_summary,
-        "mtf": mtf,
-        "grid_levels": grid_levels,
-        "rows": int(len(data)),
-    }
+        if _metrics:
+            try:
+                _metrics.record_signal(
+                    symbol, sig_dict["signal"], sig_dict["confidence"]
+                )
+            except Exception as exc:
+                logger.debug("metrics.record_signal failed: %s", exc)
+
+        return {
+            "symbol": symbol,
+            "timeframe": cfg.get("timeframe", "M5"),
+            "last_close": round(float(latest["close"]), 6),
+            "lstm_delta": round(float(lstm_delta), 6),
+            "signal": sig_dict,
+            "indicators": indicators_summary,
+            "mtf": mtf,
+            "grid_levels": grid_levels,
+            "rows": int(len(data)),
+        }
 
 
 def _build_multi_snapshots(
@@ -621,7 +612,7 @@ def _enrich_with_sentiment(
     snapshot: dict[str, Any],
     sentiment_map: dict[str, Any],
 ) -> dict[str, Any]:
-    """Overlay news sentiment onto signal confidence (Task 3)."""
+    """Overlay news-sentiment score onto signal confidence."""
     sym = snapshot.get("symbol", "")
     base_ccy = sym[:3] if len(sym) >= 3 else sym
     score = sentiment_map.get(base_ccy)
@@ -675,7 +666,6 @@ class AppRuntime:
         self.last_trade_ts: dict[str, float] = {sym: 0.0 for sym in self.symbols}
         self.last_trade_signal: dict[str, str] = {sym: "" for sym in self.symbols}
 
-        # Task 3: optional news sentiment cache
         newsapi_key: str | None = cfg.get("newsapi_key") or get_secrets().news_api_key
         self._sentiment_cache: _SentimentCache | None = None
         if cfg.get("sentiment_enabled", False):
@@ -685,10 +675,7 @@ class AppRuntime:
             )
             self._sentiment_cache.start()
 
-        # Task 2: optional Claude AI validator
         self._claude = _ClaudeValidator(api_key=cfg.get("claude_api_key"))
-
-        # Task 5: signal-change alert manager
         self.alerts = AlertManager()
 
     def _create_traders(
@@ -720,20 +707,16 @@ class AppRuntime:
         )
         snapshots = _build_multi_snapshots(self.cfg, raw_data)
 
-        # Task 3: news sentiment overlay
         if self._sentiment_cache:
             sentiment_map = self._sentiment_cache.get()
             snapshots = [_enrich_with_sentiment(s, sentiment_map) for s in snapshots]
 
-        # Task 2: Claude AI validation
         snapshots = [self._claude.validate(s) for s in snapshots]
 
-        # Trade signals
         for snap in snapshots:
             sym = snap.get("symbol", "")
             snap["autotrade"] = self._maybe_trade(sym, snap)
 
-        # Task 5: fire alerts for signal changes
         self.alerts.check(snapshots)
 
         return snapshots
@@ -776,15 +759,15 @@ class AppRuntime:
         trader.volume = lot
         result = trader.maybe_execute(signal=signal, confidence=confidence)
         if result.get("status") in {"placed", "dry_run"}:
-            risk._open_positions += 1  # track open position before registering
+            risk.open_trade()
             risk.register_trade(float(result.get("profit", 0.0)))
             self.last_trade_ts[symbol] = now_ts
             self.last_trade_signal[symbol] = signal
-            try:
-                from metrics_server import get_metrics
-                get_metrics().set_active_positions(risk._open_positions)
-            except Exception:
-                pass
+            if _metrics:
+                try:
+                    _metrics.set_active_positions(risk.open_positions)
+                except Exception as exc:
+                    logger.debug("metrics.set_active_positions failed: %s", exc)
         return result
 
 
@@ -806,7 +789,6 @@ def _parse_args() -> argparse.Namespace:
                         help="Run continuous loop (console output)")
     parser.add_argument("--interval", type=float, default=None,
                         help="Seconds between analysis cycles (overrides config)")
-    # Feature 2: WebSocket dashboard flag
     parser.add_argument("--dashboard", action="store_true",
                         help="Start WebSocket dashboard at http://localhost:8050")
     parser.add_argument("--dashboard-port", type=int, default=8050,
@@ -837,11 +819,9 @@ def _run_continuous_loop(
     logger.info("Continuous loop started (%.1fs interval)", interval)
 
     while controller.should_continue():
-        # Feature 5: honour pause
         if controller.wait_if_paused():
             break  # stop was requested while paused
 
-        # Feature 1: error-resilient iteration
         try:
             snapshots = runtime.next_snapshots()
         except Exception as exc:
@@ -855,21 +835,19 @@ def _run_continuous_loop(
         print(status)
         print(f"Next update in {interval:.1f}s  |  [Ctrl+C to stop]")
 
-        # Feature 2: push snapshots to WebSocket dashboard
         if push_fn is not None:
             try:
                 push_fn(snapshots)
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("Dashboard push_state failed: %s", exc)
 
-        # Task 5: push any new alerts to dashboard
         if push_alerts_fn is not None:
             new_alerts = runtime.alerts.recent(5)
             if new_alerts:
                 try:
                     push_alerts_fn(new_alerts)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug("Dashboard push_alerts failed: %s", exc)
 
         # Sleep in short increments so pause/stop is responsive
         deadline = time.monotonic() + interval
@@ -891,9 +869,11 @@ def main() -> None:
     args = _parse_args()
     cfg = _load_config(args.config)
 
+    global _metrics
     try:
-        from metrics_server import start_metrics_server
+        from metrics_server import get_metrics, start_metrics_server
         start_metrics_server()
+        _metrics = get_metrics()
     except Exception as _mex:
         logger.debug("Metrics server not started: %s", _mex)
 
@@ -906,7 +886,6 @@ def main() -> None:
     if (args.gui or args.continuous) and interval <= 0:
         raise ValueError("--interval must be > 0 for GUI or continuous mode")
 
-    # Feature 2: start WebSocket dashboard if requested
     push_fn = None
     push_alerts_fn = None
     if args.dashboard or args.gui:

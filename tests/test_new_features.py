@@ -150,20 +150,12 @@ class TestDashboardState:
 # ── compute_grid_levels ───────────────────────────────────────────────────────
 
 class TestComputeGridLevels:
-    """Tests for main.compute_grid_levels — import via importlib to avoid tkinter."""
+    """Tests for main.compute_grid_levels."""
 
     @staticmethod
     def _import():
-        import sys
-        # Temporarily stub gui so main.py can import without tkinter
-        if "gui" not in sys.modules:
-            import types
-            stub = types.ModuleType("gui")
-            stub.render_console = lambda *a, **k: None  # type: ignore
-            stub.run_live_gui = lambda *a, **k: None    # type: ignore
-            sys.modules["gui"] = stub
-        import main as m
-        return m.compute_grid_levels
+        from main import compute_grid_levels
+        return compute_grid_levels
 
     def test_contains_current_level(self):
         fn = self._import()
@@ -224,15 +216,8 @@ class TestComputeGridLevels:
 class TestAlertManager:
     @staticmethod
     def _import():
-        import sys
-        import types
-        if "gui" not in sys.modules:
-            stub = types.ModuleType("gui")
-            stub.render_console = lambda *a, **k: None  # type: ignore
-            stub.run_live_gui = lambda *a, **k: None    # type: ignore
-            sys.modules["gui"] = stub
-        import main as m
-        return m.AlertManager
+        from main import AlertManager
+        return AlertManager
 
     def _snap(self, sym: str, sig: str, conf: float = 65.0) -> dict[str, Any]:
         return {"symbol": sym, "signal": {"signal": sig, "confidence": conf}}
