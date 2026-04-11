@@ -1,0 +1,33 @@
+# config/brokers.yaml
+# ============================================
+# WYBIERZ BROKERA: xtb, ibkr, alpaca, hybrid_xtb_ibkr, hybrid_xtb_alpaca
+# ============================================
+active_broker: xtb
+
+# === XTB (tylko odczyt XLSX z xStation) ===
+xtb:
+  closed_positions_xlsx_paths:
+    - "./data/IKE_54250698_2026-03-07_2026-04-07.xlsx"
+    - "./data/PLN_51514835_2026-03-07_2026-04-07.xlsx"
+  cash_operations_xlsx_paths:
+    - "./data/IKE_54250698_2026-03-07_2026-04-07.xlsx"
+    - "./data/PLN_51514835_2026-03-07_2026-04-07.xlsx"
+  default_currency: "PLN"
+
+# === IBKR (Trading + data) ===
+ibkr:
+  host: "127.0.0.1"
+  port: 7497              # 7497=Paper (TWS), 7496=Live (TWS) | 4002=Paper (Gateway), 4001=Live (Gateway)
+  client_id: 1
+  paper: true             # zmień na false dla LIVE TRADING!
+
+# === Alpaca (US stocks + options) ===
+alpaca:
+  api_key: "TWÓJ_ALPACA_API_KEY"
+  secret_key: "TWÓJ_ALPACA_SECRET_KEY"
+  paper: true             # zmień na false dla LIVE
+
+# === Logging ===
+logging:
+  level: INFO
+  file: alpha_ai.log

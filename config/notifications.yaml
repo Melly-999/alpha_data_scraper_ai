@@ -1,0 +1,13 @@
+# config/notifications.yaml
+# Powiadomienia po zakończeniu raportów
+
+telegram:
+  enabled: false                                  # zmień na true jeśli masz bota
+  bot_token: "TWÓJ_TELEGRAM_BOT_TOKEN"           # https://t.me/BotFather
+  chat_id: "TWÓJ_CHAT_ID"                        # skopiuj z @userinfobot
+
+discord:
+  enabled: false                                  # zmień na true jeśli masz webhook
+  webhook_url: "https://discord.com/api/webhooks/..."
+
+# (Opcjonalnie: email, Slack itd. - można rozbudować później)
