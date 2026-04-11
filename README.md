@@ -226,7 +226,7 @@ docker-compose restart             # Restart
 
 ## 📝 Licencja
 
-MIT – Use freely
+Apache-2.0 License
 
 ## 👨‍💻 Autor
 
