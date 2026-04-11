@@ -9,6 +9,10 @@ if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi
 
+# Run asynchronously so the session starts immediately while deps install in
+# the background. asyncTimeout gives the hook up to 5 minutes to complete.
+echo '{"async": true, "asyncTimeout": 300000}'
+
 echo "==> Installing CI dependencies..."
 
 # ta 0.11.0 uses a legacy setup.py attribute (install_layout) that was
