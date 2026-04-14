@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Alpha AI Terminal</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body style="background:#0a0a0a;color:#00ff88;font-family:Consolas">
+<h2>Alpha AI Realtime Dashboard</h2>
+<canvas id="chart" width="900" height="300"></canvas>
+<div id="stats"></div>
+<div id="positions"></div>
+<div id="signals"></div>
+<script>
+const ctx=document.getElementById("chart").getContext("2d");
+let labels=[];
+let equity=[];
+const chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[{label:"Equity",data:equity}]}});
+
+const ws=new WebSocket("ws://127.0.0.1:8000/equity-stream");
+ws.onmessage=(event)=>{
+ const payload=JSON.parse(event.data);
+ if(payload.stats&&payload.stats.equity){
+  equity.push(payload.stats.equity);
+  labels.push(new Date().toLocaleTimeString());
+  if(equity.length>50){equity.shift();labels.shift();}
+  chart.update();
+ }
+ document.getElementById("stats").innerText=JSON.stringify(payload.stats,null,2);
+ document.getElementById("positions").innerText=JSON.stringify(payload.positions,null,2);
+ document.getElementById("signals").innerText=JSON.stringify(payload.signals,null,2);
+};
+</script>
+</body>
+</html>
