@@ -5,6 +5,18 @@
   "bars": 700,
   "lookback": 30,
   "epochs": 2,
+  "indicator_buffer_size": 260,
+  "http_timeout": 10.0,
+  "risk": {
+    "max_risk_per_trade_pct": 1.5,
+    "min_confidence": 50.0,
+    "min_rr": 1.1,
+    "max_open_positions": 7,
+    "max_daily_loss_pct": 2.5,
+    "max_position_size_lots": 1.25,
+    "stop_loss_pips": 20.0,
+    "pip_value_per_lot": 10.0
+  },
   "autotrade": {
     "enabled": true,
     "dry_run": false,
@@ -18,5 +30,4 @@
     "allow_same_signal": true
   }
 }
-
 

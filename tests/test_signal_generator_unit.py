@@ -51,5 +51,5 @@ def test_confidence_clamped() -> None:
 def test_signal_to_dict_keys() -> None:
     result = generate_signal(_row(), lstm_delta=0.0)
     d = signal_to_dict(result)
-    assert set(d.keys()) == {"signal", "confidence", "score", "reasons"}
+    assert set(d.keys()) == {"signal", "confidence", "score", "reasons", "regime"}
     assert isinstance(d["reasons"], list)

@@ -20,7 +20,7 @@ Run the trading bot as a Windows Service for automatic startup and monitoring.
 ### Prerequisites
 
 - Windows 7 or later
-- Python 3.10+
+- Python 3.9+ (CI pins in `requirements-ci.txt` are verified with Python 3.9)
 - Administrator privileges
 - NSSM (Non-Sucking Service Manager) - Optional but recommended
 
@@ -43,6 +43,24 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
+
+For CI-style validation before deployment, install the lightweight toolchain and run the same checks used locally:
+
+```powershell
+pip install -r requirements-ci.txt
+python -m pytest -q
+python -m black --check .
+python -m flake8 .
+python -m mypy .
+```
+
+Keep `autotrade.enabled` set to `false` and `autotrade.dry_run` set to `true` until live trading has been explicitly approved for the current environment.
+
+Optional entrypoints are installed separately:
+
+- `mcp_server.py` requires `pip install -r requirements-mcp.txt`; MCP is not part of the minimal CI dependency set.
+- `mt5_bridge.py` requires the full runtime profile with `MetaTrader5`, `pandas_ta`, `FASTAPI_KEY`, `MT5_LOGIN`, `MT5_PASSWORD`, and `MT5_SERVER`.
+- If the bridge cannot produce an LSTM signal, the ensemble combiner falls back to a 100% technical signal instead of emitting a mixed signal with a broken adapter.
 
 #### Step 3: Install Service
 

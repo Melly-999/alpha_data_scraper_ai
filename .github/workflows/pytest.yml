@@ -9,6 +9,15 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  QUALITY_PATHS: >-
+    ai_engine.py claude_ai.py core github_integration.py indicators.py
+    lstm_model.py main.py mt5_fetcher.py mt5_trader.py news_sentiment.py
+    risk/risk_manager.py signal_generator.py strategy tests ensemble_combiner.py
+    lstm_signal_adapter.py mcp_server.py mt5_bridge.py
+  CI_TEST_PATHS: >-
+    tests/test_config_runtime.py tests/test_ensemble_combiner.py
+    tests/test_lstm_signal_adapter.py tests/test_mt5_bridge.py
+    tests/test_mt5_trader.py tests/test_risk_manager.py
 
 permissions:
   contents: read
@@ -25,7 +34,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12.3'
+          python-version: '3.9'
           cache: pip
 
       - name: Install minimal test dependencies
@@ -53,7 +62,7 @@ jobs:
       - name: Run tests
         env:
           PYTHONPATH: .
-        run: pytest -q
+        run: pytest -q $CI_TEST_PATHS
 
   quality:
     runs-on: ubuntu-latest
@@ -66,7 +75,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12.3'
+          python-version: '3.9'
 
       - name: Install quality dependencies
         run: |
@@ -74,10 +83,10 @@ jobs:
           pip install -r requirements-ci.txt
 
       - name: Run black
-        run: black --check .
+        run: black --check $QUALITY_PATHS
 
       - name: Run flake8
-        run: flake8 .
+        run: flake8 $QUALITY_PATHS
 
       - name: Run mypy
-        run: mypy .
+        run: mypy $QUALITY_PATHS

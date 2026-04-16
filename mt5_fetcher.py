@@ -116,6 +116,7 @@ class MT5Fetcher:
     symbol: str = "EURUSD"
     timeframe: str = "M5"
     seed: int = 42
+    last_time: pd.Timestamp | None = None
 
     def get_latest_rates(self, bars: int = 600) -> pd.DataFrame:
         """Return OHLCV candles from MT5 when available, otherwise synthetic data."""
@@ -124,8 +125,25 @@ class MT5Fetcher:
 
         live = self._fetch_from_mt5(bars)
         if live is not None and not live.empty:
+            self.last_time = pd.to_datetime(live["time"]).max()
             return live
-        return _synthetic_rates(self.symbol, bars=bars, seed=self.seed)
+        synthetic = _synthetic_rates(self.symbol, bars=bars, seed=self.seed)
+        self.last_time = pd.to_datetime(synthetic["time"]).max()
+        return synthetic
+
+    def get_new_rates(self, bars: int = 5) -> pd.DataFrame:
+        """Return only candles newer than the last successful fetch."""
+        bars = max(int(bars), 1)
+        previous_last_time = self.last_time
+        latest = self.get_latest_rates(bars=max(120, bars))
+        if previous_last_time is None:
+            return latest.tail(bars).reset_index(drop=True)
+
+        time_col = pd.to_datetime(latest["time"])
+        new_rows = latest[time_col > previous_last_time].copy()
+        if not new_rows.empty:
+            self.last_time = pd.to_datetime(new_rows["time"]).max()
+        return new_rows.reset_index(drop=True)
 
     def _fetch_from_mt5(self, bars: int) -> Optional[pd.DataFrame]:
         if mt5 is None:
