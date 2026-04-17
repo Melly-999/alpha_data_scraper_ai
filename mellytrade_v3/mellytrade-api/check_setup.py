@@ -114,15 +114,31 @@ def check_lstm_adapter() -> bool:
     mt5_dir = Path(__file__).resolve().parents[1] / "mt5"
     sys.path.insert(0, str(mt5_dir))
     try:
+        import pandas as pd
+
         from lstm_signal_adapter import LSTMSignalAdapter
 
-        result = LSTMSignalAdapter("EURUSD").predict(None)
+        rows = 80
+        close = [1.10 + (idx * 0.0001) for idx in range(rows)]
+        frame = pd.DataFrame(
+            {
+                "close": close,
+                "open": [value - 0.00005 for value in close],
+                "high": [value + 0.0002 for value in close],
+                "low": [value - 0.0002 for value in close],
+                "volume": [1000 + idx for idx in range(rows)],
+            }
+        )
+        result = LSTMSignalAdapter("EURUSD").predict(frame)
     except Exception as exc:
         return status("lstm adapter", False, str(exc))
     return status(
         "lstm adapter",
-        result.direction in {"BUY", "SELL", "HOLD"},
-        f"available={result.available} direction={result.direction}",
+        result.available,
+        (
+            f"available={result.available} direction={result.direction} "
+            f"confidence={result.confidence} reasons={result.reasons}"
+        ),
     )
 
 
