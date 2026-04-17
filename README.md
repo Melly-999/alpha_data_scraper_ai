@@ -274,6 +274,24 @@ ALPHA_REPO_PATH=/absolute/path/to/alpha_data_scraper_ai
 ALPHA_LSTM_CLASS=lstm_model.LSTMPipeline
 ```
 
+### Diagnostics
+
+```bash
+# End-to-end LSTM + adapter wiring check (no network, no API call)
+python -m mellytrade_v3.mt5.check_setup
+
+# One-shot MT5 bridge run (reads .env, posts to /signal, prints JSON status)
+python -m mellytrade_v3.mt5.mt5_bridge
+```
+
+### Claude Code — SessionStart hook
+
+`.claude/hooks/session-start.sh` (registered in `.claude/settings.json`)
+auto-installs `requirements-ci.txt` + `mellytrade_v3/mellytrade-api/requirements.txt`
+and exports `PYTHONPATH` when `CLAUDE_CODE_REMOTE=true` (i.e. on the
+Claude Code web sandbox). Local sessions skip it — install dependencies
+manually per the Quick start above.
+
 See `mellytrade_v3/docs/MELLYTRADE_V3.md` for operational details, and
 `DEPLOYMENT_GUIDE.md` for the production checklist.
 

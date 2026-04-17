@@ -50,6 +50,16 @@ npm run dev                           # default: http://127.0.0.1:5173
 # MT5 bridge (one-shot)
 cd ../../..
 python -m mellytrade_v3.mt5.mt5_bridge
+
+# LSTM + adapter diagnostic (no network)
+python -m mellytrade_v3.mt5.check_setup
 ```
+
+## Claude Code — SessionStart hook
+
+On the Claude Code web sandbox the repo's SessionStart hook auto-installs
+`requirements-ci.txt` + `mellytrade-api/requirements.txt` and exports
+`PYTHONPATH`. See `../.claude/hooks/session-start.sh` and
+`docs/MELLYTRADE_V3.md`.
 
 See `../DEPLOYMENT_GUIDE.md` for production guidance.

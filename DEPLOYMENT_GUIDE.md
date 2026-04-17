@@ -69,6 +69,25 @@ npm audit fix                 # resolve moderate advisories when possible
 - SL and TP required and consistent with the direction
 - Per-symbol cooldown of `COOLDOWN_SECONDS` — rejected with `cooldown_active`
 
+### Diagnostics
+
+```bash
+# Verifies LSTMPipeline + adapter end-to-end (no network, no API).
+python -m mellytrade_v3.mt5.check_setup
+
+# Runs the MT5 bridge once: fetch OHLCV → predict → POST /signal.
+python -m mellytrade_v3.mt5.mt5_bridge
+```
+
+### Claude Code — SessionStart hook
+
+On the Claude Code web sandbox the repo's `SessionStart` hook
+(`.claude/hooks/session-start.sh`, registered in
+`.claude/settings.json`) installs the CI requirements and the backend
+requirements, and exports `PYTHONPATH` so `mellytrade_v3.*` plus the
+root `lstm_model` module are importable from the first command. It is a
+no-op on local sessions (`CLAUDE_CODE_REMOTE` unset or not `true`).
+
 ### Tests
 
 - Backend: `cd mellytrade_v3/mellytrade-api && pytest -q` (7 tests)

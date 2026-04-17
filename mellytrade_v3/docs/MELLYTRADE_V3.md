@@ -16,6 +16,11 @@
 | `ALPHA_REPO_PATH` | yes (bridge) | — | Absolute path to `alpha_data_scraper_ai` |
 | `ALPHA_LSTM_CLASS` | no | `lstm_model.LSTMPipeline` | Class loaded by the adapter |
 | `ALPHA_LSTM_FUNCTION` | no | — | Optional callable overriding the class |
+| `ALPHA_LSTM_CHECKPOINT` | no | — | Optional path to a pre-trained checkpoint |
+| `MT5_SYMBOL`, `MT5_TIMEFRAME`, `MT5_BARS` | no | `EURUSD`, `M5`, `300` | MT5 bridge fetch params |
+| `MT5_SL_PIPS`, `MT5_TP_PIPS`, `MT5_RISK_PERCENT` | no | `20`, `40`, `0.5` | MT5 bridge trade sizing |
+| `MELLYTRADE_API_URL` | no | `http://127.0.0.1:8000` | Where the bridge POSTs `/signal` |
+| `CLOUDMCP_TOKEN` | no | — | Shared token for `.mcp.json` / `.cursor/mcp.json` |
 
 ### Worker secrets
 
@@ -88,6 +93,34 @@ cfg = BridgeConfig(api_url="http://127.0.0.1:8000",
 print(run_once(cfg))
 ```
 
+### One-shot CLI
+
+```bash
+# from repo root
+python -m mellytrade_v3.mt5.mt5_bridge
+# or (with PYTHONPATH pre-set by the SessionStart hook):
+python mellytrade_v3/mt5/mt5_bridge.py
+```
+
+Exit code is `0` when the bridge posts a signal, reports HOLD, or skips
+(no OHLCV); any other status returns `1`.
+
+### Setup diagnostic
+
+`mellytrade_v3/mt5/check_setup.py` verifies the LSTM + adapter wiring
+end-to-end without touching the network or the API:
+
+```bash
+python -m mellytrade_v3.mt5.check_setup
+# or:
+python mellytrade_v3/mt5/check_setup.py
+```
+
+It prints the resolved `ALPHA_*` env vars, runs the fallback path (no
+OHLCV → HOLD + `is_fallback`), and feeds a 120-bar synthetic OHLCV frame
+through `LSTMPipeline.fit()` + `predict_next_delta()`. Exit code `0` on
+success, `1` otherwise.
+
 ## Dashboard
 
 ```bash
@@ -118,6 +151,20 @@ Routes:
 |---|---|---|
 | `mellytrade-api/tests` | 7 | `cd mellytrade-api && pytest -q` |
 | `mt5/tests` | 3 | `cd mellytrade_v3 && pytest mt5/tests -q` |
+
+## Claude Code — SessionStart hook
+
+The repo ships a `SessionStart` hook at `.claude/hooks/session-start.sh`,
+registered via `.claude/settings.json`. On the Claude Code web sandbox
+(where `CLAUDE_CODE_REMOTE=true`) it installs `requirements-ci.txt` and
+`mellytrade_v3/mellytrade-api/requirements.txt`, then exports
+`PYTHONPATH` so `mellytrade_v3.*` and the root `lstm_model` module are
+importable without manual setup. Nothing runs on local sessions.
+
+Disable the hook locally by ensuring `CLAUDE_CODE_REMOTE` is unset (or
+set to anything other than `true`). The hook writes `PYTHONPATH` to
+`$CLAUDE_ENV_FILE` when provided by the runtime, so subsequent commands
+see both the repo root and `mellytrade_v3/` on the import path.
 
 ## Outstanding follow-ups
 
