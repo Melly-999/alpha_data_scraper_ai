@@ -1,4 +1,6 @@
+numpy>=1.26,<3.0
 pandas==2.2.0
+scikit-learn>=1.4,<2.0
 yfinance==0.2.41
 ib_insync==1.10.4
 alpaca-py==2.5.0
