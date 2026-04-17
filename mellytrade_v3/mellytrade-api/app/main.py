@@ -116,9 +116,13 @@ def list_signals(
     _: str = Depends(require_api_key),
 ) -> List[SignalOut]:
     limit = max(1, min(limit, 500))
-    rows = db.execute(
-        select(SignalRecord).order_by(SignalRecord.created_at.desc()).limit(limit)
-    ).scalars().all()
+    rows = (
+        db.execute(
+            select(SignalRecord).order_by(SignalRecord.created_at.desc()).limit(limit)
+        )
+        .scalars()
+        .all()
+    )
     return [SignalOut.model_validate(r) for r in rows]
 
 

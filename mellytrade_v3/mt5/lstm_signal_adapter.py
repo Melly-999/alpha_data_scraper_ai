@@ -150,14 +150,16 @@ def _invoke_model(instance: Any, frame: Any) -> float:
     2. ``predict_next_delta(frame)`` — stateless pipeline already trained.
     3. ``predict(frame)`` / ``instance(frame)`` — generic callable.
     """
-    if callable(instance) and not hasattr(instance, "predict_next_delta") \
-            and not hasattr(instance, "predict"):
+    if (
+        callable(instance)
+        and not hasattr(instance, "predict_next_delta")
+        and not hasattr(instance, "predict")
+    ):
         return float(instance(frame))
 
     if hasattr(instance, "predict_next_delta"):
         needs_fit = (
-            hasattr(instance, "fit")
-            and getattr(instance, "model", None) is None
+            hasattr(instance, "fit") and getattr(instance, "model", None) is None
         )
         if needs_fit:
             instance.fit(frame)

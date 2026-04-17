@@ -87,4 +87,7 @@ def test_bridge_run_once_posts_signal_to_api(ohlcv, monkeypatch):
     assert result["http"] == 200
     assert "/signal" in captured["url"]
     assert captured["headers"].get("x-api-key") == "test-key"
-    assert '"symbol":"EURUSD"' in captured["json"] or '"symbol": "EURUSD"' in captured["json"]
+    assert (
+        '"symbol":"EURUSD"' in captured["json"]
+        or '"symbol": "EURUSD"' in captured["json"]
+    )

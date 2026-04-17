@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-import pytest
-
 HEADERS = {"X-API-Key": "test-key"}
 
 
@@ -51,9 +49,7 @@ def test_signal_rejects_excessive_risk(client):
 
 def test_signal_rejects_invalid_sl_tp(client):
     # BUY but SL above entry — schema-level rejection (422).
-    resp = client.post(
-        "/signal", json=_buy(stop_loss=1.1100), headers=HEADERS
-    )
+    resp = client.post("/signal", json=_buy(stop_loss=1.1100), headers=HEADERS)
     assert resp.status_code == 422
 
 

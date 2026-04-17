@@ -143,3 +143,19 @@ def run_once(
     finally:
         if http_client is None:
             client.close()
+
+
+def _cli() -> int:  # pragma: no cover - thin entry point
+    import json
+
+    logging.basicConfig(
+        level=os.getenv("MT5_BRIDGE_LOG_LEVEL", "INFO"),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+    result = run_once()
+    print(json.dumps(result, indent=2, default=str))
+    return 0 if result.get("status") in ("sent", "hold", "skipped") else 1
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(_cli())

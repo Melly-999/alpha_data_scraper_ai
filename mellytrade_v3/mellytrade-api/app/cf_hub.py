@@ -23,9 +23,7 @@ async def publish(payload: Dict[str, Any], settings: Settings) -> bool:
         headers["X-Hub-Secret"] = settings.cf_api_secret
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.post(
-                settings.cf_hub_url, json=payload, headers=headers
-            )
+            resp = await client.post(settings.cf_hub_url, json=payload, headers=headers)
             resp.raise_for_status()
         return True
     except Exception as exc:  # pragma: no cover - network failures in prod
