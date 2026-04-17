@@ -2,6 +2,12 @@
 .env
 .env.local
 .env.*.local
+.venv/
+node_modules/
+dist/
+*.db
+.diagnostics/
+.wrangler/
 
 # Python
 __pycache__/

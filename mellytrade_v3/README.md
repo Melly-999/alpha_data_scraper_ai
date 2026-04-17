@@ -9,6 +9,11 @@ Integrated monorepo starter with:
 
 ## Local start
 
+Risk gates are enforced by the API before publish: `X-API-Key` is required,
+`MAX_RISK_PERCENT=1.0`, `MIN_CONFIDENCE=70`, `stopLoss` and `takeProfit` are
+mandatory, and duplicate symbol/direction signals are blocked for
+`COOLDOWN_SECONDS=120`.
+
 ### 1) API
 ```bash
 cd mellytrade-api
@@ -33,6 +38,9 @@ npm install
 npm run dev
 ```
 
+The Vite dev server proxies `/ws` and `/api` to the local Worker on
+`http://127.0.0.1:8787`.
+
 ### 4) MT5 bridge
 ```bash
 cd mt5
@@ -41,6 +49,10 @@ python -m venv .venv
 pip install -r requirements.txt
 python mt5_bridge.py
 ```
+
+Set `ALPHA_REPO_PATH` and either `ALPHA_LSTM_CLASS` or `ALPHA_LSTM_FUNCTION` to
+wire the bridge to `alpha_data_scraper_ai`; without those values the adapter
+falls back to HOLD and the technical weighting remains active.
 
 ## End-to-end flow
 MT5 bridge -> FastAPI `/signal` -> DB log -> Cloudflare Worker `/api/publish` -> Durable Object -> dashboard websocket clients.

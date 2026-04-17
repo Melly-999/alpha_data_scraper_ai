@@ -2,6 +2,71 @@
 
 Complete guide for deploying the Grok Alpha AI Trading Bot in various environments.
 
+## MellyTrade v3 Deployment Notes
+
+`mellytrade_v3/` now contains the integrated signal flow:
+
+1. MT5 bridge creates a weighted technical/LSTM signal.
+2. FastAPI `app.main:app` validates `X-API-Key`, risk percent, confidence,
+   SL/TP, and cooldown.
+3. Accepted and blocked signals are persisted in SQLAlchemy `signal_logs`.
+4. Accepted signals are published to the Cloudflare Worker `/api/publish`
+   endpoint.
+5. Dashboard clients receive live signals over the Worker `/ws` WebSocket.
+
+### Local Windows Commands
+
+```powershell
+# Worker hub
+cd C:\AI\MellyTrade_Workspace\02_Repo\alpha_data_scraper_ai\mellytrade_v3\mellytrade
+npm install
+npm run dev
+
+# Backend
+cd C:\AI\MellyTrade_Workspace\02_Repo\alpha_data_scraper_ai\mellytrade_v3\mellytrade-api
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+uvicorn app.main:app --reload
+
+# Dashboard
+cd C:\AI\MellyTrade_Workspace\02_Repo\alpha_data_scraper_ai\mellytrade_v3\mellytrade\dashboard
+npm install
+npm run dev
+
+# MT5 bridge
+cd C:\AI\MellyTrade_Workspace\02_Repo\alpha_data_scraper_ai\mellytrade_v3\mt5
+..\mellytrade-api\.venv\Scripts\python.exe mt5_bridge.py
+```
+
+### Required Environment
+
+Use `mellytrade_v3/mellytrade-api/.env` for backend settings:
+
+```env
+DATABASE_URL=sqlite:///./signals.db
+FASTAPI_KEY=change-me-fastapi-key
+CF_HUB_URL=http://127.0.0.1:8787
+CF_API_SECRET=change-me-cloudflare-secret
+COOLDOWN_SECONDS=120
+MIN_CONFIDENCE=70
+MAX_RISK_PERCENT=1.0
+```
+
+For production, replace SQLite with a Postgres `DATABASE_URL`, rotate both API
+secrets, and provide real `CLOUDMCP_*_URL` and `CLOUDMCP_*_TOKEN` values through
+system environment variables or `.env`.
+
+### Validation Checklist
+
+- `python -m pytest -q` in `mellytrade_v3/mellytrade-api`
+- `python -m pytest -q tests` in `mellytrade_v3/mt5`
+- `npm run build` in `mellytrade_v3/mellytrade/dashboard`
+- Manual `GET /health`
+- Manual `POST /signal` checks for unauthorized, accepted, max risk,
+  confidence, missing SL/TP, and cooldown cases
+- Confirm `signal_logs` contains both accepted and blocked signals
+
 ## Table of Contents
 
 1. [Windows Service (Local Deployment)](#windows-service-local-deployment)
