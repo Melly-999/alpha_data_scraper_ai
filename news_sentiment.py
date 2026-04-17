@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict
 import logging
 
-import requests
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger("NewsSentiment")
@@ -53,6 +53,12 @@ class ForexFactoryScraper:
 
     @classmethod
     def fetch_calendar(cls, days_ahead: int = 7) -> Optional[List[NewsItem]]:
+        return _run_async(cls.fetch_calendar_async(days_ahead=days_ahead))
+
+    @classmethod
+    async def fetch_calendar_async(
+        cls, days_ahead: int = 7, timeout: float = 10.0
+    ) -> Optional[List[NewsItem]]:
         """
         Fetch economic calendar from ForexFactory.
 
@@ -63,8 +69,13 @@ class ForexFactoryScraper:
             List of NewsItem objects, or None on error.
         """
         try:
+            import httpx
+
             url = f"{cls.BASE_URL}/calendar.php"
-            response = requests.get(url, headers=cls.HEADERS, timeout=10)
+            async with httpx.AsyncClient(
+                timeout=timeout, headers=cls.HEADERS
+            ) as client:
+                response = await client.get(url)
             response.raise_for_status()
 
             soup = BeautifulSoup(response.text, "html.parser")
@@ -196,6 +207,11 @@ class NewsAPIClient:
     def fetch_forex_news(
         self, currencies: Optional[List[str]] = None
     ) -> Optional[List[NewsItem]]:
+        return _run_async(self.fetch_forex_news_async(currencies=currencies))
+
+    async def fetch_forex_news_async(
+        self, currencies: Optional[List[str]] = None, timeout: float = 10.0
+    ) -> Optional[List[NewsItem]]:
         """
         Fetch news about forex currencies.
 
@@ -209,49 +225,21 @@ class NewsAPIClient:
             currencies = ["USD", "EUR", "GBP", "JPY"]
 
         try:
-            all_news = []
-            for currency in currencies:
-                query = f"{currency} forex OR trading OR economy"
-                params: dict[str, str] = {
-                    "q": query,
-                    "sortBy": "publishedAt",
-                    "language": "en",
-                    "apiKey": self.api_key,
-                    "pageSize": "20",
-                }
+            import httpx
 
-                response = requests.get(self.BASE_URL, params=params, timeout=10)
-                response.raise_for_status()
-                data = response.json()
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                tasks = [
+                    self._fetch_currency_news(client, currency)
+                    for currency in currencies
+                ]
+                batches = await asyncio.gather(*tasks, return_exceptions=True)
 
-                if data.get("status") == "error":
-                    logger.warning(f"NewsAPI error: {data.get('message')}")
+            all_news: list[NewsItem] = []
+            for batch in batches:
+                if isinstance(batch, BaseException):
+                    logger.warning(f"NewsAPI request failed: {batch}")
                     continue
-
-                for article in data.get("articles", []):
-                    pub_date = datetime.fromisoformat(
-                        article["publishedAt"].replace("Z", "+00:00")
-                    )
-                    # Skip older than 24h
-                    if (datetime.now(timezone.utc) - pub_date) > timedelta(days=1):
-                        continue
-
-                    sentiment = self._analyze_sentiment_newsapi(
-                        article.get("title", "") + " " + article.get("description", "")
-                    )
-
-                    all_news.append(
-                        NewsItem(
-                            source="NewsAPI",
-                            title=article.get("title", ""),
-                            content=article.get("description", ""),
-                            sentiment=sentiment,
-                            impact="N/A",
-                            currency=currency,
-                            timestamp=pub_date,
-                            url=article.get("url", ""),
-                        )
-                    )
+                all_news.extend(batch)
 
             logger.info(f"Fetched {len(all_news)} news items from NewsAPI")
             return all_news
@@ -259,6 +247,50 @@ class NewsAPIClient:
         except Exception as e:
             logger.error(f"NewsAPI fetch failed: {e}")
             return None
+
+    async def _fetch_currency_news(self, client, currency: str) -> list[NewsItem]:
+        query = f"{currency} forex OR trading OR economy"
+        params: dict[str, str] = {
+            "q": query,
+            "sortBy": "publishedAt",
+            "language": "en",
+            "apiKey": self.api_key,
+            "pageSize": "20",
+        }
+
+        response = await client.get(self.BASE_URL, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("status") == "error":
+            logger.warning(f"NewsAPI error: {data.get('message')}")
+            return []
+
+        items: list[NewsItem] = []
+        for article in data.get("articles", []):
+            pub_date = datetime.fromisoformat(
+                article["publishedAt"].replace("Z", "+00:00")
+            )
+            if (datetime.now(timezone.utc) - pub_date) > timedelta(days=1):
+                continue
+
+            sentiment = self._analyze_sentiment_newsapi(
+                article.get("title", "") + " " + article.get("description", "")
+            )
+
+            items.append(
+                NewsItem(
+                    source="NewsAPI",
+                    title=article.get("title", ""),
+                    content=article.get("description", ""),
+                    sentiment=sentiment,
+                    impact="N/A",
+                    currency=currency,
+                    timestamp=pub_date,
+                    url=article.get("url", ""),
+                )
+            )
+        return items
 
     @staticmethod
     def _analyze_sentiment_newsapi(text: str) -> str:
@@ -306,23 +338,39 @@ class SentimentAnalyzer:
     def analyze_sentiment(
         self, include_forexfactory: bool = True, include_newsapi: bool = True
     ) -> Dict[str, SentimentScore]:
+        return _run_async(
+            self.analyze_sentiment_async(
+                include_forexfactory=include_forexfactory,
+                include_newsapi=include_newsapi,
+            )
+        )
+
+    async def analyze_sentiment_async(
+        self, include_forexfactory: bool = True, include_newsapi: bool = True
+    ) -> Dict[str, SentimentScore]:
         """
         Analyze sentiment for all tracked currencies.
 
         Returns:
             Dict keyed by currency, with SentimentScore values.
         """
-        all_news = []
+        all_news: list[NewsItem] = []
+        tasks = []
 
         if include_forexfactory:
-            ff_news = ForexFactoryScraper.fetch_calendar()
-            if ff_news:
-                all_news.extend(ff_news)
+            tasks.append(ForexFactoryScraper.fetch_calendar_async())
 
         if include_newsapi and self.newsapi:
-            api_news = self.newsapi.fetch_forex_news()
-            if api_news:
-                all_news.extend(api_news)
+            tasks.append(self.newsapi.fetch_forex_news_async())
+
+        if tasks:
+            batches = await asyncio.gather(*tasks, return_exceptions=True)
+            for batch in batches:
+                if isinstance(batch, BaseException):
+                    logger.warning(f"Sentiment source failed: {batch}")
+                    continue
+                if batch:
+                    all_news.extend(batch)
 
         # Aggregate by currency
         sentiment_map: Dict[str, SentimentScore] = {}
@@ -389,3 +437,13 @@ class SentimentAnalyzer:
         elif avg_sentiment < -0.3:
             return "SELL"
         return "HOLD"
+
+
+def _run_async(awaitable):
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(awaitable)
+    if hasattr(awaitable, "close"):
+        awaitable.close()
+    raise RuntimeError("Use the async API when an event loop is already running")

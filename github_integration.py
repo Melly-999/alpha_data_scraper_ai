@@ -8,6 +8,7 @@ This module provides real-time Git operations for the trading bot:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -187,6 +188,22 @@ class GitHubIntegration:
         repo_owner: Optional[str] = None,
         repo_name: Optional[str] = None,
     ) -> bool:
+        return _run_async(
+            self.trigger_workflow_async(
+                event_type=event_type,
+                payload=payload,
+                repo_owner=repo_owner,
+                repo_name=repo_name,
+            )
+        )
+
+    async def trigger_workflow_async(
+        self,
+        event_type: str,
+        payload: dict[str, Any],
+        repo_owner: Optional[str] = None,
+        repo_name: Optional[str] = None,
+    ) -> bool:
         """
         Trigger GitHub Actions workflow via repository_dispatch.
 
@@ -211,7 +228,7 @@ class GitHubIntegration:
             repo_owner, repo_name = repo_full
 
         try:
-            import requests
+            import httpx
 
             url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/dispatches"
             headers = {
@@ -220,7 +237,8 @@ class GitHubIntegration:
             }
             data = {"event_type": event_type, "client_payload": payload}
 
-            response = requests.post(url, json=data, headers=headers, timeout=10)
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(url, json=data, headers=headers)
             if response.status_code == 204:
                 logger.info(f"✅ Workflow dispatched: {event_type}")
                 return True
@@ -322,3 +340,13 @@ class TradingResultsCommitter:
         except Exception as e:
             logger.error(f"❌ Failed to commit results: {e}")
             return False
+
+
+def _run_async(awaitable):
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(awaitable)
+    if hasattr(awaitable, "close"):
+        awaitable.close()
+    raise RuntimeError("Use the async API when an event loop is already running")

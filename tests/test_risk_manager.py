@@ -173,3 +173,37 @@ def test_default_context_uses_config_balance() -> None:
     assert mgr.ctx.balance == float(config.ACCOUNT_BALANCE)
     assert mgr.ctx.open_positions == 0
     assert mgr.ctx.daily_pnl_pct == 0.0
+
+
+def test_validate_requires_complete_sl_tp_set() -> None:
+    mgr = _manager()
+    result = mgr.validate(signal="BUY", confidence=80, entry_price=1.1)
+    assert result.allowed is False
+    assert result.status == "BLOCKED_MISSING_SL_TP"
+
+
+def test_validate_blocks_low_risk_reward() -> None:
+    mgr = _manager()
+    result = mgr.validate(
+        signal="BUY",
+        confidence=80,
+        entry_price=1.1000,
+        stop_loss=1.0900,
+        take_profit=1.1050,
+    )
+    assert result.allowed is False
+    assert result.status == "BLOCKED_LOW_RISK_REWARD"
+
+
+def test_validate_allows_trade_with_good_risk_reward() -> None:
+    mgr = _manager()
+    result = mgr.validate(
+        signal="SELL",
+        confidence=80,
+        entry_price=1.1000,
+        stop_loss=1.1100,
+        take_profit=1.0800,
+    )
+    assert result.allowed is True
+    assert result.status == "ALLOWED"
+    assert result.risk_reward == pytest.approx(2.0)

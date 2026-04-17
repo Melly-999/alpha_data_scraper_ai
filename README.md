@@ -1,238 +1,320 @@
-# Alpha AI – Automated Trading Terminal
+#  Alpha AI - Automated Trading Terminal
 
-Profesjonalny system analizy handlowej z integracją Claude AI + Wall Street promptów + automatycznym tradingiem.
+[![Pytest CI (main)](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml?query=branch%3Amain)
 
-## 🎯 Cechy
+## 3-Layer LSTM | RSI Fusion | Stochastic | MT5 Live Trading Engine
 
-- ✅ **Analiza XTB** (cash flow, dywidendy, pozycje z XLSX)
-- ✅ **Wall Street prompty** (Goldman Sachs, Bridgewater, Harvard, McKinsey itd.)
-- ✅ **Multi-broker** (XTB, IBKR, Alpaca)
-- ✅ **Automatyczne raporty** (daily, weekly, monthly)
-- ✅ **TradingView webhook** (alerty → Claude analiza)
-- ✅ **Powiadomienia** (Telegram, Discord)
-- ✅ **Docker 24/7**
+ Alpha AI to zaawansowany terminal tradingowy oparty o:
+
+- **LSTM (3 warstwy) + RSI Fusion**
+- **Stochastic Oscillator**
+- **MACD Histogram**
+- **Bollinger Bands Position**
+- **Dynamiczny system sygnalow BUY/SELL**
+- **Confidence Engine (33-85%)**
+- **Live MT5 Tick Feed**
+- **Wykres w czasie rzeczywistym**
+- **Modulowa architektura (7 plikow)**
+
+Projekt jest w pelni testowalny, konteneryzowalny i gotowy do CI/CD.
 
 ---
 
-## 🚀 SZYBKI START
+## Struktura projektu
 
-### **OPCJA A: Test Parsera (5 minut)**
+```text
+grok_alpha_ai/
+|-- config.json
+|-- main.py
+|-- gui.py
+|-- mt5_fetcher.py
+|-- indicators.py
+|-- lstm_model.py
+|-- signal_generator.py
+|-- tests/
+|   |-- test_indicators.py
+|   |-- test_signal_generator.py
+|   |-- test_lstm_model.py
+|   |-- test_integration_pipeline.py
+|   |-- test_integration_gui_pipeline.py
+|   |-- test_stress_extended.py
+|   `-- conftest.py
+|-- profiling/
+|   |-- profile_cpu.py
+|   `-- profile_memory.py
+|-- Dockerfile
+|-- dev.sh
+|-- run_tests.sh
+|-- requirements.txt
+`-- .pre-commit-config.yaml
+```
+
+---
+
+## Instalacja
+
+### 1. Klonowanie repo
 
 ```bash
-# 1. Zainstaluj zależności
+git clone https://github.com/Melly-999/alpha_data_scraper_ai.git
+cd grok_alpha_ai
+```
+
+### 2. Instalacja zaleznosci
+
+```bash
 pip install -r requirements.txt
-
-# 2. Wrzuć pliki XLSX z XTB do folderu data/
-# Sprawdź config/brokers.yaml - ścieżki są już tam
-
-# 3. Test
-python test_parser.py
 ```
 
-**Powinno pokazać:**
-- Liczbę wczytanych pozycji
-- Dywidendy netto, brutto
-- Top dywidendy
-- Wartość portfela
+Uwaga:
+
+- `tensorflow` i `MetaTrader5` sa traktowane jako zaleznosci opcjonalne na niewspieranych wersjach Pythona.
+- Pipeline uruchomi sie bez nich, korzystajac z fallbacku dla modelu i danych syntetycznych.
+
+### Windows setup
+
+Preferowana sciezka lokalna na Windows:
+
+```powershell
+.\setup_windows.ps1
+```
+
+Jesli masz problem z lokalnym Pythonem, uruchamiaj projekt przez Docker z sekcji ponizej.
 
 ---
 
-### **OPCJA B: Pełne Uruchomienie Lokalnie (30 minut)**
+## Uruchamianie aplikacji
 
 ```bash
-# 1. Setup
-pip install -r requirements.txt
-cp .env.example .env
+python main.py
+```
 
-# 2. EDYTUJ .env - wpisz ANTHROPIC_API_KEY
-# Pobierz klucz: https://console.anthropic.com
+### Auto-trade MetaTrader5
 
-# 3. Testuj pojedyncze raporty
-python daily_analysis.py      # → raport w reports/
-python weekly_analysis.py     # pełny raport
-python monthly_dividend_report.py  # dywidendy
+Auto-trade jest sterowany przez sekcje `autotrade` w `config.json`.
 
-# 4. Logi
-tail -f alpha_ai.log
+Domyslnie:
+
+- `enabled: false` (brak wysylki zlecen),
+- `dry_run: true` (symulacja requestu do MT5 bez realnego ordera).
+
+Zalecana kolejnosc:
+
+1. Ustaw `enabled: true` i zostaw `dry_run: true`, uruchom aplikacje i sprawdzaj pole `autotrade` w snapshotach.
+2. Po weryfikacji ustaw `dry_run: false`, aby wlaczyc realne zlecenia rynkowe BUY/SELL.
+
+Przykladowe klucze:
+
+- `min_confidence` - minimalna pewnosc sygnalu do wyslania zlecenia,
+- `volume` - wolumen pozycji,
+- `sl_points` / `tp_points` - odleglosc SL/TP w punktach,
+- `cooldown_seconds` - minimalny odstep miedzy kolejnymi zleceniami,
+- `allow_same_signal` - czy pozwolic na kolejne zlecenie w tym samym kierunku.
+
+### Bufor wskaznikow, async I/O i risk manager
+
+Projekt ma teraz przyrostowy bufor OHLCV `RollingIndicatorBuffer`, ktory trzyma ograniczone okno ostatnich swiec i pozwala wyliczac wskazniki dla nowych punktow bez utrzymywania nieograniczonej historii w pamieci. Rozmiar okna ustawisz w `config.json` przez `indicator_buffer_size`.
+
+Opcjonalna fuzja ensemble jest wylaczona domyslnie przez `enable_ensemble: false`, zeby glowna sciezka runtime pozostala ograniczona do technicznych wskaznikow, LSTM fallbacku i centralnego risk managera. Wlaczaj ja dopiero po osobnym przegladzie `ensemble_combiner.py`, `lstm_signal_adapter.py`, `mcp_server.py` i `mt5_bridge.py`.
+
+`mcp_server.py` pozostaje opcjonalnym entrypointem. Nie jest czescia domyslnego runtime ani minimalnego CI; przed uruchomieniem zainstaluj dodatkowy profil:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-mcp.txt
+```
+
+`mt5_bridge.py` wymaga pelnego profilu runtime z `MetaTrader5`, `pandas_ta` oraz zmiennych `FASTAPI_KEY`, `MT5_LOGIN`, `MT5_PASSWORD` i `MT5_SERVER`. Przy braku LSTM bridge przechodzi na 100% sygnal techniczny zamiast blokowac caly cykl.
+
+Zrodla sieciowe maja warianty async:
+
+- `ForexFactoryScraper.fetch_calendar_async(...)`
+- `NewsAPIClient.fetch_forex_news_async(...)`
+- `SentimentAnalyzer.analyze_sentiment_async(...)`
+- `GitHubIntegration.trigger_workflow_async(...)`
+- `ClaudeAIClient.get_trading_signal_async(...)`
+
+Synchroniczne metody pozostaly jako wrappery kompatybilne wstecz. Timeout HTTP ustawisz przez `http_timeout` w konfiguracji i stale `HTTP_TIMEOUT_SEC` w `core/config.py`.
+
+Kontrola ryzyka jest scentralizowana w `risk/risk_manager.py`. Metoda `RiskManager.validate(...)` sprawdza sygnal, minimalna pewnosc, dzienny limit straty, maksymalna liczbe pozycji, obecnosc SL/TP oraz minimalny risk/reward przed wyslaniem zlecenia. Parametry sa w sekcji `risk` w `config.json`.
+
+Gotowe profile (folder `profiles/`):
+
+1. `paper_safe.json` - bezpieczny paper-trading (`dry_run: true`)
+2. `real_conservative.json` - real trading konserwatywny
+3. `real_aggressive.json` - real trading agresywny
+
+Uruchamianie z profilem:
+
+```powershell
+.[0m\.venv\Scripts\python.exe main.py --config profiles/paper_safe.json --continuous --interval 2
+```
+
+```powershell
+.[0m\.venv\Scripts\python.exe main.py --config profiles/real_conservative.json --continuous --interval 2
+```
+
+```powershell
+.[0m\.venv\Scripts\python.exe main.py --config profiles/real_aggressive.json --continuous --interval 2
 ```
 
 ---
 
-### **OPCJA C: Docker 24/7 (45 minut)**
+## Testy
+
+Uruchom wszystkie testy:
 
 ```bash
-# 1. Setup
-cp .env.example .env
-# EDYTUJ .env - ANTHROPIC_API_KEY
-
-# 2. Uruchom
-chmod +x build_and_run.sh
-./build_and_run.sh
-
-# 3. Sprawdzenie
-docker-compose ps
-docker-compose logs -f alpha-ai-scheduler
-
-# 4. Webhook (TradingView)
-curl http://localhost:8000/health
+./run_tests.sh
 ```
 
-Scheduler działa:
-- **08:30** codziennie → daily_analysis
-- **09:00 poniedziałek** → weekly_analysis
-- **10:00 1. dnia miesiąca** → monthly_dividend_report
+PowerShell:
 
----
-
-## 📁 Struktura
-
-```
-alpha_data_scraper_ai/
-├── config/                    # Konfiguracja
-│   ├── brokers.yaml          # Wybór brokera
-│   └── notifications.yaml     # Telegram/Discord
-├── brokers/                   # Multi-broker abstrakacja
-│   ├── xtb_broker.py         # XTB (XLSX)
-│   ├── ibkr_broker.py        # Interactive Brokers
-│   ├── alpaca_broker.py      # Alpaca
-│   └── broker_factory.py     # Przełączanie
-├── data/                      # Pliki XLSX z XTB
-├── reports/                   # Wygenerowane raporty
-├── prompts.py                # 10 Wall Street promptów
-├── claude_ai.py              # Integracja Claude API
-├── ai_engine.py              # Serce systemu
-├── daily_analysis.py         # Daily report
-├── weekly_analysis.py        # Weekly report
-├── monthly_dividend_report.py # Dywidendy
-├── scheduler.py              # APScheduler (24/7)
-├── webhook_server.py         # TradingView API
-├── test_parser.py            # Test XLSX parsera
-├── Dockerfile                # Docker image
-├── docker-compose.yml        # Docker Compose
-├── build_and_run.sh          # Auto-build script
-├── requirements.txt
-├── .env.example
-└── .gitignore
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m black --check .
+.\.venv\Scripts\python.exe -m flake8 .
+.\.venv\Scripts\python.exe -m mypy .
 ```
 
----
+Minimalne zaleznosci CI sa w `requirements-ci.txt` i sa dobrane tak, aby dzialaly w lokalnym srodowisku Python 3.9+.
 
-## ⚙️ Konfiguracja
-
-### **1. Wybór Brokera** (`config/brokers.yaml`)
-
-```yaml
-active_broker: xtb    # zmień na: xtb, ibkr, alpaca
-
-xtb:
-  closed_positions_xlsx_paths:
-    - "./data/IKE_54250698_2026-03-07_2026-04-07.xlsx"
-    - "./data/PLN_51514835_2026-03-07_2026-04-07.xlsx"
+```powershell
+.\run_tests.ps1 -q
 ```
 
-### **2. API Key** (`.env`)
+GitHub Actions:
+
+- Workflow: [Pytest CI](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml)
+- Wszystkie runy: [Actions](https://github.com/Melly-999/alpha_data_scraper_ai/actions)
+
+Szybki workflow git dla tego repo:
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-xxxxx
-```
-
-### **3. Powiadomienia** (`config/notifications.yaml`)
-
-```yaml
-telegram:
-  enabled: true
-  bot_token: "TWÓJ_TOKEN"
-  chat_id: "TWÓJ_ID"
+git add .
+git commit -m "opis zmian"
+git push
 ```
 
 ---
 
-## 🔌 Integracja TradingView
+## Docker
 
-W TradingView utwórz alert z webhook:
+Budowanie obrazu:
 
-**URL:** `http://your-ip:8000/webhook`
-
-**Message (JSON):**
-```json
-{
-  "ticker": "NVDA",
-  "action": "buy",
-  "message": "RSI oversold + MACD crossover"
-}
-```
-
-Alpha AI automatycznie:
-1. Otrzyma alert
-2. Uruchomi analizę Claude (Citadel Technical)
-3. Zwróci rekomendację
-
----
-
-## 📊 Prompty (Wall Street)
-
-System zawiera 10 profesjonalnych promptów:
-
-1. **Goldman Screener** – screening akcji
-2. **Morgan Stanley DCF** – wycena
-3. **Bridgewater Risk** – analiza ryzyka
-4. **JPMorgan Earnings** – earnings preview
-5. **BlackRock Portfolio** – budowa portfela
-6. **Citadel Technical** – analiza techniczna
-7. **Harvard Dividend** – portfel dywidendowy
-8. **Bain Competitive** – analiza konkurencji
-9. **Renaissance Quant** – wzorce statystyczne
-10. **McKinsey Macro** – analiza makro
-
-Wszystkie automatycznie wstrzykują dane o **cash flow, dywidendach i ryzyku** z Twojego portfela.
-
----
-
-## 🛠️ Polecenia
-
-### Lokalne
 ```bash
-python test_parser.py              # Test XLSX
-python daily_analysis.py           # Codzienny raport
-python scheduler.py                # APScheduler (24/7)
-python webhook_server.py           # TradingView API
+docker build -t grok-alpha .
 ```
 
-### Docker
+Budowanie wersji produkcyjnej na lzejszym obrazie:
+
 ```bash
-./build_and_run.sh                 # Build + start
-docker-compose down                # Stop
-docker-compose logs -f             # Logi
-docker-compose restart             # Restart
+docker build -f Dockerfile.prod -t grok-alpha:prod .
+```
+
+Uruchamianie:
+
+```bash
+docker run --rm -it grok-alpha
+```
+
+Uruchamianie wersji produkcyjnej:
+
+```bash
+docker run --rm -it grok-alpha:prod
+```
+
+Docker Compose:
+
+```bash
+docker compose up app
+docker compose run --rm tests
+docker compose run --rm dev
 ```
 
 ---
 
-## 🚨 Troubleshooting
+## Profilowanie wydajnosci
 
-### Parser nie czyta XLSX
-- Sprawdź ścieżki w `config/brokers.yaml`
-- Uruchom: `python test_parser.py`
+CPU profiling:
 
-### Claude API error
-- Sprawdź `.env` - czy `ANTHROPIC_API_KEY` jest prawidłowy
-- Test: `python -c "from claude_ai import ClaudeAIIntegration; c = ClaudeAIIntegration(); print(c.test_connection())"`
+```bash
+python profiling/profile_cpu.py
+```
 
-### Docker nie uruchamia się
-- Sprawdź czy Docker jest zainstalowany: `docker --version`
-- Logi: `docker-compose logs`
+Memory profiling:
 
----
-
-## 📝 Licencja
-
-Apache-2.0 License
-
-## 👨‍💻 Autor
-
-Alpha AI Team – Automated Trading Intelligence
+```bash
+python profiling/profile_memory.py
+```
 
 ---
 
-**Pytania?** Sprawdź `reports/` folder – tam są wszystkie wygenerowane raporty.
+## Pre-commit hooks
 
+Instalacja:
+
+```bash
+pre-commit install
+```
+
+Uruchomienie reczne:
+
+```bash
+pre-commit run --all-files
+```
+
+---
+
+## Windows Dev I Test Commands
+
+Setup lokalny:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\setup_windows.ps1
+```
+
+Aktywacja srodowiska:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Uruchomienie aplikacji:
+
+```powershell
+.\.venv\Scripts\python.exe main.py
+```
+
+Uruchomienie wszystkich testow:
+
+```powershell
+.\run_tests.ps1 -q
+```
+
+Uruchomienie tylko nowych testow pipeline:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q tests/test_integration_pipeline.py tests/test_integration_gui_pipeline.py tests/test_stress_extended.py
+```
+
+Formatowanie, lint i coverage:
+
+```powershell
+bash ./dev.sh
+```
+
+Jesli nie chcesz aktywowac `.venv`, mozesz uzywac bezposrednio:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m black .
+.\.venv\Scripts\python.exe -m flake8 .
+.\.venv\Scripts\python.exe -m mypy .
+```
+
+---
+
+## Licencja
+
+MIT License.

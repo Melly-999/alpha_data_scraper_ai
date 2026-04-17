@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from indicators import _ema, _rsi, _stochastic, add_indicators
+from indicators import RollingIndicatorBuffer, _ema, _rsi, _stochastic, add_indicators
 
 # ---------------------------------------------------------------------------
 # Existing tests
@@ -173,3 +173,22 @@ def test_add_indicators_stoch_in_range(sample_ohlcv: pd.DataFrame) -> None:
     out = add_indicators(sample_ohlcv)
     assert out["stoch_k"].between(0, 100).all()
     assert out["stoch_d"].between(0, 100).all()
+
+
+def test_rolling_indicator_buffer_returns_latest_row(
+    sample_ohlcv: pd.DataFrame,
+) -> None:
+    buffer = RollingIndicatorBuffer(maxlen=120)
+    out = buffer.extend(sample_ohlcv.tail(80))
+    assert len(out) > 0
+    assert {"rsi", "macd_hist", "bb_pos"}.issubset(set(out.columns))
+
+
+def test_rolling_indicator_buffer_ignores_duplicate_time(
+    sample_ohlcv: pd.DataFrame,
+) -> None:
+    buffer = RollingIndicatorBuffer(maxlen=120)
+    candle = sample_ohlcv.iloc[0]
+    buffer.append(candle)  # first append may or may not return None
+    assert buffer.append(candle) is None  # duplicate must be rejected
+    assert len(buffer.frame) == 1

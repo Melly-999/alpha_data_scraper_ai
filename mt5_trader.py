@@ -22,6 +22,7 @@ class MT5AutoTrader:
     sl_points: int = 200
     tp_points: int = 300
     magic: int = 20260327
+    risk_manager: Any = None
 
     def maybe_execute(self, signal: str, confidence: float) -> dict[str, Any]:
         if not self.enabled:
@@ -88,6 +89,19 @@ class MT5AutoTrader:
                 "type_time": mt5_api.ORDER_TIME_GTC,
                 "type_filling": mt5_api.ORDER_FILLING_IOC,
             }
+
+            if self.risk_manager is not None:
+                validation = self.risk_manager.validate(
+                    signal=signal_upper,
+                    confidence=confidence,
+                    entry_price=price,
+                    stop_loss=sl,
+                    take_profit=tp,
+                )
+                validation_data = validation.to_dict()
+                if not validation.allowed:
+                    return {"status": "risk_blocked", "validation": validation_data}
+                request["volume"] = float(validation.lot_size)
 
             if self.dry_run:
                 return {

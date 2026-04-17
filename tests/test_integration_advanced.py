@@ -11,7 +11,7 @@ import json
 import sys
 from datetime import datetime, timedelta
 from typing import Callable, Dict, Optional, Tuple
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -343,7 +343,9 @@ class TestClaudeAIIntegration:
             }
         )
         client = ClaudeAIClient(api_key="test")
-        with patch.object(client, "_call_api", return_value=raw):
+        with patch.object(
+            client, "_call_api_async", new_callable=AsyncMock, return_value=raw
+        ):
             sig = client.get_trading_signal({"symbol": "EURUSD", "rsi": 35.0})
         assert isinstance(sig, ClaudeSignal)
         assert sig.signal == "BUY"
@@ -359,20 +361,29 @@ class TestClaudeAIIntegration:
             }
         )
         client = ClaudeAIClient(api_key="test")
-        with patch.object(client, "_call_api", return_value=raw):
+        with patch.object(
+            client, "_call_api_async", new_callable=AsyncMock, return_value=raw
+        ):
             sig = client.get_trading_signal({"symbol": "GBPUSD", "rsi": 75.0})
         assert sig.signal == "SELL"
         assert sig.confidence == 75
 
     def test_api_error_returns_none(self):
         client = ClaudeAIClient(api_key="test")
-        with patch.object(client, "_call_api", return_value=None):
+        with patch.object(
+            client, "_call_api_async", new_callable=AsyncMock, return_value=None
+        ):
             sig = client.get_trading_signal({"symbol": "EURUSD"})
         assert sig is None
 
     def test_malformed_json_returns_hold(self):
         client = ClaudeAIClient(api_key="test")
-        with patch.object(client, "_call_api", return_value="not valid json"):
+        with patch.object(
+            client,
+            "_call_api_async",
+            new_callable=AsyncMock,
+            return_value="not valid json",
+        ):
             sig = client.get_trading_signal({"symbol": "EURUSD"})
         assert sig is not None
         assert sig.signal == "HOLD"
@@ -384,7 +395,9 @@ class TestClaudeAIIntegration:
             '```json\n{"signal":"BUY","confidence":70,"risk":"LOW","reason":"ok"}\n```'
         )
         client = ClaudeAIClient(api_key="test")
-        with patch.object(client, "_call_api", return_value=raw):
+        with patch.object(
+            client, "_call_api_async", new_callable=AsyncMock, return_value=raw
+        ):
             sig = client.get_trading_signal({"symbol": "EURUSD"})
         assert sig.signal == "BUY"
 
@@ -398,7 +411,9 @@ class TestClaudeAIIntegration:
             "GBPUSD": {"symbol": "GBPUSD", "rsi": 40},
             "USDJPY": {"symbol": "USDJPY", "rsi": 38},
         }
-        with patch.object(client, "_call_api", return_value=raw_buy):
+        with patch.object(
+            client, "_call_api_async", new_callable=AsyncMock, return_value=raw_buy
+        ):
             sigs = client.get_portfolio_signal(portfolio)
         assert sigs is not None
         assert len(sigs) == 3
@@ -422,7 +437,12 @@ class TestClaudeAIIntegration:
             {"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "agrees"}
         )
         integration = ClaudeAIIntegration(api_key="test", enabled=True)
-        with patch.object(integration.client, "_call_api", return_value=raw):
+        with patch.object(
+            integration.client,
+            "_call_api_async",
+            new_callable=AsyncMock,
+            return_value=raw,
+        ):
             sig, conf, reason = integration.validate_signal(
                 symbol="EURUSD",
                 engine_signal="BUY",
@@ -437,7 +457,12 @@ class TestClaudeAIIntegration:
             {"signal": "SELL", "confidence": 75, "risk": "MEDIUM", "reason": "bearish"}
         )
         integration = ClaudeAIIntegration(api_key="test", enabled=True)
-        with patch.object(integration.client, "_call_api", return_value=raw):
+        with patch.object(
+            integration.client,
+            "_call_api_async",
+            new_callable=AsyncMock,
+            return_value=raw,
+        ):
             sig, conf, reason = integration.validate_signal(
                 symbol="EURUSD",
                 engine_signal="BUY",
@@ -449,7 +474,12 @@ class TestClaudeAIIntegration:
 
     def test_integration_claude_failure_falls_back(self):
         integration = ClaudeAIIntegration(api_key="test", enabled=True)
-        with patch.object(integration.client, "_call_api", return_value=None):
+        with patch.object(
+            integration.client,
+            "_call_api_async",
+            new_callable=AsyncMock,
+            return_value=None,
+        ):
             sig, conf, reason = integration.validate_signal(
                 symbol="EURUSD",
                 engine_signal="SELL",
@@ -464,7 +494,12 @@ class TestClaudeAIIntegration:
             {"signal": "BUY", "confidence": 80, "risk": "MEDIUM", "reason": "ok"}
         )
         integration = ClaudeAIIntegration(api_key="test", enabled=True)
-        with patch.object(integration.client, "_call_api", return_value=raw):
+        with patch.object(
+            integration.client,
+            "_call_api_async",
+            new_callable=AsyncMock,
+            return_value=raw,
+        ):
             sig = integration.get_independent_signal({"symbol": "EURUSD", "rsi": 32})
         assert isinstance(sig, ClaudeSignal)
         assert sig.signal == "BUY"
@@ -510,7 +545,12 @@ class TestFullPipeline:
             {"signal": chosen, "confidence": 78, "risk": "MEDIUM", "reason": "agrees"}
         )
         integration = ClaudeAIIntegration(api_key="test")
-        with patch.object(integration.client, "_call_api", return_value=raw):
+        with patch.object(
+            integration.client,
+            "_call_api_async",
+            new_callable=AsyncMock,
+            return_value=raw,
+        ):
             final_sig, final_conf, reason = integration.validate_signal(
                 symbol="EURUSD",
                 engine_signal=chosen,
@@ -531,7 +571,12 @@ class TestFullPipeline:
             {"signal": "SELL", "confidence": 80, "risk": "HIGH", "reason": "counter"}
         )
         integration = ClaudeAIIntegration(api_key="test")
-        with patch.object(integration.client, "_call_api", return_value=raw):
+        with patch.object(
+            integration.client,
+            "_call_api_async",
+            new_callable=AsyncMock,
+            return_value=raw,
+        ):
             final_sig, _, reason = integration.validate_signal(
                 symbol="EURUSD",
                 engine_signal="BUY",
