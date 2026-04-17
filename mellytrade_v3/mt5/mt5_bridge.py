@@ -9,7 +9,7 @@ import httpx
 from ensemble_combiner import CombinedSignal, EnsembleCombiner, TechnicalSignal
 from lstm_signal_adapter import LSTMSignalAdapter
 
-FASTAPI_URL = os.getenv('FASTAPI_URL', 'http://127.0.0.1:8000')
+FASTAPI_URL = os.getenv('FASTAPI_URL', 'http://127.0.0.1:8001')
 FASTAPI_KEY = os.getenv('FASTAPI_KEY', 'change-me-fastapi-key')
 SYMBOLS = [s.strip() for s in os.getenv('SYMBOLS', 'EURUSD,GBPUSD,XAUUSD,USDJPY').split(',') if s.strip()]
 POLL_INTERVAL = int(os.getenv('POLL_INTERVAL', '15'))
