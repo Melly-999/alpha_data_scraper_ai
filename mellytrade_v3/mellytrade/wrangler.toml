@@ -1,0 +1,12 @@
+name = "mellytrade-hub"
+main = "src/worker.ts"
+compatibility_date = "2024-09-23"
+
+# KV for recent signals
+[[kv_namespaces]]
+binding = "SIGNALS"
+id = "replace-with-your-kv-namespace-id"
+
+[vars]
+ALLOWED_ORIGIN = "*"
+# CF_API_SECRET is injected via `wrangler secret put CF_API_SECRET`
