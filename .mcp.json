@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "cloudmcp-files": {
+      "url": "${env:CLOUDMCP_FILES_URL}",
+      "headers": {
+        "Authorization": "Bearer ${env:CLOUDMCP_FILES_TOKEN}"
+      }
+    },
+    "cloudmcp-web": {
+      "url": "${env:CLOUDMCP_WEB_URL}",
+      "headers": {
+        "Authorization": "Bearer ${env:CLOUDMCP_WEB_TOKEN}"
+      }
+    },
+    "cloudmcp-memory": {
+      "url": "${env:CLOUDMCP_MEMORY_URL}",
+      "headers": {
+        "Authorization": "Bearer ${env:CLOUDMCP_MEMORY_TOKEN}"
+      }
+    }
+  }
+}

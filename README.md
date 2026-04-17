@@ -2,6 +2,62 @@
 
 Profesjonalny system analizy handlowej z integracją Claude AI + Wall Street promptów + automatycznym tradingiem.
 
+## MellyTrade v3 Integration
+
+The `mellytrade_v3/` integration adds a FastAPI signal gate, Cloudflare Worker
+publish hub, React/Vite dashboard, and MT5 bridge. The default risk posture is
+unchanged: live trading remains disabled elsewhere in the repository, MellyTrade
+signals must include SL/TP, `MIN_CONFIDENCE=70`, `MAX_RISK_PERCENT=1.0`, and
+`COOLDOWN_SECONDS=120`.
+
+### Requirements
+
+- Windows PowerShell
+- Python 3.9+ for the MellyTrade API and MT5 bridge
+- Node.js/npm for the Worker and dashboard
+- Production secrets supplied through `.env` or system environment variables
+- Optional CloudMCP URLs/tokens for File Manager, Web Search, and Memory
+
+### Run MellyTrade v3 Locally
+
+```powershell
+# 1. Cloudflare Worker hub on http://127.0.0.1:8787
+cd C:\AI\MellyTrade_Workspace\02_Repo\alpha_data_scraper_ai\mellytrade_v3\mellytrade
+npm install
+npm run dev
+
+# 2. FastAPI backend on http://127.0.0.1:8000
+cd C:\AI\MellyTrade_Workspace\02_Repo\alpha_data_scraper_ai\mellytrade_v3\mellytrade-api
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+uvicorn app.main:app --reload
+
+# 3. Dashboard on http://127.0.0.1:5173
+cd C:\AI\MellyTrade_Workspace\02_Repo\alpha_data_scraper_ai\mellytrade_v3\mellytrade\dashboard
+npm install
+npm run dev
+
+# 4. MT5 bridge
+cd C:\AI\MellyTrade_Workspace\02_Repo\alpha_data_scraper_ai\mellytrade_v3\mt5
+..\mellytrade-api\.venv\Scripts\python.exe mt5_bridge.py
+```
+
+If port 8000 is unavailable on Windows, run `uvicorn app.main:app --reload
+--host 127.0.0.1 --port 8001` and set `FASTAPI_URL=http://127.0.0.1:8001` for
+the bridge.
+
+### Remaining Manual Setup
+
+- Replace placeholder `FASTAPI_KEY`, `CF_API_SECRET`, and all `CLOUDMCP_*`
+  values before any shared or production run.
+- Set a production `DATABASE_URL`, for example Postgres via
+  `postgresql+psycopg://...`.
+- Configure `ALPHA_REPO_PATH` plus either `ALPHA_LSTM_CLASS` or
+  `ALPHA_LSTM_FUNCTION` when connecting the MT5 bridge to the Alpha LSTM model.
+- Validate deployment-specific networking for Docker, Cloud Run, or the target
+  production host.
+
 ## 🎯 Cechy
 
 - ✅ **Analiza XTB** (cash flow, dywidendy, pozycje z XLSX)
