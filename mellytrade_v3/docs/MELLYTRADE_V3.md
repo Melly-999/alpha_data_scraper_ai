@@ -55,6 +55,28 @@ curl -s -X POST http://127.0.0.1:8000/signal \
 fetcher for tests), calls `lstm_signal_adapter.predict_signal` with a real
 DataFrame, and POSTs the result to `/signal`.
 
+### Datasource requirements
+
+The LSTM adapter expects a `pandas.DataFrame` with at least these
+case-insensitive columns (in any order — the adapter normalises and
+re-orders them so `close` sits at index 0):
+
+- `close`, `open`, `high`, `low` — required
+- `volume` — optional but forwarded when present
+
+The adapter enforces a minimum of **40 bars**. Anything smaller, missing
+a required column, or passed as `None` falls back to `HOLD` with a
+`fallback:*` reason so the backend risk gates reject it.
+
+### LSTM lifecycle
+
+`lstm_model.LSTMPipeline` is stateful — it needs `fit()` before
+`predict_next_delta()`. The adapter caches one instance per
+`ALPHA_LSTM_CLASS` value and runs `fit` on the first OHLCV batch it
+sees; subsequent calls only predict. Call
+`mellytrade_v3.mt5.lstm_signal_adapter.reset_cache()` to drop the cached
+instance (e.g. at start of a new session, or in tests).
+
 Without a real OHLCV DataFrame the adapter always returns a HOLD fallback —
 this is by design so missing data never leaks into live trading.
 

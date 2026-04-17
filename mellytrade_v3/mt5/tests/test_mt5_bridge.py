@@ -6,7 +6,7 @@ import httpx
 import pandas as pd
 
 from mt5 import mt5_bridge
-from mt5.lstm_signal_adapter import AdapterSignal, predict_signal
+from mt5.lstm_signal_adapter import predict_signal, reset_cache
 
 
 def test_adapter_fallback_without_ohlcv():
@@ -16,14 +16,31 @@ def test_adapter_fallback_without_ohlcv():
     assert sig.confidence == 33.0
 
 
-def test_adapter_uses_injected_model(ohlcv):
-    # Custom predict_fn produces a deterministic BUY bias.
-    def up_model(frame: pd.DataFrame) -> float:
-        return 0.005  # delta ~ 0.45% on ~1.10 close
+def test_adapter_fits_and_predicts_with_real_lstm(ohlcv, monkeypatch, tmp_path):
+    """Exercises the full fit → predict_next_delta path on the bundled
+    ``lstm_model.LSTMPipeline``. Without a real OHLCV frame the adapter
+    would fall back to HOLD — this test proves the bridge now hands one
+    over and the pipeline accepts it.
+    """
+    import pathlib
 
-    sig = predict_signal(ohlcv, threshold=1e-4, predict_fn=up_model)
-    assert sig.action == "BUY"
+    # The alpha repo lives two levels above mellytrade_v3/mt5/tests/.
+    repo_root = pathlib.Path(__file__).resolve().parents[3]
+    assert (repo_root / "lstm_model.py").exists(), repo_root
+
+    reset_cache()
+    monkeypatch.setenv("ALPHA_REPO_PATH", str(repo_root))
+    monkeypatch.setenv("ALPHA_LSTM_CLASS", "lstm_model.LSTMPipeline")
+    monkeypatch.delenv("ALPHA_LSTM_FUNCTION", raising=False)
+
+    sig = predict_signal(ohlcv)
+
+    # The naive/TF-free fallback inside LSTMPipeline may return ~0 delta
+    # → HOLD. What matters is that the model ran (no fallback:* reason)
+    # and confidence stays within the clamp.
+    assert sig.action in ("BUY", "SELL", "HOLD")
     assert 33.0 <= sig.confidence <= 85.0
+    assert not sig.reason.startswith("fallback:"), sig.reason
 
 
 def test_bridge_run_once_posts_signal_to_api(ohlcv, monkeypatch):
@@ -41,21 +58,18 @@ def test_bridge_run_once_posts_signal_to_api(ohlcv, monkeypatch):
 
     def fetcher(symbol: str, timeframe: str, bars: int) -> pd.DataFrame:
         assert symbol == "EURUSD"
+        assert {"open", "high", "low", "close"}.issubset(set(ohlcv.columns))
         return ohlcv
 
-    def predict_fn(frame: pd.DataFrame) -> float:
-        return 0.004  # force BUY
-
-    # Patch the adapter used inside run_once so we exercise the full
-    # bridge path (fetch → adapt → HTTP) deterministically.
-    def fake_predict(frame, threshold=1e-4, predict_fn=None):
+    # Replace the adapter with a deterministic BUY so we can assert on
+    # the exact payload shape the bridge hands off to the API.
+    def fake_predict(frame):
         from mt5.lstm_signal_adapter import AdapterSignal
 
-        return AdapterSignal("BUY", 75.0, predict_fn(frame) if predict_fn else 0.004)
+        assert {"open", "high", "low", "close"}.issubset(set(frame.columns))
+        return AdapterSignal("BUY", 75.0, 0.004)
 
-    monkeypatch.setattr(
-        mt5_bridge, "predict_signal", lambda f: fake_predict(f, predict_fn=predict_fn)
-    )
+    monkeypatch.setattr(mt5_bridge, "predict_signal", fake_predict)
 
     cfg = mt5_bridge.BridgeConfig(
         api_url="http://test",

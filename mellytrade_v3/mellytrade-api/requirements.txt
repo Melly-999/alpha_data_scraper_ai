@@ -5,3 +5,9 @@ SQLAlchemy>=2.0,<3.0
 python-dotenv>=1.0,<2.0
 httpx>=0.27,<1.0
 pytest>=8.0,<10.0
+
+# MT5 bridge + LSTM adapter runtime (the adapter loads
+# alpha_data_scraper_ai/lstm_model.py which depends on these).
+numpy>=1.26,<3.0
+pandas>=2.2,<4.0
+scikit-learn>=1.4,<2.0
