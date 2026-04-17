@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from lstm_signal_adapter import LSTMSignal
 

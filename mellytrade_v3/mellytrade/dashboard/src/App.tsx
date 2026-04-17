@@ -1,98 +1,164 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from "react"
 
 type Signal = {
-  id: string
-  symbol: string
-  direction: string
-  confidence: number
-  price: number
-  stopLoss: number
-  takeProfit: number
-  riskPercent: number
+  id?: string | number
+  symbol?: string
+  direction?: string
+  confidence?: number
+  price?: number
+  stopLoss?: number
+  takeProfit?: number
+  riskPercent?: number
   timestamp?: string
+  status?: string
 }
 
-function makeDemoSignal(): Signal {
-  const buy = Math.random() > 0.5
-  const price = Number((1.05 + Math.random() * 0.1).toFixed(5))
-  return {
-    id: crypto.randomUUID(),
-    symbol: ['EURUSD', 'GBPUSD', 'XAUUSD', 'USDJPY'][Math.floor(Math.random() * 4)],
-    direction: buy ? 'BUY' : 'SELL',
-    confidence: Number((70 + Math.random() * 25).toFixed(1)),
-    price,
-    stopLoss: buy ? Number((price - 0.003).toFixed(5)) : Number((price + 0.003).toFixed(5)),
-    takeProfit: buy ? Number((price + 0.006).toFixed(5)) : Number((price - 0.006).toFixed(5)),
-    riskPercent: Number((0.3 + Math.random() * 0.7).toFixed(2)),
-    timestamp: new Date().toISOString(),
-  }
+const wsUrl = () => {
+  const configured = import.meta.env.VITE_WS_URL as string | undefined
+  if (configured) return configured
+
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+  return `${protocol}//${window.location.host}/ws`
+}
+
+const formatValue = (value: number | undefined, digits = 5) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "-"
+  return value.toFixed(digits)
 }
 
 export default function App() {
   const [signals, setSignals] = useState<Signal[]>([])
-  const [status, setStatus] = useState('demo')
-  const timer = useRef<number | null>(null)
+  const [status, setStatus] = useState("connecting")
+  const [lastError, setLastError] = useState("")
 
   useEffect(() => {
-    setSignals([makeDemoSignal(), makeDemoSignal()])
-    timer.current = window.setInterval(() => {
-      setSignals(prev => [makeDemoSignal(), ...prev].slice(0, 12))
-    }, 3500)
+    let socket: WebSocket | null = null
+    let reconnectTimer: number | undefined
+    let closedByApp = false
+
+    const connect = () => {
+      socket = new WebSocket(wsUrl())
+      setStatus("connecting")
+
+      socket.onopen = () => {
+        setStatus("live")
+        setLastError("")
+      }
+
+      socket.onmessage = event => {
+        try {
+          const data = JSON.parse(event.data) as Signal
+          if ((data as { type?: string }).type === "pong") return
+          setSignals(prev => [{ ...data, id: data.id ?? crypto.randomUUID() }, ...prev].slice(0, 20))
+        } catch {
+          setLastError("Received unreadable signal payload")
+        }
+      }
+
+      socket.onerror = () => {
+        setStatus("error")
+        setLastError("WebSocket connection failed")
+      }
+
+      socket.onclose = () => {
+        if (closedByApp) return
+        setStatus("reconnecting")
+        reconnectTimer = window.setTimeout(connect, 3000)
+      }
+    }
+
+    connect()
+
     return () => {
-      if (timer.current) window.clearInterval(timer.current)
+      closedByApp = true
+      if (reconnectTimer) window.clearTimeout(reconnectTimer)
+      socket?.close()
     }
   }, [])
 
   const summary = useMemo(() => {
-    const buys = signals.filter(s => s.direction === 'BUY').length
-    const sells = signals.filter(s => s.direction === 'SELL').length
-    return { total: signals.length, buys, sells }
+    const accepted = signals.filter(signal => signal.status !== "blocked").length
+    const blocked = signals.length - accepted
+    const maxRisk = signals.reduce((max, signal) => Math.max(max, signal.riskPercent ?? 0), 0)
+    const averageConfidence = signals.length
+      ? signals.reduce((sum, signal) => sum + (signal.confidence ?? 0), 0) / signals.length
+      : 0
+    return { total: signals.length, accepted, blocked, maxRisk, averageConfidence }
   }, [signals])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#060d1a', color: '#f1f5f9', padding: 24, fontFamily: 'Inter, system-ui, sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+    <main style={{ minHeight: "100vh", background: "#f7f7f2", color: "#161616", padding: 24, fontFamily: "Inter, system-ui, sans-serif" }}>
+      <header style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", marginBottom: 22 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 24 }}>MellyTrade Dashboard</h1>
-          <div style={{ color: '#94a3b8', marginTop: 6 }}>Live signal feed starter</div>
+          <h1 style={{ margin: 0, fontSize: 26 }}>MellyTrade</h1>
+          <p style={{ margin: "6px 0 0", color: "#5f625d" }}>Live signal feed</p>
         </div>
-        <div style={{ padding: '6px 12px', border: '1px solid #1e293b', borderRadius: 8, color: '#22c55e' }}>{status.toUpperCase()}</div>
-      </div>
+        <span style={{ border: "1px solid #b8b8ad", borderRadius: 8, padding: "7px 12px", background: status === "live" ? "#dff2df" : "#fff4cf" }}>
+          {status.toUpperCase()}
+        </span>
+      </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, marginBottom: 20 }}>
-        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, padding: 16 }}>
-          <div style={{ color: '#94a3b8', fontSize: 12 }}>TOTAL SIGNALS</div>
-          <div style={{ fontSize: 28, fontWeight: 700 }}>{summary.total}</div>
-        </div>
-        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, padding: 16 }}>
-          <div style={{ color: '#94a3b8', fontSize: 12 }}>BUY</div>
-          <div style={{ fontSize: 28, fontWeight: 700, color: '#22c55e' }}>{summary.buys}</div>
-        </div>
-        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, padding: 16 }}>
-          <div style={{ color: '#94a3b8', fontSize: 12 }}>SELL</div>
-          <div style={{ fontSize: 28, fontWeight: 700, color: '#ef4444' }}>{summary.sells}</div>
-        </div>
-      </div>
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 22 }}>
+        <Metric label="Signals" value={summary.total.toString()} />
+        <Metric label="Accepted" value={summary.accepted.toString()} />
+        <Metric label="Blocked" value={summary.blocked.toString()} />
+        <Metric label="Max risk" value={`${summary.maxRisk.toFixed(2)}%`} />
+        <Metric label="Avg confidence" value={`${summary.averageConfidence.toFixed(1)}%`} />
+      </section>
 
-      <div style={{ display: 'grid', gap: 10 }}>
-        {signals.map(signal => (
-          <div key={signal.id} style={{ background: '#0f172a', border: '1px solid #1e293b', borderLeft: `4px solid ${signal.direction === 'BUY' ? '#22c55e' : '#ef4444'}`, borderRadius: 12, padding: 14 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <strong>{signal.symbol}</strong>
-                <span style={{ color: signal.direction === 'BUY' ? '#22c55e' : '#ef4444' }}>{signal.direction}</span>
-              </div>
-              <div>{signal.confidence}%</div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, marginTop: 10, fontSize: 14 }}>
-              <div><div style={{ color: '#94a3b8', fontSize: 12 }}>Entry</div><div>{signal.price}</div></div>
-              <div><div style={{ color: '#94a3b8', fontSize: 12 }}>SL</div><div>{signal.stopLoss}</div></div>
-              <div><div style={{ color: '#94a3b8', fontSize: 12 }}>TP</div><div>{signal.takeProfit}</div></div>
-              <div><div style={{ color: '#94a3b8', fontSize: 12 }}>Risk</div><div>{signal.riskPercent}%</div></div>
-            </div>
+      {lastError ? <p style={{ color: "#9f1d1d", marginBottom: 14 }}>{lastError}</p> : null}
+
+      <section style={{ display: "grid", gap: 10 }}>
+        {signals.length === 0 ? (
+          <div style={{ border: "1px solid #d6d6ca", borderRadius: 8, padding: 18, background: "#ffffff" }}>
+            Waiting for published signals.
           </div>
-        ))}
+        ) : (
+          signals.map(signal => <SignalRow key={signal.id} signal={signal} />)
+        )}
+      </section>
+    </main>
+  )
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ border: "1px solid #d6d6ca", borderRadius: 8, padding: 14, background: "#ffffff" }}>
+      <div style={{ color: "#5f625d", fontSize: 12, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 700 }}>{value}</div>
+    </div>
+  )
+}
+
+function SignalRow({ signal }: { signal: Signal }) {
+  const direction = signal.direction ?? "UNKNOWN"
+  const directionColor = direction === "BUY" ? "#116b38" : direction === "SELL" ? "#9f1d1d" : "#5f625d"
+
+  return (
+    <article style={{ border: "1px solid #d6d6ca", borderLeft: `4px solid ${directionColor}`, borderRadius: 8, padding: 14, background: "#ffffff" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <strong>{signal.symbol ?? "UNKNOWN"}</strong>
+          <span style={{ color: directionColor, fontWeight: 700 }}>{direction}</span>
+          {signal.status ? <span>{signal.status}</span> : null}
+        </div>
+        <strong>{formatValue(signal.confidence, 1)}%</strong>
       </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8, marginTop: 12, fontSize: 14 }}>
+        <Field label="Entry" value={formatValue(signal.price)} />
+        <Field label="SL" value={formatValue(signal.stopLoss)} />
+        <Field label="TP" value={formatValue(signal.takeProfit)} />
+        <Field label="Risk" value={`${formatValue(signal.riskPercent, 2)}%`} />
+      </div>
+    </article>
+  )
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div style={{ color: "#5f625d", fontSize: 12 }}>{label}</div>
+      <div>{value}</div>
     </div>
   )
 }

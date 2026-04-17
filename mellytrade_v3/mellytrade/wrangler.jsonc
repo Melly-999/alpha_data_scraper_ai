@@ -1,0 +1,19 @@
+{
+  "name": "mellytrade-hub-v3",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-03-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [{ "name": "TRADING_HUB", "class_name": "TradingHub" }]
+  },
+  "migrations": [{ "tag": "v1", "new_classes": ["TradingHub"] }],
+  "assets": {
+    "directory": "./dashboard/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "vars": {
+    "ENVIRONMENT": "development",
+    "CF_API_SECRET": "change-me-cloudflare-secret"
+  }
+}

@@ -47,7 +47,7 @@ export default {
     if (url.pathname === '/ws') {
       const id = env.TRADING_HUB.idFromName('global');
       const stub = env.TRADING_HUB.get(id);
-      return stub.fetch('https://hub/ws');
+      return stub.fetch(request);
     }
     return env.ASSETS.fetch(request);
   }
