@@ -4,7 +4,9 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.exception_handlers import http_exception_handler
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -34,6 +36,27 @@ app = FastAPI(
     ),
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(HTTPException)
+async def rejected_http_exception_handler(
+    request: Request, exc: HTTPException
+) -> Response:
+    if exc.status_code in (
+        status.HTTP_400_BAD_REQUEST,
+        status.HTTP_401_UNAUTHORIZED,
+    ):
+        detail = exc.detail
+        if isinstance(detail, dict):
+            reason = str(detail.get("reason", "rejected"))
+            message = detail.get("detail")
+        else:
+            reason = "rejected"
+            message = str(detail) if detail is not None else None
+        body = RejectedOut(reason=reason, detail=message)
+        return JSONResponse(status_code=exc.status_code, content=body.model_dump())
+
+    return await http_exception_handler(request, exc)
 
 
 def get_db() -> Session:  # pragma: no cover - trivial

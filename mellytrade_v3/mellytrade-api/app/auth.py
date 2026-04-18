@@ -10,6 +10,9 @@ async def require_api_key(x_api_key: str | None = Header(default=None)) -> str:
     if not x_api_key or x_api_key != expected:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="invalid or missing API key",
+            detail={
+                "reason": "unauthorized",
+                "detail": "invalid_or_missing_api_key",
+            },
         )
     return x_api_key

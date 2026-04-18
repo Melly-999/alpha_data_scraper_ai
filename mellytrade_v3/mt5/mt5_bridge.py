@@ -139,7 +139,10 @@ def run_once(
             body = resp.json()
         except Exception:
             body = {"text": resp.text}
-        return {"status": "sent", "http": resp.status_code, "body": body}
+        result = {"http": resp.status_code, "body": body, "payload": payload}
+        if resp.status_code < 200 or resp.status_code >= 300:
+            return {"status": "failed", **result}
+        return {"status": "sent", **result}
     finally:
         if http_client is None:
             client.close()
