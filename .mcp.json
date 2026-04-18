@@ -1,23 +1,11 @@
 {
   "$schema": "https://modelcontextprotocol.io/schema/config.json",
-  "_comment": "CloudMCP server wiring. Each server has its own URL + bearer token injected from the environment. Copy .env.example -> .env and fill the six CLOUDMCP_* variables locally; never commit real values.",
+  "_comment": "CloudMCP.run router wiring — a single MCP endpoint fans out to all backend servers (files, web, memory). Set CLOUDMCP_ROUTER_URL and CLOUDMCP_ROUTER_TOKEN in your local .env (never committed).",
   "mcpServers": {
-    "cloudmcp-file-manager": {
-      "url": "${CLOUDMCP_FILES_URL}",
+    "cloudmcp-router": {
+      "url": "${CLOUDMCP_ROUTER_URL}",
       "headers": {
-        "Authorization": "Bearer ${CLOUDMCP_FILES_TOKEN}"
-      }
-    },
-    "cloudmcp-web-search": {
-      "url": "${CLOUDMCP_WEB_URL}",
-      "headers": {
-        "Authorization": "Bearer ${CLOUDMCP_WEB_TOKEN}"
-      }
-    },
-    "cloudmcp-memory": {
-      "url": "${CLOUDMCP_MEMORY_URL}",
-      "headers": {
-        "Authorization": "Bearer ${CLOUDMCP_MEMORY_TOKEN}"
+        "Authorization": "Bearer ${CLOUDMCP_ROUTER_TOKEN}"
       }
     }
   }
