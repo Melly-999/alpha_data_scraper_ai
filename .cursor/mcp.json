@@ -1,0 +1,24 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/config.json",
+  "_comment": "Cursor-local MCP wiring. Tokens injected from environment.",
+  "mcpServers": {
+    "cloudmcp-file-manager": {
+      "url": "https://cloudmcp.example.com/file-manager",
+      "env": {
+        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      }
+    },
+    "cloudmcp-web-search": {
+      "url": "https://cloudmcp.example.com/web-search",
+      "env": {
+        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      }
+    },
+    "cloudmcp-memory": {
+      "url": "https://cloudmcp.example.com/memory",
+      "env": {
+        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      }
+    }
+  }
+}

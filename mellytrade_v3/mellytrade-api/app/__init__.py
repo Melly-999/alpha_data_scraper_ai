@@ -1,0 +1,1 @@
+"""MellyTrade API package."""

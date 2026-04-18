@@ -1,0 +1,24 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/config.json",
+  "_comment": "Populate tokens via environment variables; never commit real secrets.",
+  "mcpServers": {
+    "cloudmcp-file-manager": {
+      "url": "https://cloudmcp.example.com/file-manager",
+      "env": {
+        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      }
+    },
+    "cloudmcp-web-search": {
+      "url": "https://cloudmcp.example.com/web-search",
+      "env": {
+        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      }
+    },
+    "cloudmcp-memory": {
+      "url": "https://cloudmcp.example.com/memory",
+      "env": {
+        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      }
+    }
+  }
+}

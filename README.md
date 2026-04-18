@@ -224,6 +224,79 @@ docker-compose restart             # Restart
 
 ---
 
+## 🧩 MellyTrade v3 (backend + MT5 bridge + dashboard + worker)
+
+The `mellytrade_v3/` sub-project ships the new MellyTrade stack on top of this
+repository's LSTM pipeline. All risk gates are enforced centrally by the
+backend: **max risk 1 %**, **min confidence 70**, **SL/TP required**,
+**per-symbol cooldown 60 s**.
+
+```
+mellytrade_v3/
+├── mellytrade-api/      # FastAPI (/health, /signal, /signals)
+├── mt5/                 # lstm_signal_adapter.py + mt5_bridge.py
+├── mellytrade/          # Cloudflare Worker hub + React dashboard
+└── docs/MELLYTRADE_V3.md
+```
+
+### Quick start
+
+```bash
+# Backend
+cd mellytrade_v3/mellytrade-api
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+cp .env.example .env
+pytest -q                                # 7 passing tests
+uvicorn app.main:app --reload --port 8000
+
+# Cloudflare Worker
+cd ../mellytrade && npm install && npm run dev        # :8787
+
+# Dashboard
+cd dashboard && npm install && npm run dev            # :5173
+
+# MT5 bridge tests (3)
+cd ../../../ && pytest mellytrade_v3/mt5/tests -q
+```
+
+Required env vars in `mellytrade_v3/mellytrade-api/.env`:
+
+```
+DATABASE_URL=sqlite:///./mellytrade.db   # or postgresql+psycopg://...
+FASTAPI_KEY=change-me
+CF_HUB_URL=http://127.0.0.1:8787/api/publish
+CF_API_SECRET=change-me
+COOLDOWN_SECONDS=60
+MIN_CONFIDENCE=70
+MAX_RISK_PERCENT=1.0
+ALPHA_REPO_PATH=/absolute/path/to/alpha_data_scraper_ai
+ALPHA_LSTM_CLASS=lstm_model.LSTMPipeline
+```
+
+### Diagnostics
+
+```bash
+# End-to-end LSTM + adapter wiring check (no network, no API call)
+python -m mellytrade_v3.mt5.check_setup
+
+# One-shot MT5 bridge run (reads .env, posts to /signal, prints JSON status)
+python -m mellytrade_v3.mt5.mt5_bridge
+```
+
+### Claude Code — SessionStart hook
+
+`.claude/hooks/session-start.sh` (registered in `.claude/settings.json`)
+auto-installs `requirements-ci.txt` + `mellytrade_v3/mellytrade-api/requirements.txt`
+and exports `PYTHONPATH` when `CLAUDE_CODE_REMOTE=true` (i.e. on the
+Claude Code web sandbox). Local sessions skip it — install dependencies
+manually per the Quick start above.
+
+See `mellytrade_v3/docs/MELLYTRADE_V3.md` for operational details, and
+`DEPLOYMENT_GUIDE.md` for the production checklist.
+
+---
+
 ## 📝 Licencja
 
 Apache-2.0 License
