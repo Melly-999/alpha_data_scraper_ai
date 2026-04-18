@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+from types import SimpleNamespace
 from typing import Any, Dict
 
 import httpx
@@ -131,3 +133,30 @@ def test_bridge_run_once_reports_api_rejection_as_failure(ohlcv, monkeypatch):
     assert result["status"] == "failed"
     assert result["http"] == 400
     assert result["body"]["reason"] == "risk_above_max"
+
+
+def test_fetch_ohlcv_uses_repo_mt5_fetcher_contract(ohlcv, monkeypatch):
+    captured: Dict[str, Any] = {}
+
+    class FakeMT5Fetcher:
+        def __init__(self, symbol: str, timeframe: str):
+            captured["symbol"] = symbol
+            captured["timeframe"] = timeframe
+
+        def get_latest_rates(self, bars: int) -> pd.DataFrame:
+            captured["bars"] = bars
+            frame = ohlcv.copy()
+            frame["time"] = pd.date_range("2026-01-01", periods=len(frame), freq="5min")
+            return frame
+
+    monkeypatch.setitem(
+        sys.modules,
+        "mt5_fetcher",
+        SimpleNamespace(MT5Fetcher=FakeMT5Fetcher),
+    )
+
+    frame = mt5_bridge.fetch_ohlcv("EURUSD", "M5", 120)
+
+    assert frame is not None
+    assert captured == {"symbol": "EURUSD", "timeframe": "M5", "bars": 120}
+    assert {"open", "high", "low", "close"}.issubset(set(frame.columns))

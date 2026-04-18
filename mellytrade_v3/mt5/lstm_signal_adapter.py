@@ -127,16 +127,14 @@ def _prepare_frame(frame: Any) -> Any:
     """Lower-case columns and reorder so ``close`` is first (expected by
     ``LSTMPipeline.predict_next_delta(close_col_index=0)``).
 
-    Extra columns are preserved so pipelines that expect volume still work.
+    Non-numeric columns such as MT5 timestamps are dropped because the
+    bundled ``LSTMPipeline`` feeds raw ``DataFrame.values`` into a scaler.
     """
     renamed = frame.rename(columns={c: c.lower() for c in frame.columns})
     ordered = list(REQUIRED_COLUMNS)
     for extra in OPTIONAL_COLUMNS:
         if extra in renamed.columns and extra not in ordered:
             ordered.append(extra)
-    for other in renamed.columns:
-        if other not in ordered:
-            ordered.append(other)
     return renamed[ordered]
 
 
