@@ -57,8 +57,21 @@ def fetch_ohlcv(
     try:
         from mt5_fetcher import MT5Fetcher  # type: ignore
 
-        f = MT5Fetcher()
-        frame = f.fetch(symbol=symbol, timeframe=timeframe, bars=bars)
+        try:
+            f = MT5Fetcher(symbol=symbol, timeframe=timeframe)
+        except TypeError:
+            f = MT5Fetcher()
+
+        if hasattr(f, "fetch"):
+            frame = f.fetch(symbol=symbol, timeframe=timeframe, bars=bars)
+        elif hasattr(f, "get_latest_rates"):
+            if hasattr(f, "symbol"):
+                f.symbol = symbol
+            if hasattr(f, "timeframe"):
+                f.timeframe = timeframe
+            frame = f.get_latest_rates(bars=bars)
+        else:
+            raise AttributeError("MT5Fetcher has no fetch/get_latest_rates method")
         return _normalize(frame)
     except Exception as exc:
         log.warning("MT5 fetch failed: %s", exc)
