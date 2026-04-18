@@ -1,5 +1,5 @@
 // MellyTrade hub: relays signals from the FastAPI backend to the dashboard.
-// - POST /api/publish  (secret-gated) stores the signal in KV + latest slot
+// - POST /api/publish  (secret-gated) stores each signal as an immutable KV item
 // - GET  /api/signals  returns the latest N signals for the dashboard
 // - GET  /api/health   liveness probe
 
@@ -9,8 +9,9 @@ export interface Env {
   ALLOWED_ORIGIN?: string;
 }
 
-const LATEST_KEY = "signals:latest";
+const SIGNAL_KEY_PREFIX = "signals:item:";
 const MAX_SIGNALS = 50;
+const MAX_TIMESTAMP_MS = 9999999999999;
 
 function cors(env: Env) {
   const origin = env.ALLOWED_ORIGIN ?? "*";
@@ -53,13 +54,17 @@ export default {
         }
       }
       const signal = await request.json().catch(() => null);
-      if (!signal) return json({ error: "invalid_json" }, { status: 400, env });
+      if (!signal || typeof signal !== "object" || Array.isArray(signal)) {
+        return json({ error: "invalid_json" }, { status: 400, env });
+      }
 
-      const list = await loadList(env);
-      list.unshift(signal as Record<string, unknown>);
-      const trimmed = list.slice(0, MAX_SIGNALS);
-      await env.SIGNALS.put(LATEST_KEY, JSON.stringify(trimmed));
-      return json({ status: "published", count: trimmed.length }, { env });
+      const stored = {
+        ...(signal as Record<string, unknown>),
+        received_at: new Date().toISOString(),
+      };
+      const key = signalKey();
+      await env.SIGNALS.put(key, JSON.stringify(stored));
+      return json({ status: "published", key }, { env });
     }
 
     if (url.pathname === "/api/signals" && request.method === "GET") {
@@ -72,12 +77,32 @@ export default {
 };
 
 async function loadList(env: Env): Promise<Record<string, unknown>[]> {
-  const raw = await env.SIGNALS.get(LATEST_KEY);
-  if (!raw) return [];
+  const listed = await env.SIGNALS.list({
+    prefix: SIGNAL_KEY_PREFIX,
+    limit: MAX_SIGNALS,
+  });
+  const keys = listed.keys.map((item) => item.name);
+  const values = await Promise.all(keys.map((key) => env.SIGNALS.get(key)));
+  return values
+    .map(parseSignal)
+    .filter((value): value is Record<string, unknown> => value !== null);
+}
+
+function signalKey(): string {
+  const reverseTimestamp = (MAX_TIMESTAMP_MS - Date.now())
+    .toString()
+    .padStart(13, "0");
+  return `${SIGNAL_KEY_PREFIX}${reverseTimestamp}:${crypto.randomUUID()}`;
+}
+
+function parseSignal(raw: string | null): Record<string, unknown> | null {
+  if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : null;
   } catch {
-    return [];
+    return null;
   }
 }

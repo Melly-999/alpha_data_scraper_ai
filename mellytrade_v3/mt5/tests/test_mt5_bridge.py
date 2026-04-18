@@ -91,3 +91,43 @@ def test_bridge_run_once_posts_signal_to_api(ohlcv, monkeypatch):
         '"symbol":"EURUSD"' in captured["json"]
         or '"symbol": "EURUSD"' in captured["json"]
     )
+
+
+def test_bridge_run_once_reports_api_rejection_as_failure(ohlcv, monkeypatch):
+    def transport_handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            400,
+            json={
+                "status": "rejected",
+                "reason": "risk_above_max",
+                "detail": "2.0 > 1.0",
+            },
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(transport_handler), timeout=5.0)
+
+    def fetcher(symbol: str, timeframe: str, bars: int) -> pd.DataFrame:
+        return ohlcv
+
+    def fake_predict(frame):
+        from mt5.lstm_signal_adapter import AdapterSignal
+
+        return AdapterSignal("BUY", 75.0, 0.004)
+
+    monkeypatch.setattr(mt5_bridge, "predict_signal", fake_predict)
+
+    cfg = mt5_bridge.BridgeConfig(
+        api_url="http://test",
+        api_key="test-key",
+        symbol="EURUSD",
+        timeframe="M5",
+        bars=120,
+        sl_pips=20,
+        tp_pips=40,
+        risk_percent=2.0,
+    )
+    result = mt5_bridge.run_once(config=cfg, fetcher=fetcher, http_client=client)
+
+    assert result["status"] == "failed"
+    assert result["http"] == 400
+    assert result["body"]["reason"] == "risk_above_max"

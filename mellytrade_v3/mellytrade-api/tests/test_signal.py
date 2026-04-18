@@ -23,6 +23,11 @@ def _buy(**overrides) -> dict:
 def test_signal_requires_api_key(client):
     resp = client.post("/signal", json=_buy())
     assert resp.status_code == 401
+    assert resp.json() == {
+        "status": "rejected",
+        "reason": "unauthorized",
+        "detail": "invalid_or_missing_api_key",
+    }
 
 
 def test_signal_accepts_valid_buy(client):
@@ -38,13 +43,15 @@ def test_signal_accepts_valid_buy(client):
 def test_signal_rejects_low_confidence(client):
     resp = client.post("/signal", json=_buy(confidence=60), headers=HEADERS)
     assert resp.status_code == 400
-    assert resp.json()["detail"]["reason"] == "confidence_below_min"
+    assert resp.json()["status"] == "rejected"
+    assert resp.json()["reason"] == "confidence_below_min"
 
 
 def test_signal_rejects_excessive_risk(client):
     resp = client.post("/signal", json=_buy(risk_percent=2.0), headers=HEADERS)
     assert resp.status_code == 400
-    assert resp.json()["detail"]["reason"] == "risk_above_max"
+    assert resp.json()["status"] == "rejected"
+    assert resp.json()["reason"] == "risk_above_max"
 
 
 def test_signal_rejects_invalid_sl_tp(client):
@@ -62,7 +69,8 @@ def test_signal_cooldown_blocks_then_clears(client):
 
     blocked = client.post("/signal", json=_buy(), headers=HEADERS)
     assert blocked.status_code == 400
-    assert blocked.json()["detail"]["reason"] == "cooldown_active"
+    assert blocked.json()["status"] == "rejected"
+    assert blocked.json()["reason"] == "cooldown_active"
 
     db_mod = importlib.import_module("app.database")
     model_mod = importlib.import_module("app.models")
