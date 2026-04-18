@@ -7,9 +7,13 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Callable, Tuple
 import logging
 
-import MetaTrader5 as mt5
 import numpy as np
 import pandas as pd
+
+try:
+    import MetaTrader5 as mt5  # type: ignore
+except Exception:  # pragma: no cover - optional runtime dependency
+    mt5 = None
 
 logger = logging.getLogger("Backtest")
 
@@ -89,28 +93,57 @@ class BacktestEngine:
     def backtest(
         self,
         signal_func: Callable[[pd.DataFrame], Tuple[str, float]],
-        start_date: datetime,
-        end_date: datetime,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
         lookback_bars: int = 100,
+        historical_data: Optional[pd.DataFrame] = None,
+        balance: Optional[float] = None,
+        risk_per_trade: Optional[float] = None,
     ) -> Optional[BacktestMetrics]:
         """
         Run backtest using signal function over historical data.
 
         Args:
             signal_func: Function that takes OHLC DataFrame and returns (signal, confidence).
-            start_date: Backtest start date (UTC).
-            end_date: Backtest end date (UTC).
+            start_date: Backtest start date (UTC). Optional when historical_data
+                is supplied.
+            end_date: Backtest end date (UTC). Optional when historical_data is
+                supplied.
             lookback_bars: Number of bars for indicators.
+            historical_data: Optional in-memory OHLCV DataFrame for tests/examples.
+            balance: Optional temporary initial balance override.
+            risk_per_trade: Optional temporary risk-per-trade override.
 
         Returns:
             BacktestMetrics object or None on error.
         """
-        # Fetch historical data
+        if balance is not None:
+            self.initial_balance = float(balance)
+        if risk_per_trade is not None:
+            self.risk_per_trade = float(risk_per_trade)
+
         try:
-            logger.info(
-                f"Fetching {self.symbol} data from {start_date} to {end_date}..."
-            )
-            df = self._fetch_historical_data(start_date, end_date, lookback_bars)
+            if historical_data is not None:
+                df = historical_data.copy()
+                if df.empty:
+                    logger.error("No historical data supplied")
+                    return None
+                if start_date is None:
+                    start_date = df.iloc[0]["time"]
+                if end_date is None:
+                    end_date = df.iloc[-1]["time"]
+            else:
+                if start_date is None or end_date is None:
+                    raise ValueError(
+                        "start_date and end_date are required without historical_data"
+                    )
+                logger.info(
+                    "Fetching %s data from %s to %s...",
+                    self.symbol,
+                    start_date,
+                    end_date,
+                )
+                df = self._fetch_historical_data(start_date, end_date, lookback_bars)
             if df is None or len(df) == 0:
                 logger.error("No data fetched")
                 return None
@@ -126,6 +159,7 @@ class BacktestEngine:
         self.equity_timestamps = [df.iloc[0]["time"]]
 
         open_position: Optional[Trade] = None
+        open_position_idx: Optional[int] = None
 
         for i in range(lookback_bars, len(df)):
             # Compute signal from historical window
@@ -149,14 +183,12 @@ class BacktestEngine:
                         entry_price=current_close,
                         signal=signal,
                     )
+                    open_position_idx = i
                     logger.debug(
                         f"OPEN {signal} @ {current_close:.5f} ({lot_size:.2f} lots)"
                     )
             else:
-                # Close position after N bars or on opposite signal
-                bars_held = i - list(df.iloc[lookback_bars : i + 1]["time"]).index(
-                    open_position.entry_time
-                )
+                bars_held = i - (open_position_idx or i)
                 # Simple: hold for max 50 bars or close on opposite signal
                 should_close = (
                     bars_held > 50
@@ -194,6 +226,7 @@ class BacktestEngine:
                     )
 
                     open_position = None
+                    open_position_idx = None
 
             # Update equity curve
             if open_position:
@@ -255,6 +288,10 @@ class BacktestEngine:
         lookback_bars: int,
     ) -> Optional[pd.DataFrame]:
         """Fetch OHLC data from MT5."""
+        if mt5 is None:
+            logger.error("MetaTrader5 is unavailable")
+            return None
+
         # Extend start_date for lookback
         extended_start = start_date - timedelta(
             days=max(int(lookback_bars * 1.5 / 1440), 7)

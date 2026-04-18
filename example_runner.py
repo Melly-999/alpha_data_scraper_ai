@@ -76,7 +76,7 @@ class TradingPipelineRunner:
     def _load_config(self, config_file: str) -> dict[str, Any]:
         """Load configuration from file"""
         if Path(config_file).exists():
-            with open(config_file) as f:
+            with open(config_file, encoding="utf-8") as f:
                 return json.load(f)
         return {
             "timeframes": ["M1", "M5", "H1"],
@@ -153,7 +153,11 @@ class TradingPipelineRunner:
             analyzer = MultiTimeframeAnalyzer(symbol=symbol)
 
             try:
-                result = analyzer.analyze(market_data[symbol])
+                indicators_by_tf = {
+                    tf: self._frame_to_indicator_snapshot(frame)
+                    for tf, frame in market_data[symbol].items()
+                }
+                result = analyzer.analyze(indicators_by_tf)
                 results[symbol] = result
                 logger.info(
                     f"  Weighted Signal: {result.weighted_signal} "
@@ -222,22 +226,21 @@ class TradingPipelineRunner:
         engine_config = EngineConfig(
             symbols=self.symbols,
             timeframe="M1",
-            weights=self.config.get("weights", {"technical": 0.85, "sentiment": 0.15}),
+            weights=self.config.get("weights", {}),
             min_confidence_threshold=60,
             update_interval_seconds=60,
         )
 
         engine = AIEngine(config=engine_config)
 
+        signal_map = engine.analyze_all()
         unified_signals = {}
         for symbol in self.symbols:
             logger.info(f"Generating unified signal for {symbol}")
-            # Analyze symbol
-            signal = engine.analyze_all()
-            if symbol in signal:
-                unified_signals[symbol] = signal[symbol]
-                logger.info(f"  Signal: {signal[symbol].primary_signal}")
-                logger.info(f"  Confidence: {signal[symbol].confidence:.1f}")
+            if symbol in signal_map:
+                unified_signals[symbol] = signal_map[symbol]
+                logger.info(f"  Signal: {signal_map[symbol].primary_signal}")
+                logger.info(f"  Confidence: {signal_map[symbol].confidence:.1f}")
             else:
                 logger.warning(f"No signal generated for {symbol}")
 
@@ -275,8 +278,8 @@ class TradingPipelineRunner:
                 try:
                     validated = claude_integration.validate_signal(
                         symbol=symbol,
-                        engine_signal=engine_signal.primary_signal,
-                        engine_confidence=engine_signal.confidence,
+                        engine_signal=self._signal_value(engine_signal),
+                        engine_confidence=self._signal_confidence(engine_signal),
                         market_data={
                             "close": (
                                 market_data[symbol]["M1"]["close"].tail(10).tolist()
@@ -325,15 +328,16 @@ class TradingPipelineRunner:
 
                 # Create signal function from validated signal
                 if symbol in validated_signals:
-                    signal_val = validated_signals[symbol].signal
+                    signal_val = self._signal_value(validated_signals[symbol])
+                    confidence_val = self._signal_confidence(validated_signals[symbol])
 
                     def signal_func(ohlcv):
-                        return signal_val
+                        return signal_val, confidence_val
 
                 else:
 
                     def signal_func(ohlcv):
-                        return "HOLD"
+                        return "HOLD", 50.0
 
                 # Run backtest
                 metrics = engine.backtest(
@@ -368,7 +372,9 @@ class TradingPipelineRunner:
         risk_pct = self.config.get("risk_per_trade", 0.02)
 
         for symbol, signal in validated_signals.items():
-            if signal.signal == "HOLD":
+            signal_value = self._signal_value(signal)
+            confidence = self._signal_confidence(signal)
+            if signal_value == "HOLD":
                 logger.info(f"{symbol}: HOLD (no action)")
                 continue
 
@@ -381,19 +387,19 @@ class TradingPipelineRunner:
                     point_value=10,
                 )
 
-                logger.info(f"{symbol}: {signal.signal}")
-                logger.info(f"  Confidence: {signal.confidence}/100")
-                logger.info(f"  Risk Level: {signal.risk}")
+                logger.info(f"{symbol}: {signal_value}")
+                logger.info(f"  Confidence: {confidence}/100")
+                logger.info(f"  Risk Level: {getattr(signal, 'risk', 'UNKNOWN')}")
                 logger.info(f"  Lot Size: {lot_size:.2f}")
-                logger.info(f"  Reason: {signal.reason}")
+                logger.info(f"  Reason: {getattr(signal, 'reason', '')}")
 
                 if not self.config.get("demo_mode", True):
                     logger.info(
-                        f"  [EXECUTING] Would execute {signal.signal} on {symbol}"
+                        f"  [EXECUTING] Would execute {signal_value} on {symbol}"
                     )
                     # Would execute here with actual MT5 order
                 else:
-                    logger.info(f"  [DEMO] Would execute {signal.signal} on {symbol}")
+                    logger.info(f"  [DEMO] Would execute {signal_value} on {symbol}")
 
             except Exception as e:
                 logger.error(f"Error executing {symbol}: {e}")
@@ -493,11 +499,37 @@ class TradingPipelineRunner:
         df["time"] = pd.to_datetime(df["time"], unit="s")
         return df[["time", "open", "high", "low", "close", "tick_volume"]]
 
+    @staticmethod
+    def _frame_to_indicator_snapshot(frame):
+        """Convert OHLCV candles into the dict expected by MTF analyzer."""
+        return {
+            "rsi": MultiTimeframeAnalyzer._compute_rsi(frame["close"]),
+            "macd_hist": MultiTimeframeAnalyzer._compute_macd_hist(frame["close"]),
+            "bb_position": MultiTimeframeAnalyzer._compute_bb_position(frame["close"]),
+            "slope": MultiTimeframeAnalyzer._compute_slope(frame["close"]),
+        }
+
+    @staticmethod
+    def _signal_value(signal: Any) -> str:
+        return str(
+            getattr(signal, "signal", getattr(signal, "primary_signal", "HOLD"))
+        ).upper()
+
+    @staticmethod
+    def _signal_confidence(signal: Any) -> float:
+        return float(
+            getattr(
+                signal,
+                "confidence",
+                getattr(signal, "primary_confidence", 50.0),
+            )
+        )
+
 
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(
-        description="Complete Trading Pipeline: MTF→Sentiment→AIEngine→Claude→Backtest"
+        description="Complete Trading Pipeline: MTF -> Sentiment -> AIEngine -> Claude -> Backtest"
     )
     parser.add_argument(
         "--symbols",

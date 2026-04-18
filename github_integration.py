@@ -77,6 +77,9 @@ class GitHubIntegration:
         """
         try:
             for pattern in patterns:
+                if not self._is_safe_relative_pattern(pattern):
+                    logger.error("Refusing to stage unsafe path pattern: %s", pattern)
+                    return False
                 subprocess.run(
                     ["git", "add", pattern],
                     cwd=self.repo_path,
@@ -95,6 +98,12 @@ class GitHubIntegration:
         except subprocess.CalledProcessError as e:
             logger.error(f"❌ Staging failed: {e.stderr.decode()}")
             return False
+
+    @staticmethod
+    def _is_safe_relative_pattern(pattern: str) -> bool:
+        """Allow only repository-relative pathspecs."""
+        path = Path(pattern)
+        return not path.is_absolute() and ".." not in path.parts
 
     def commit(
         self, message: str, patterns: Optional[list[str]] = None
@@ -133,17 +142,22 @@ class GitHubIntegration:
             logger.error(f"❌ Commit failed: {e.stderr.decode()}")
             return None
 
-    def push(self, branch: str = "main") -> bool:
+    def push(self, branch: Optional[str] = None) -> bool:
         """
         Push changes to remote.
 
         Args:
-            branch: Branch to push
+            branch: Branch to push. Defaults to current branch.
 
         Returns:
             True if push succeeded
         """
         try:
+            if branch is None:
+                branch = self.current_branch()
+            if branch in {"main", "master"} and os.getenv("ALLOW_MAIN_PUSH") != "1":
+                logger.error("Refusing to push directly to %s", branch)
+                return False
             subprocess.run(
                 ["git", "push", "origin", branch],
                 cwd=self.repo_path,
@@ -156,8 +170,19 @@ class GitHubIntegration:
             logger.error(f"❌ Push failed: {e.stderr.decode()}")
             return False
 
+    def current_branch(self) -> str:
+        """Return the current git branch name."""
+        result = subprocess.run(
+            ["git", "branch", "--show-current"],
+            cwd=self.repo_path,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+
     def commit_and_push(
-        self, message: str, patterns: list[str], branch: str = "main"
+        self, message: str, patterns: list[str], branch: Optional[str] = None
     ) -> bool:
         """
         Commit and push in one operation.
@@ -165,7 +190,7 @@ class GitHubIntegration:
         Args:
             message: Commit message
             patterns: Files to commit
-            branch: Target branch
+            branch: Target branch. Defaults to the current branch.
 
         Returns:
             True if successful
@@ -240,8 +265,8 @@ class TradingResultsCommitter:
     def __init__(self):
         """Initialize committer with default config."""
         self.git = GitHubIntegration()
-        self.results_dir = Path("results")
-        self.logs_dir = Path("logs")
+        self.results_dir = self.git.repo_path / "results"
+        self.logs_dir = self.git.repo_path / "logs"
 
     def record_signal(
         self,

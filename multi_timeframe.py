@@ -6,9 +6,13 @@ from dataclasses import dataclass
 from typing import Optional, Dict, Tuple
 import logging
 
-import MetaTrader5 as mt5
 import pandas as pd
 import numpy as np
+
+try:
+    import MetaTrader5 as mt5  # type: ignore
+except Exception:  # pragma: no cover - optional runtime dependency
+    mt5 = None
 
 logger = logging.getLogger("MultiTimeframe")
 
@@ -44,9 +48,9 @@ class MultiTimeframeAnalyzer:
         self.symbol = symbol
         self.weights = {"M1": 0.40, "M5": 0.35, "H1": 0.25}
         self.timeframes = {
-            "M1": mt5.TIMEFRAME_M1,
-            "M5": mt5.TIMEFRAME_M5,
-            "H1": mt5.TIMEFRAME_H1,
+            "M1": mt5.TIMEFRAME_M1 if mt5 else 1,
+            "M5": mt5.TIMEFRAME_M5 if mt5 else 5,
+            "H1": mt5.TIMEFRAME_H1 if mt5 else 16388,
         }
 
     def analyze(self, from_indicators: Dict[str, Dict]) -> MultiTimeframeResult:
@@ -222,6 +226,10 @@ class MultiTimeframeAnalyzer:
         Returns:
             Dict with keys "M1", "M5", "H1", each containing computed indicators.
         """
+        if mt5 is None:
+            logger.error("MetaTrader5 is unavailable")
+            return None
+
         result = {}
         for tf_name, tf_enum in self.timeframes.items():
             rates = mt5.copy_rates_from_pos(self.symbol, tf_enum, 0, bars)

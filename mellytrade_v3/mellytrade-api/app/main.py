@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from collections.abc import Generator
 from typing import Any, Dict, List
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
@@ -59,7 +60,7 @@ async def rejected_http_exception_handler(
     return await http_exception_handler(request, exc)
 
 
-def get_db() -> Session:  # pragma: no cover - trivial
+def get_db() -> Generator[Session, None, None]:  # pragma: no cover - trivial
     db = SessionLocal()
     try:
         yield db
