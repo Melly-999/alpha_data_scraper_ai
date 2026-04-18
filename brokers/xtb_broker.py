@@ -160,8 +160,8 @@ class XTBBroker(BrokerInterface):
             data = yf.download(ticker, period="5d", progress=False)
             if not data.empty:
                 return float(data["Close"].iloc[-1])
-        except:
-            pass
+        except Exception as exc:
+            logger.debug("yfinance price fetch failed for %s: %s", ticker, exc)
         return 0.0
 
     def get_positions(self) -> List[Dict]:

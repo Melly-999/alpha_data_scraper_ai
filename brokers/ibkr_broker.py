@@ -1,7 +1,8 @@
 # brokers/ibkr_broker.py
-from ib_insync import *
-import pandas as pd
 import logging
+
+import pandas as pd
+from ib_insync import IB, LimitOrder, MarketOrder, Stock, util
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,8 @@ class IBKRBroker:
             ticker = self.ib.reqMktData(contract, snapshot=True)
             self.ib.sleep(1)
             return ticker.marketPrice() or 0.0
-        except:
+        except Exception as exc:
+            logger.debug("IBKR price fetch failed: %s", exc)
             return 0.0
 
     def place_order(

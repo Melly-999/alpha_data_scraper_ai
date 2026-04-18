@@ -54,7 +54,8 @@ class AlpacaBroker:
         try:
             latest = self.data_client.get_stock_latest_trade(symbol)
             return float(latest[symbol].price) if latest else 0.0
-        except:
+        except Exception as exc:
+            logger.debug("Alpaca price fetch failed: %s", exc)
             return 0.0
 
     def place_order(

@@ -26,7 +26,7 @@ def test_parser():
     # Cash Flow
     try:
         cash = broker.get_cash_summary()
-        print(f"\n✅ Cash Operations:")
+        print("\n✅ Cash Operations:")
         print(f"   Transakcji: {cash.get('total_transactions', 0)}")
         print(f"   Net cash flow: {cash.get('net_cash_flow', 0):.2f} PLN")
         print(f"   Dywidendy brutto: {cash.get('total_dividends_gross', 0):.2f} PLN")
@@ -38,13 +38,13 @@ def test_parser():
     # Dywidendy
     try:
         dividends = broker.get_dividend_analysis()
-        print(f"\n✅ Top dywidendy:")
+        print("\n✅ Top dywidendy:")
         for ticker, amount in list(dividends.get("top_dividend_stocks", {}).items())[
             :5
         ]:
             print(f"   {ticker:12}: {amount:8.2f} PLN")
-    except:
-        pass
+    except Exception as exc:
+        logger.debug("Dividend analysis failed: %s", exc)
 
     # Wartość
     value = broker.get_portfolio_value()

@@ -1,5 +1,5 @@
 # notifications.py
-import yaml
+import yaml  # type: ignore[import-untyped]
 import requests
 import logging
 from pathlib import Path

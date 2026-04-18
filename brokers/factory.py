@@ -19,7 +19,7 @@ def create_broker(name: str, config: dict[str, Any]) -> BrokerAdapter:
     if key == "ibkr":
         return IBKRBrokerAdapter(config)
     if key == "alpaca":
-        return AlpacaBrokerAdapter(config)
+        return AlpacaBrokerAdapter(config)  # type: ignore[abstract]
     if key == "binance":
         return BinanceBrokerAdapter(config)
     raise ValueError(f"Unsupported broker: {name}")

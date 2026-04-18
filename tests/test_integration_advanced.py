@@ -48,7 +48,11 @@ from multi_timeframe import (  # noqa: E402
     MultiTimeframeResult,
 )
 from backtest import BacktestEngine, BacktestMetrics  # noqa: E402
-from claude_ai import ClaudeAIClient, ClaudeAIIntegration, ClaudeSignal  # noqa: E402
+from claude_ai import (  # type: ignore[attr-defined]  # noqa: E402
+    ClaudeAIClient,
+    ClaudeAIIntegration,
+    ClaudeSignal,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
