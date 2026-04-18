@@ -1,3 +1,10 @@
 [tool.black]
 line-length = 88
 target-version = ["py312"]
+
+[tool.pytest.ini_options]
+# Only collect from ``tests/``. The root-level ``test_parser.py`` is a
+# hand-run broker script (imports yfinance) and must not be pulled in by
+# pytest autocollection.
+testpaths = ["tests"]
+addopts = "-q"
