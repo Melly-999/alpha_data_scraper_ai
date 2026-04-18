@@ -9,6 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class AlpacaBroker:
     """Alpaca Broker - commission-free US stocks"""
 
@@ -26,15 +27,25 @@ class AlpacaBroker:
             logger.error(f"Alpaca connection error: {e}")
             return False
 
-    def get_historical_data(self, symbol: str, timeframe: str = "1h", limit: int = 500) -> pd.DataFrame:
+    def get_historical_data(
+        self, symbol: str, timeframe: str = "1h", limit: int = 500
+    ) -> pd.DataFrame:
         try:
-            tf_map = {"1h": TimeFrame.Hour, "1d": TimeFrame.Day, "15m": TimeFrame.FifteenMinute}
-            request = StockBarsRequest(symbol_or_symbols=symbol, timeframe=tf_map.get(timeframe, TimeFrame.Hour), limit=limit)
+            tf_map = {
+                "1h": TimeFrame.Hour,
+                "1d": TimeFrame.Day,
+                "15m": TimeFrame.FifteenMinute,
+            }
+            request = StockBarsRequest(
+                symbol_or_symbols=symbol,
+                timeframe=tf_map.get(timeframe, TimeFrame.Hour),
+                limit=limit,
+            )
             bars = self.data_client.get_stock_bars(request)
             df = bars.df
             if isinstance(df.index, pd.MultiIndex):
                 df = df.xs(symbol, level=0)
-            return df[['open', 'high', 'low', 'close', 'volume']]
+            return df[["open", "high", "low", "close", "volume"]]
         except Exception as e:
             logger.error(f"Alpaca historical data error: {e}")
             return pd.DataFrame()
@@ -46,9 +57,18 @@ class AlpacaBroker:
         except:
             return 0.0
 
-    def place_order(self, symbol: str, side: str, quantity: float, order_type: str = "market", **kwargs):
+    def place_order(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        order_type: str = "market",
+        **kwargs,
+    ):
         try:
-            order_data = MarketOrderRequest(symbol=symbol, qty=quantity, side=side.lower(), time_in_force="day")
+            order_data = MarketOrderRequest(
+                symbol=symbol, qty=quantity, side=side.lower(), time_in_force="day"
+            )
             order = self.trading_client.submit_order(order_data=order_data)
             logger.info(f"✅ Alpaca Order: {side} {quantity} {symbol}")
             return {"status": order.status, "orderId": order.id}
@@ -58,7 +78,14 @@ class AlpacaBroker:
 
     def get_positions(self):
         positions = self.trading_client.get_all_positions()
-        return [{"symbol": p.symbol, "qty": float(p.qty), "avg_cost": float(p.avg_entry_price)} for p in positions]
+        return [
+            {
+                "symbol": p.symbol,
+                "qty": float(p.qty),
+                "avg_cost": float(p.avg_entry_price),
+            }
+            for p in positions
+        ]
 
     def get_portfolio_value(self) -> float:
         account = self.trading_client.get_account()

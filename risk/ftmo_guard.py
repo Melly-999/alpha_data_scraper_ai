@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 try:
@@ -37,7 +36,9 @@ class RealTimeFTMOGuard:
 
             daily_pct = 0.0
             if self._baseline_balance:
-                daily_pct = ((balance - self._baseline_balance) / self._baseline_balance) * 100
+                daily_pct = (
+                    (balance - self._baseline_balance) / self._baseline_balance
+                ) * 100
 
             return RiskContext(
                 balance=balance,
