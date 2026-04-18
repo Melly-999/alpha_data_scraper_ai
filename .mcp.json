@@ -1,12 +1,10 @@
 {
   "$schema": "https://modelcontextprotocol.io/schema/config.json",
-  "_comment": "CloudMCP.run router wiring — a single MCP endpoint fans out to all backend servers (files, web, memory). Set CLOUDMCP_ROUTER_URL and CLOUDMCP_ROUTER_TOKEN in your local .env (never committed).",
+  "_comment": "CloudMCP.run router wiring — a single HTTP MCP endpoint fans out to all backend servers. Auth is URL-based (your <user-id>.router.cloudmcp.run subdomain identifies you); no bearer token needed. Set CLOUDMCP_ROUTER_URL in your local .env (never committed). Equivalent CLI: `claude mcp add -t http cloudmcp-manager ${CLOUDMCP_ROUTER_URL}`.",
   "mcpServers": {
-    "cloudmcp-router": {
-      "url": "${CLOUDMCP_ROUTER_URL}",
-      "headers": {
-        "Authorization": "Bearer ${CLOUDMCP_ROUTER_TOKEN}"
-      }
+    "cloudmcp-manager": {
+      "type": "http",
+      "url": "${CLOUDMCP_ROUTER_URL}"
     }
   }
 }

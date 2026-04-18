@@ -1,12 +1,10 @@
 {
   "$schema": "https://modelcontextprotocol.io/schema/config.json",
-  "_comment": "Cursor-local CloudMCP.run router wiring. Same single-URL/single-token model as repo-root .mcp.json; values come from the developer's local .env (never committed).",
+  "_comment": "Cursor-local CloudMCP.run router wiring. Same single-URL, URL-auth model as repo-root .mcp.json; CLOUDMCP_ROUTER_URL comes from the developer's local .env (never committed).",
   "mcpServers": {
-    "cloudmcp-router": {
-      "url": "${CLOUDMCP_ROUTER_URL}",
-      "headers": {
-        "Authorization": "Bearer ${CLOUDMCP_ROUTER_TOKEN}"
-      }
+    "cloudmcp-manager": {
+      "type": "http",
+      "url": "${CLOUDMCP_ROUTER_URL}"
     }
   }
 }
