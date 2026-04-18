@@ -11,13 +11,12 @@ import sys
 import time
 from typing import Any
 
-_ROOT = Path(__file__).resolve().parent.parent
+_ROOT = Path(__file__).resolve().parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
-from utils.config import *  # noqa: F403,E402
-from utils.risk_manager import RiskManager  # noqa: E402
+from utils.risk_manager_compat import LegacyRiskManager  # noqa: E402
 
-risk = RiskManager()
+risk = LegacyRiskManager()
 
 
 def _sync_risk_from_mt5() -> None:
@@ -382,9 +381,6 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     """Main entry point: parse args, load config, run snapshots."""
-    print("FTMO MODE:", FTMO_MODE)  # noqa: F405
-    print("Max daily loss:", START_BALANCE * (MAX_DAILY_LOSS_PCT / 100))  # noqa: F405
-
     args = _parse_args()
     cfg = _load_config(args.config)
     runtime = AppRuntime(cfg)

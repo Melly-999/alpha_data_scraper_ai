@@ -39,16 +39,12 @@ def signals(limit: int = 50) -> list[dict[str, Any]]:
 
 @app.get("/positions")
 def positions() -> list[dict[str, Any]]:
-    return _query(
-        "SELECT * FROM position_snapshots ORDER BY created_at DESC"
-    )
+    return _query("SELECT * FROM position_snapshots ORDER BY created_at DESC")
 
 
 @app.get("/stats")
 def stats() -> dict[str, Any]:
-    rows = _query(
-        "SELECT * FROM equity_snapshots ORDER BY created_at DESC LIMIT 1"
-    )
+    rows = _query("SELECT * FROM equity_snapshots ORDER BY created_at DESC LIMIT 1")
     return rows[0] if rows else {}
 
 

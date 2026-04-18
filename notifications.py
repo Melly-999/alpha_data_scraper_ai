@@ -1,11 +1,12 @@
 # notifications.py
-import yaml
+import yaml  # type: ignore[import-untyped]
 import requests
 import logging
 from pathlib import Path
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
 
 class AlphaNotifier:
     def __init__(self):
@@ -14,7 +15,10 @@ class AlphaNotifier:
             with open(config_path, encoding="utf-8") as f:
                 self.config = yaml.safe_load(f) or {}
         else:
-            self.config = {"telegram": {"enabled": False}, "discord": {"enabled": False}}
+            self.config = {
+                "telegram": {"enabled": False},
+                "discord": {"enabled": False},
+            }
             logger.warning("notifications.yaml not found")
 
     def send_report_notification(self, report_type: str, summary: str = ""):

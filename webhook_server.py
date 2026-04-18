@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Alpha AI TradingView Webhook")
 engine = AlphaAIEngine()
 
+
 @app.post("/webhook")
 async def tradingview_webhook(request: Request):
     """Receive alerts from TradingView"""
@@ -24,20 +25,24 @@ async def tradingview_webhook(request: Request):
         # Optional: Run Claude analysis
         if "analyze" in action.lower():
             report = engine.claude.get_full_analysis(
-                "citadel_technical",
-                ticker_and_position=f"{ticker} (TradingView alert)"
+                "citadel_technical", ticker_and_position=f"{ticker} (TradingView alert)"
             )
             logger.info(f"Analysis ready: {report[:200]}...")
 
         return {"status": "ok", "ticker": ticker, "action": action}
-    
+
     except Exception as e:
         logger.error(f"Webhook error: {e}")
         return {"status": "error", "reason": str(e)}
 
+
 @app.get("/health")
 def health():
-    return {"status": "running", "timestamp": str(__import__('datetime').datetime.now())}
+    return {
+        "status": "running",
+        "timestamp": str(__import__("datetime").datetime.now()),
+    }
+
 
 if __name__ == "__main__":
     logger.info("🚀 Starting webhook server on http://localhost:8000")

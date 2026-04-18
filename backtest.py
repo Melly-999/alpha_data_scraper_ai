@@ -7,7 +7,10 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Callable, Tuple
 import logging
 
-import MetaTrader5 as mt5
+try:
+    import MetaTrader5 as mt5  # type: ignore
+except ImportError:  # pragma: no cover - MT5 is optional (Linux/CI)
+    mt5 = None  # type: ignore[assignment]
 import numpy as np
 import pandas as pd
 
@@ -255,6 +258,13 @@ class BacktestEngine:
         lookback_bars: int,
     ) -> Optional[pd.DataFrame]:
         """Fetch OHLC data from MT5."""
+        if mt5 is None:
+            logger.warning(
+                "MetaTrader5 not available — _fetch_historical_data returning "
+                "None. Tests should patch this method."
+            )
+            return None
+
         # Extend start_date for lookback
         extended_start = start_date - timedelta(
             days=max(int(lookback_bars * 1.5 / 1440), 7)
