@@ -1,23 +1,23 @@
 {
   "$schema": "https://modelcontextprotocol.io/schema/config.json",
-  "_comment": "Cursor-local MCP wiring. Tokens injected from environment.",
+  "_comment": "Cursor-local MCP wiring. Same per-server URL/token layout as repo-root .mcp.json; values come from the developer's local .env (never committed).",
   "mcpServers": {
     "cloudmcp-file-manager": {
-      "url": "https://cloudmcp.example.com/file-manager",
-      "env": {
-        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      "url": "${CLOUDMCP_FILES_URL}",
+      "headers": {
+        "Authorization": "Bearer ${CLOUDMCP_FILES_TOKEN}"
       }
     },
     "cloudmcp-web-search": {
-      "url": "https://cloudmcp.example.com/web-search",
-      "env": {
-        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      "url": "${CLOUDMCP_WEB_URL}",
+      "headers": {
+        "Authorization": "Bearer ${CLOUDMCP_WEB_TOKEN}"
       }
     },
     "cloudmcp-memory": {
-      "url": "https://cloudmcp.example.com/memory",
-      "env": {
-        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      "url": "${CLOUDMCP_MEMORY_URL}",
+      "headers": {
+        "Authorization": "Bearer ${CLOUDMCP_MEMORY_TOKEN}"
       }
     }
   }

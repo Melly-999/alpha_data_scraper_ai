@@ -1,23 +1,23 @@
 {
   "$schema": "https://modelcontextprotocol.io/schema/config.json",
-  "_comment": "Populate tokens via environment variables; never commit real secrets.",
+  "_comment": "CloudMCP server wiring. Each server has its own URL + bearer token injected from the environment. Copy .env.example -> .env and fill the six CLOUDMCP_* variables locally; never commit real values.",
   "mcpServers": {
     "cloudmcp-file-manager": {
-      "url": "https://cloudmcp.example.com/file-manager",
-      "env": {
-        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      "url": "${CLOUDMCP_FILES_URL}",
+      "headers": {
+        "Authorization": "Bearer ${CLOUDMCP_FILES_TOKEN}"
       }
     },
     "cloudmcp-web-search": {
-      "url": "https://cloudmcp.example.com/web-search",
-      "env": {
-        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      "url": "${CLOUDMCP_WEB_URL}",
+      "headers": {
+        "Authorization": "Bearer ${CLOUDMCP_WEB_TOKEN}"
       }
     },
     "cloudmcp-memory": {
-      "url": "https://cloudmcp.example.com/memory",
-      "env": {
-        "CLOUDMCP_TOKEN": "${CLOUDMCP_TOKEN}"
+      "url": "${CLOUDMCP_MEMORY_URL}",
+      "headers": {
+        "Authorization": "Bearer ${CLOUDMCP_MEMORY_TOKEN}"
       }
     }
   }
