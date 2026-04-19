@@ -5,7 +5,7 @@
 	"lookback": 30,
 	"epochs": 2,
 	"autotrade": {
-		"enabled": true,
+		"enabled": false,
 		"dry_run": true,
 		"min_confidence": 75.0,
 		"volume": 0.01,

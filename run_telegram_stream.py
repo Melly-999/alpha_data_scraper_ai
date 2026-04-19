@@ -1,7 +1,6 @@
 from monitoring.telegram_push import TelegramAlertPublisher
 from monitoring.propfirm_stream import PropFirmRiskStream
 
-
 publisher = TelegramAlertPublisher()
 risk_stream = PropFirmRiskStream()
 
@@ -16,4 +15,6 @@ def handle_dashboard_payload(payload: dict):
 
 
 if __name__ == "__main__":
-    print("Telegram realtime stream ready. Connect this handler to /equity-stream consumer.")
+    print(
+        "Telegram realtime stream ready. Connect this handler to /equity-stream consumer."
+    )
