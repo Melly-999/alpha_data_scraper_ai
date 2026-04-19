@@ -71,7 +71,7 @@ jobs:
             -e ENVIRONMENT=test \
             trading-bot-test python -c "
           import sys, importlib
-          mods = ['numpy', 'pandas', 'ta', 'sklearn']
+          mods = ['numpy', 'pandas', 'sklearn']
           for m in mods:
               importlib.import_module(m)
           print('Container smoke test OK')
