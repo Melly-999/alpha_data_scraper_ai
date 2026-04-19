@@ -95,7 +95,7 @@ class ClaudeAIClient:
             logger.warning(f"Could not parse Claude signal response: {e}")
             return ClaudeSignal(
                 signal="HOLD",
-                confidence=0.0,
+                confidence=33.0,
                 risk="HIGH",
                 reason="Malformed Claude response",
             )
@@ -191,7 +191,9 @@ class ClaudeAIIntegration:
             return engine_signal, engine_confidence, "Claude AI unavailable"
 
         if claude_signal.signal == engine_signal:
-            confidence = min(100.0, (engine_confidence + claude_signal.confidence) / 2)
+            confidence = min(
+                85.0, max(33.0, (engine_confidence + claude_signal.confidence) / 2)
+            )
             return engine_signal, confidence, claude_signal.reason
 
         if claude_signal.signal == "HOLD":
@@ -199,7 +201,7 @@ class ClaudeAIIntegration:
 
         return (
             "HOLD",
-            min(engine_confidence, claude_signal.confidence),
+            max(33.0, min(engine_confidence, claude_signal.confidence)),
             f"Conflict with Claude signal: {claude_signal.reason}",
         )
 
