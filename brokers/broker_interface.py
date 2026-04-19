@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List
 import pandas as pd
 
+
 class BrokerInterface(ABC):
     """Abstrakcyjny interfejs dla wszystkich brokerów"""
 
@@ -27,7 +28,9 @@ class BrokerInterface(ABC):
         pass
 
     @abstractmethod
-    def get_historical_data(self, symbol: str, timeframe: str = "1h", limit: int = 500) -> pd.DataFrame:
+    def get_historical_data(
+        self, symbol: str, timeframe: str = "1h", limit: int = 500
+    ) -> pd.DataFrame:
         """Zwraca dane OHLCV (dla modeli LSTM)"""
         pass
 
@@ -37,7 +40,14 @@ class BrokerInterface(ABC):
         pass
 
     @abstractmethod
-    def place_order(self, symbol: str, side: str, quantity: float, order_type: str = "market", **kwargs) -> Dict:
+    def place_order(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        order_type: str = "market",
+        **kwargs,
+    ) -> Dict:
         """Składa zlecenie"""
         pass
 

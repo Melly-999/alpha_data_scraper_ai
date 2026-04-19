@@ -32,7 +32,9 @@ def get_closed_trade_winrate(days: int = 7) -> dict[str, Any]:
             "wins": wins,
             "losses": losses,
             "winrate_pct": round((wins / total * 100.0), 2) if total else 0.0,
-            "net_profit": round(sum(float(getattr(d, "profit", 0.0)) for d in closed), 2),
+            "net_profit": round(
+                sum(float(getattr(d, "profit", 0.0)) for d in closed), 2
+            ),
         }
     finally:
         mt5.shutdown()
@@ -81,7 +83,7 @@ def extract_cooldown_alerts(signals: list[dict[str, Any]]) -> list[dict[str, Any
     alerts: list[dict[str, Any]] = []
     for row in signals:
         status = str(row.get("autotrade_status", ""))
-        if 'cooldown' in status.lower():
+        if "cooldown" in status.lower():
             alerts.append(
                 {
                     "symbol": row.get("symbol"),

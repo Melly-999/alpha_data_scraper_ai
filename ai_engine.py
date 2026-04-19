@@ -17,7 +17,9 @@ class AlphaAIEngine:
     def __init__(self, api_key: Optional[str] = None):
         self.broker = get_broker()
         self.broker.connect()
-        self.claude = ClaudeAIIntegration(api_key=api_key or os.getenv("ANTHROPIC_API_KEY"))
+        self.claude = ClaudeAIIntegration(
+            api_key=api_key or os.getenv("ANTHROPIC_API_KEY")
+        )
         logger.info(f"✅ AlphaAIEngine initialized - {type(self.broker).__name__}")
 
     def analyze_and_decide(self, symbols: Optional[list] = None) -> dict:
@@ -47,9 +49,7 @@ class AlphaAIEngine:
             "portfolio_value": self.broker.get_portfolio_value(),
             "positions_count": len(self.broker.get_positions()),
             "risk_report_summary": (
-                risk_report[:500] + "..."
-                if len(risk_report) > 500
-                else risk_report
+                risk_report[:500] + "..." if len(risk_report) > 500 else risk_report
             ),
             "dividend_info": dividend_analysis,
         }

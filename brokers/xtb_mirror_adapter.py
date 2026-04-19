@@ -48,7 +48,10 @@ class XTBMirrorAdapter(BrokerAdapter):
             "checklist": self._build_checklist(order),
         }
 
-        out_file = MIRROR_DIR / f"{order.symbol}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+        out_file = (
+            MIRROR_DIR
+            / f"{order.symbol}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         out_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         self._persist_decision(payload)
 
