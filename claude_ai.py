@@ -28,7 +28,9 @@ class ClaudeAIClient:
     MODEL = "claude-opus-4-20250514"
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv("CLAUDE_API_KEY")
+        self.api_key = (
+            api_key or os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
+        )
         if not self.api_key:
             raise ValueError("Claude API key is required")
 
@@ -113,8 +115,10 @@ class ClaudeAIIntegration:
         enabled: bool = True,
         client: Optional[ClaudeAIClient] = None,
     ):
-        self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
-        self.enabled = enabled and bool(self.api_key)
+        self.api_key = (
+            api_key or os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
+        )
+        self.enabled = enabled and (bool(self.api_key) or client is not None)
         self.client = client
         if self.enabled and self.client is None:
             self.client = ClaudeAIClient(api_key=self.api_key)
@@ -181,6 +185,9 @@ class ClaudeAIIntegration:
         engine_confidence: float,
         market_data: Dict[str, Any],
     ) -> tuple[str, float, str]:
+        engine_signal = engine_signal.upper()
+        engine_confidence = min(85.0, max(33.0, engine_confidence))
+
         if not self.enabled or self.client is None:
             return engine_signal, engine_confidence, "Claude AI disabled"
 
@@ -201,7 +208,7 @@ class ClaudeAIIntegration:
 
         return (
             "HOLD",
-            max(33.0, min(engine_confidence, claude_signal.confidence)),
+            min(85.0, max(33.0, min(engine_confidence, claude_signal.confidence))),
             f"Conflict with Claude signal: {claude_signal.reason}",
         )
 
