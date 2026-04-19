@@ -4,9 +4,13 @@ matplotlib
 scikit-learn
 requests
 beautifulsoup4
+httpx
+PyYAML
+SQLAlchemy>=2.0,<3.0
 pytest==9.0.3
 pytest-cov==7.1.0
 black==26.3.1
 flake8==7.3.0
 mypy==1.20.0
 types-requests==2.33.0.20260408
+types-PyYAML
