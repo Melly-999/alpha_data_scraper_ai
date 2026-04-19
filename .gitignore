@@ -46,6 +46,7 @@ scheduler.log
 # Data
 data/
 .DS_Store
+desktop.ini
 
 # Cache
 .pytest_cache/

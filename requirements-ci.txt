@@ -4,6 +4,8 @@ matplotlib
 scikit-learn
 requests
 beautifulsoup4
+PyYAML==6.0.1
+types-PyYAML==6.0.12.20250915
 pytest==9.0.3
 pytest-cov==7.1.0
 black==26.3.1

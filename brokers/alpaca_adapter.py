@@ -6,7 +6,7 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
 
-from brokers.base import BrokerAdapter, BrokerOrder
+from brokers.base import BrokerAccountInfo, BrokerAdapter, BrokerOrder, BrokerPosition
 
 
 class AlpacaBrokerAdapter(BrokerAdapter):
@@ -23,6 +23,30 @@ class AlpacaBrokerAdapter(BrokerAdapter):
         return True
 
     def disconnect(self) -> None:
+        return None
+
+    def get_account_info(self) -> BrokerAccountInfo | None:
+        account = self.client.get_account()
+        return BrokerAccountInfo(
+            balance=float(account.cash),
+            equity=float(account.equity),
+            currency="USD",
+        )
+
+    def get_positions(self) -> list[BrokerPosition]:
+        return [
+            BrokerPosition(
+                symbol=position.symbol,
+                side="BUY" if float(position.qty) >= 0 else "SELL",
+                volume=abs(float(position.qty)),
+                price_open=float(position.avg_entry_price),
+                price_current=float(position.current_price),
+                profit=float(position.unrealized_pl),
+            )
+            for position in self.client.get_all_positions()
+        ]
+
+    def get_latest_price(self, symbol: str) -> float | None:
         return None
 
     def place_order(self, order: BrokerOrder) -> dict[str, Any]:

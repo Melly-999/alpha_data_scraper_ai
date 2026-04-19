@@ -9,6 +9,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def run_daily_analysis():
     logger.info("🚀 Daily Analysis started")
     engine = AlphaAIEngine()
@@ -20,10 +21,9 @@ def run_daily_analysis():
 
     # Get cash data if available
     try:
-        cash = broker.get_cash_summary()
+        broker.get_cash_summary()
         dividend_info = broker.get_dividend_analysis()
-    except:
-        cash = {}
+    except Exception:
         dividend_info = {}
 
     # Save report
@@ -36,13 +36,18 @@ def run_daily_analysis():
         f.write(f"**Portfolio Value:** {result.get('portfolio_value', 0):.2f} PLN\n")
         f.write(f"**Positions:** {result.get('positions_count', 0)}\n")
         if dividend_info:
-            f.write(f"**Dywidendy netto:** {dividend_info.get('net_dividends', 0):.2f} PLN\n")
+            f.write(
+                f"**Dywidendy netto:** {dividend_info.get('net_dividends', 0):.2f} PLN\n"
+            )
         f.write("\n## Risk Analysis\n")
-        f.write(result.get('risk_report_summary', 'Report ready'))
+        f.write(result.get("risk_report_summary", "Report ready"))
 
     logger.info(f"✅ Report saved: {path}")
-    notifier.send_report_notification("Daily Analysis", f"Value: {result.get('portfolio_value', 0):.2f} PLN")
+    notifier.send_report_notification(
+        "Daily Analysis", f"Value: {result.get('portfolio_value', 0):.2f} PLN"
+    )
     engine.shutdown()
+
 
 if __name__ == "__main__":
     run_daily_analysis()

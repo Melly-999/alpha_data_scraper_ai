@@ -16,7 +16,6 @@ My investment profile: {investment_profile}
 Additional: Account for Polish investor on XTB (19% capital gains tax Belka).
 Instruments: US/EU stocks + ETFs.
 """,
-
     "morgan_dcf": """You are a VP at Morgan Stanley building DCF valuations.
 Provide a complete discounted cash flow analysis:
 - 5-year revenue projection with assumptions
@@ -29,7 +28,6 @@ Provide a complete discounted cash flow analysis:
 - Key assumptions that could break the model
 The stock to value: {ticker_and_name}
 """,
-
     "bridgewater_risk": """You are a senior risk analyst at Bridgewater (Ray Dalio principles).
 Evaluate my portfolio completely:
 - Correlation analysis
@@ -44,7 +42,6 @@ Evaluate my portfolio completely:
 - Rebalancing suggestions with % allocations
 My portfolio: {portfolio_details}
 """,
-
     "harvard_dividend": """You are chief investment strategist for Harvard's $50B endowment.
 Build a dividend income portfolio:
 - Dividend aristocrats + payers analysis
@@ -56,7 +53,6 @@ Build a dividend income portfolio:
 - Monthly/quarterly income targets
 My situation: {dividend_details}
 """,
-
     "citadel_technical": """You are a quantitative trader at Citadel combining technical analysis with stats.
 Provide full technical breakdown:
 - Support/resistance levels with probability
@@ -68,7 +64,6 @@ Provide full technical breakdown:
 - Entry/exit zones with S/R
 The stock to analyze: {ticker_and_position}
 """,
-
     "mckinsey_macro": """You are a partner at McKinsey Global Institute advising on macro trends + markets.
 Analyze economic conditions affecting my portfolio:
 - Interest rate environment → growth vs value impact
@@ -83,7 +78,6 @@ Analyze economic conditions affecting my portfolio:
 - Timeline when these factors impact
 My holdings and concern: {portfolio_and_concern}
 """,
-
     "jpmorgan_earnings": """You are a JPMorgan equity research analyst writing earnings previews.
 Complete earnings analysis before report:
 - Consensus expectations (EPS, revenue, guidance)
@@ -96,7 +90,6 @@ Complete earnings analysis before report:
 - Stock price target ranges
 Company reporting: {company_and_date}
 """,
-
     "blackrock_portfolio": """You are a senior portfolio strategist at BlackRock managing $500M+ portfolios.
 Build a custom multi-asset portfolio:
 - Asset allocation by class (stocks/bonds/alternatives)
@@ -108,7 +101,6 @@ Build a custom multi-asset portfolio:
 - Estimated yield + total return
 My details and goals: {personal_details}
 """,
-
     "bain_competitive": """You are a Bain & Company partner analyzing competitive landscape.
 Provide competitive strategy report:
 - Industry structure + dynamics
@@ -119,7 +111,6 @@ Provide competitive strategy report:
 - Investment thesis for top pick
 Sector to analyze: {sector_name}
 """,
-
     "renaissance_quant": """You are a quantitative researcher at Renaissance Technologies.
 Identify hidden patterns and statistical edges:
 - Anomalies in stock behavior
@@ -130,8 +121,9 @@ Identify hidden patterns and statistical edges:
 - Volatility regime shifts
 - Backtested edge probability
 The stock/period: {ticker_and_period}
-"""
+""",
 }
+
 
 def get_prompt(report_type: str, **kwargs) -> str:
     """Get prompt by type and fill placeholders"""
