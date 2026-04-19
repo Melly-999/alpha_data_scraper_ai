@@ -4,6 +4,7 @@ matplotlib
 scikit-learn
 requests
 beautifulsoup4
+yfinance
 httpx
 PyYAML
 SQLAlchemy>=2.0,<3.0
