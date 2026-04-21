@@ -234,6 +234,86 @@ class GitHubIntegration:
             return False
 
 
+class AuditExporter:
+    """Exports structured JSON snapshots for signals and risk status.
+
+    ``results/execution/decisions.json`` is intentionally excluded — that file
+    is owned by ``ExecutionSnapshotService`` (written after every evaluation
+    inside ``ExecutionService``) to ensure a single, consistent writer.
+
+    Each export overwrites the previous snapshot — the files stay small and
+    machine-readable for CI/monitoring consumption.
+    """
+
+    def __init__(self, results_dir: Optional[Path] = None) -> None:
+        self.results_dir = results_dir or Path("results")
+
+    def export_latest_signal(
+        self,
+        symbol: str,
+        direction: str,
+        confidence: float,
+        extra: Optional[dict[str, Any]] = None,
+    ) -> None:
+        """Overwrite results/signals/latest.json with the most recent signal."""
+        try:
+            target = self.results_dir / "signals" / "latest.json"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            payload: dict[str, Any] = {
+                "symbol": symbol,
+                "direction": direction,
+                "confidence": confidence,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+            if extra:
+                payload.update(extra)
+            target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+            logger.info("Audit export: %s", target)
+        except Exception as exc:
+            logger.error("Failed to export latest signal audit: %s", exc)
+
+    def export_risk_status(
+        self,
+        risk_state: str,
+        daily_pnl_pct: float,
+        extra: Optional[dict[str, Any]] = None,
+    ) -> None:
+        """Overwrite results/risk/status.json with the current risk state."""
+        try:
+            target = self.results_dir / "risk" / "status.json"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            payload: dict[str, Any] = {
+                "risk_state": risk_state,
+                "daily_pnl_pct": daily_pnl_pct,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+            if extra:
+                payload.update(extra)
+            target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+            logger.info("Audit export: %s", target)
+        except Exception as exc:
+            logger.error("Failed to export risk status audit: %s", exc)
+
+    def export_all(
+        self,
+        symbol: str,
+        direction: str,
+        confidence: float,
+        risk_state: str,
+        daily_pnl_pct: float,
+    ) -> None:
+        """Export signal and risk audit snapshots in one call.
+
+        ``decisions.json`` is written by ``ExecutionSnapshotService`` and is
+        not touched here.
+        """
+        self.export_latest_signal(symbol, direction, confidence)
+        self.export_risk_status(risk_state, daily_pnl_pct)
+        logger.info(
+            "Audit export complete: %s %s risk=%s", symbol, direction, risk_state
+        )
+
+
 class TradingResultsCommitter:
     """Convenience wrapper for committing trading results and signals."""
 
@@ -242,6 +322,7 @@ class TradingResultsCommitter:
         self.git = GitHubIntegration()
         self.results_dir = Path("results")
         self.logs_dir = Path("logs")
+        self.audit = AuditExporter(results_dir=self.results_dir)
 
     def record_signal(
         self,
@@ -321,4 +402,35 @@ class TradingResultsCommitter:
             return self.git.commit_and_push(message, ["results/", "logs/"])
         except Exception as e:
             logger.error(f"❌ Failed to commit results: {e}")
+            return False
+
+    def commit_audit_snapshots(self) -> bool:
+        """Commit the three structured audit JSON files to GitHub.
+
+        Stages and pushes:
+          results/signals/latest.json
+          results/risk/status.json
+          results/execution/decisions.json
+
+        Returns:
+            True if committed and pushed successfully.
+        """
+        try:
+            patterns = [
+                "results/signals/latest.json",
+                "results/risk/status.json",
+                "results/execution/decisions.json",
+            ]
+            message = (
+                f"audit: execution snapshots "
+                f"{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}"
+            )
+            success = self.git.commit_and_push(message, patterns)
+            if success:
+                logger.info("✅ Audit snapshots committed to GitHub")
+            else:
+                logger.info("ℹ️ No audit snapshot changes to commit")
+            return success
+        except Exception as exc:
+            logger.error("❌ Failed to commit audit snapshots: %s", exc)
             return False
