@@ -123,14 +123,24 @@ class ExecutionService:
         with self._lock:
             self._latest_decision = decision
 
-        # Persist signal to history buffer
-        self._signal_history.append(
-            SignalRecord(
-                symbol=ctx.symbol,
-                direction=ctx.direction,
-                confidence=ctx.confidence,
+        # Only record signals that actually pass all guards so that a transient
+        # block (low confidence, HALTED state, drawdown) does not poison history
+        # and suppress the next valid signal as BLOCKED_DUPLICATE_SIGNAL.
+        if decision.should_execute:
+            self._signal_history.append(
+                SignalRecord(
+                    symbol=ctx.symbol,
+                    direction=ctx.direction,
+                    confidence=ctx.confidence,
+                )
             )
-        )
+        else:
+            logger.debug(
+                "Blocked signal not recorded in history: %s %s (%s)",
+                ctx.symbol,
+                ctx.direction,
+                decision.block_reason,
+            )
 
         # Export snapshot to disk
         self._snapshot_exporter.export_execution_snapshot(decision)
