@@ -290,9 +290,7 @@ class AuditExporter:
         except Exception as exc:
             logger.error("Failed to export risk status audit: %s", exc)
 
-    def export_execution_decision(
-        self, decision: dict[str, Any]
-    ) -> None:
+    def export_execution_decision(self, decision: dict[str, Any]) -> None:
         """Overwrite results/execution/decisions.json with the latest decision dict."""
         try:
             target = self.results_dir / "execution" / "decisions.json"

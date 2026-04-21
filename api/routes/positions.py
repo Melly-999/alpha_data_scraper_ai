@@ -49,4 +49,6 @@ def get_positions() -> list[PositionResponse]:
         ]
     except Exception as exc:
         logger.error("Positions endpoint error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to retrieve positions") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve positions"
+        ) from exc

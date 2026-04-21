@@ -41,4 +41,6 @@ def get_account() -> AccountResponse:
         )
     except Exception as exc:
         logger.error("Account endpoint error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to retrieve account data") from exc
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve account data"
+        ) from exc

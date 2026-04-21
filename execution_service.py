@@ -106,9 +106,7 @@ class ExecutionService:
         if block_reason is None and self._signal_history.duplicate_signal_guard(
             ctx.symbol, ctx.direction
         ):
-            block_reason = (
-                f"BLOCKED_DUPLICATE_SIGNAL ({ctx.symbol} {ctx.direction})"
-            )
+            block_reason = f"BLOCKED_DUPLICATE_SIGNAL ({ctx.symbol} {ctx.direction})"
 
         decision = ExecutionDecision(
             symbol=ctx.symbol,

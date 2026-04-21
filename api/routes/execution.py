@@ -9,14 +9,16 @@ from typing import Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from execution_service import ExecutionService
+
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Injected at startup by api/app.py via set_execution_service()
-_execution_service = None
+_execution_service: Optional[ExecutionService] = None
 
 
-def set_execution_service(svc: object) -> None:
+def set_execution_service(svc: ExecutionService) -> None:
     """Wire the shared ExecutionService instance into this route module."""
     global _execution_service
     _execution_service = svc

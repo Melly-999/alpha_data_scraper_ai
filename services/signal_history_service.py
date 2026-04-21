@@ -60,9 +60,7 @@ class SignalHistoryService:
         has the same direction, indicating a duplicate."""
         latest = self.get_latest_signal(symbol)
         if latest and latest.direction == direction:
-            logger.warning(
-                "Duplicate signal guard triggered: %s %s", symbol, direction
-            )
+            logger.warning("Duplicate signal guard triggered: %s %s", symbol, direction)
             return True
         return False
 

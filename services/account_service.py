@@ -55,7 +55,9 @@ class AccountService:
             )
             return snapshot
         except Exception as exc:
-            logger.warning("MT5 unavailable for account snapshot, using fallback: %s", exc)
+            logger.warning(
+                "MT5 unavailable for account snapshot, using fallback: %s", exc
+            )
             return self._fallback_snapshot()
 
     def get_open_positions(self) -> list[PositionSnapshot]:
@@ -76,7 +78,9 @@ class AccountService:
             logger.info("Fetched %d open positions", len(positions))
             return positions
         except Exception as exc:
-            logger.warning("MT5 unavailable for positions, returning empty list: %s", exc)
+            logger.warning(
+                "MT5 unavailable for positions, returning empty list: %s", exc
+            )
             return []
 
     # ------------------------------------------------------------------
