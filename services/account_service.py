@@ -89,50 +89,44 @@ class AccountService:
 
     def _fetch_account_info(self) -> dict[str, Any]:
         """Return raw account info dict from MT5."""
-        try:
-            import MetaTrader5 as mt5  # type: ignore
+        import MetaTrader5 as mt5  # type: ignore
 
-            if not mt5.initialize():
-                raise RuntimeError("MT5 initialisation failed")
-            info = mt5.account_info()
-            mt5.shutdown()
-            if info is None:
-                raise RuntimeError("MT5 account_info returned None")
-            return {
-                "balance": float(info.balance),
-                "equity": float(info.equity),
-                "profit": float(info.profit),
-                "margin": float(info.margin),
-                "free_margin": float(info.margin_free),
-            }
-        except Exception:
-            raise
+        if not mt5.initialize():
+            raise RuntimeError("MT5 initialisation failed")
+        info = mt5.account_info()
+        mt5.shutdown()
+        if info is None:
+            raise RuntimeError("MT5 account_info returned None")
+        return {
+            "balance": float(info.balance),
+            "equity": float(info.equity),
+            "profit": float(info.profit),
+            "margin": float(info.margin),
+            "free_margin": float(info.margin_free),
+        }
 
     def _fetch_raw_positions(self) -> list[dict[str, Any]]:
         """Return raw position list from MT5 as plain dicts."""
-        try:
-            import MetaTrader5 as mt5  # type: ignore
+        import MetaTrader5 as mt5  # type: ignore
 
-            if not mt5.initialize():
-                raise RuntimeError("MT5 initialisation failed")
-            raw = mt5.positions_get() or []
-            mt5.shutdown()
-            return [
-                {
-                    "symbol": p.symbol,
-                    "side": "BUY" if p.type == 0 else "SELL",
-                    "volume": float(p.volume),
-                    "price_open": float(p.price_open),
-                    "price_current": float(p.price_current),
-                    "profit": float(p.profit),
-                    "sl": float(p.sl),
-                    "tp": float(p.tp),
-                    "ticket": int(p.ticket),
-                }
-                for p in raw
-            ]
-        except Exception:
-            raise
+        if not mt5.initialize():
+            raise RuntimeError("MT5 initialisation failed")
+        raw = mt5.positions_get() or []
+        mt5.shutdown()
+        return [
+            {
+                "symbol": p.symbol,
+                "side": "BUY" if p.type == 0 else "SELL",
+                "volume": float(p.volume),
+                "price_open": float(p.price_open),
+                "price_current": float(p.price_current),
+                "profit": float(p.profit),
+                "sl": float(p.sl),
+                "tp": float(p.tp),
+                "ticket": int(p.ticket),
+            }
+            for p in raw
+        ]
 
     @staticmethod
     def _compute_drawdown(info: dict[str, Any]) -> float:

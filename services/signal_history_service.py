@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -20,14 +21,21 @@ class SignalRecord:
 
 
 class SignalHistoryService:
-    """Keeps the last *maxlen* signal records and detects duplicates."""
+    """Keeps the last *maxlen* signal records and detects duplicates.
+
+    All public methods are thread-safe.
+    """
 
     def __init__(self, maxlen: int = 50) -> None:
         self._buffer: Deque[SignalRecord] = deque(maxlen=maxlen)
+        self._lock = threading.Lock()
 
     def append(self, record: SignalRecord) -> None:
         """Append a new signal record; logs a warning if it is a duplicate."""
-        if self._is_duplicate(record):
+        with self._lock:
+            is_dup = self._is_duplicate_unlocked(record)
+            self._buffer.append(record)
+        if is_dup:
             logger.warning(
                 "Duplicate signal detected: %s %s", record.symbol, record.direction
             )
@@ -38,21 +46,23 @@ class SignalHistoryService:
                 record.direction,
                 record.confidence,
             )
-        self._buffer.append(record)
 
     def get_latest(self) -> Optional[SignalRecord]:
         """Return the most recently appended record, or None if empty."""
-        return self._buffer[-1] if self._buffer else None
+        with self._lock:
+            return self._buffer[-1] if self._buffer else None
 
     def get_last_n(self, n: int) -> list[SignalRecord]:
         """Return the last *n* records (oldest first)."""
-        return list(self._buffer)[-n:]
+        with self._lock:
+            return list(self._buffer)[-n:]
 
     def get_latest_signal(self, symbol: str) -> Optional[SignalRecord]:
         """Return the most recent record for *symbol*, or None."""
-        for record in reversed(list(self._buffer)):
-            if record.symbol == symbol:
-                return record
+        with self._lock:
+            for record in reversed(list(self._buffer)):
+                if record.symbol == symbol:
+                    return record
         return None
 
     def duplicate_signal_guard(self, symbol: str, direction: str) -> bool:
@@ -64,6 +74,9 @@ class SignalHistoryService:
             return True
         return False
 
-    def _is_duplicate(self, record: SignalRecord) -> bool:
-        latest = self.get_latest_signal(record.symbol)
-        return latest is not None and latest.direction == record.direction
+    def _is_duplicate_unlocked(self, record: SignalRecord) -> bool:
+        """Check for duplicate without acquiring the lock (caller must hold it)."""
+        for existing in reversed(list(self._buffer)):
+            if existing.symbol == record.symbol:
+                return existing.direction == record.direction
+        return False

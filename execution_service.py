@@ -8,6 +8,7 @@ the immutable default.
 from __future__ import annotations
 
 import logging
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
@@ -71,6 +72,7 @@ class ExecutionService:
         self._signal_history = signal_history or SignalHistoryService()
         self._snapshot_exporter = snapshot_exporter or ExecutionSnapshotService()
         self._latest_decision: Optional[ExecutionDecision] = None
+        self._lock = threading.Lock()
 
     def evaluate(self, ctx: ExecutionContext) -> ExecutionDecision:
         """Run all guards and return an ExecutionDecision for *ctx*.
@@ -118,7 +120,8 @@ class ExecutionService:
             mode="dry_run",
         )
 
-        self._latest_decision = decision
+        with self._lock:
+            self._latest_decision = decision
 
         # Persist signal to history buffer
         self._signal_history.append(
@@ -145,4 +148,5 @@ class ExecutionService:
 
     def get_latest_decision(self) -> Optional[ExecutionDecision]:
         """Return the most recent decision, or None if evaluate() has not been called."""
-        return self._latest_decision
+        with self._lock:
+            return self._latest_decision

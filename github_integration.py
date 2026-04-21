@@ -235,7 +235,11 @@ class GitHubIntegration:
 
 
 class AuditExporter:
-    """Exports structured JSON snapshots for signals, risk status, and execution decisions.
+    """Exports structured JSON snapshots for signals and risk status.
+
+    ``results/execution/decisions.json`` is intentionally excluded — that file
+    is owned by ``ExecutionSnapshotService`` (written after every evaluation
+    inside ``ExecutionService``) to ensure a single, consistent writer.
 
     Each export overwrites the previous snapshot — the files stay small and
     machine-readable for CI/monitoring consumption.
@@ -290,17 +294,6 @@ class AuditExporter:
         except Exception as exc:
             logger.error("Failed to export risk status audit: %s", exc)
 
-    def export_execution_decision(self, decision: dict[str, Any]) -> None:
-        """Overwrite results/execution/decisions.json with the latest decision dict."""
-        try:
-            target = self.results_dir / "execution" / "decisions.json"
-            target.parent.mkdir(parents=True, exist_ok=True)
-            payload = {"latest_execution_decision": decision}
-            target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-            logger.info("Audit export: %s", target)
-        except Exception as exc:
-            logger.error("Failed to export execution decision audit: %s", exc)
-
     def export_all(
         self,
         symbol: str,
@@ -308,14 +301,16 @@ class AuditExporter:
         confidence: float,
         risk_state: str,
         daily_pnl_pct: float,
-        decision: dict[str, Any],
     ) -> None:
-        """Export all three audit snapshots in one call."""
+        """Export signal and risk audit snapshots in one call.
+
+        ``decisions.json`` is written by ``ExecutionSnapshotService`` and is
+        not touched here.
+        """
         self.export_latest_signal(symbol, direction, confidence)
         self.export_risk_status(risk_state, daily_pnl_pct)
-        self.export_execution_decision(decision)
         logger.info(
-            "Full audit export complete: %s %s risk=%s", symbol, direction, risk_state
+            "Audit export complete: %s %s risk=%s", symbol, direction, risk_state
         )
 
 
