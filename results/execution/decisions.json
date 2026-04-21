@@ -1,0 +1,12 @@
+{
+  "latest_execution_decision": {
+    "symbol": "EURUSD",
+    "direction": "BUY",
+    "confidence_used": 80.0,
+    "should_execute": false,
+    "block_reason": "BLOCKED_DUPLICATE_SIGNAL (EURUSD BUY)",
+    "risk_state": "NORMAL",
+    "mode": "dry_run",
+    "timestamp": "2026-04-21T07:13:05.700426"
+  }
+}
