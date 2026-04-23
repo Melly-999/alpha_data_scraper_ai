@@ -1,5 +1,11 @@
 # Trading Bot Deployment Guide
 
+> Phase 1 MellyTrade local runtime does **not** use the legacy
+> `docker-compose.yml` / `example_runner.py` flow documented below.
+> For the active local vertical slice, use:
+> `python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001`
+> and the top-level `frontend/` Vite app.
+
 Complete guide for deploying the Grok Alpha AI Trading Bot in various environments.
 
 ## Table of Contents
@@ -7,99 +13,9 @@ Complete guide for deploying the Grok Alpha AI Trading Bot in various environmen
 1. [Windows Service (Local Deployment)](#windows-service-local-deployment)
 2. [Docker Deployment (Linux/Cloud)](#docker-deployment-linuxcloud)
 3. [Docker Compose (Multi-Service)](#docker-compose-multi-service)
-4. [MellyTrade v3 stack](#mellytrade-v3-stack)
-5. [Production Checklist](#production-checklist)
-6. [Monitoring & Logs](#monitoring--logs)
-7. [Troubleshooting](#troubleshooting)
-
-## MellyTrade v3 stack
-
-The `mellytrade_v3/` sub-project bundles four cooperating pieces:
-
-- **Backend** — `mellytrade_v3/mellytrade-api/` (FastAPI)
-- **MT5 bridge** — `mellytrade_v3/mt5/`
-- **Cloudflare Worker hub** — `mellytrade_v3/mellytrade/`
-- **React dashboard** — `mellytrade_v3/mellytrade/dashboard/`
-
-### Required environment
-
-Create `mellytrade_v3/mellytrade-api/.env` from the `.env.example`:
-
-| Variable | Purpose |
-|---|---|
-| `DATABASE_URL` | SQLite default; Postgres in prod |
-| `FASTAPI_KEY` | Required `X-API-Key` header for `/signal`, `/signals` |
-| `CF_HUB_URL` | Worker `/api/publish` URL |
-| `CF_API_SECRET` | Shared secret between backend and worker |
-| `COOLDOWN_SECONDS` | Per-symbol cooldown (default 60) |
-| `MIN_CONFIDENCE` | Minimum accepted confidence (default 70) |
-| `MAX_RISK_PERCENT` | Hard cap on `risk_percent` (default 1.0) |
-| `ALPHA_REPO_PATH` | Absolute path to this repo (so MT5 bridge can import the LSTM) |
-| `ALPHA_LSTM_CLASS` | Defaults to `lstm_model.LSTMPipeline` |
-| `ALPHA_LSTM_FUNCTION` | Optional override for the callable |
-
-### Local run
-
-```bash
-# Backend (uvicorn, port 8000 or 8001 if 8000 is busy)
-cd mellytrade_v3/mellytrade-api
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-cp .env.example .env
-pytest -q                     # 7 passing
-uvicorn app.main:app --reload --port 8000
-# or: uvicorn app.main:app --reload --port 8001
-
-# Cloudflare Worker
-cd ../mellytrade
-npm install
-npm run dev                   # http://127.0.0.1:8787
-
-# Dashboard
-cd dashboard
-npm install
-npm run dev                   # http://127.0.0.1:5173
-npm audit fix                 # resolve moderate advisories when possible
-```
-
-### Risk rules (enforced, never loosened)
-
-- `confidence >= 70` — rejected with `confidence_below_min`
-- `risk_percent <= 1.0` — rejected with `risk_above_max`
-- SL and TP required and consistent with the direction
-- Per-symbol cooldown of `COOLDOWN_SECONDS` — rejected with `cooldown_active`
-
-### Diagnostics
-
-```bash
-# Verifies LSTMPipeline + adapter end-to-end (no network, no API).
-python -m mellytrade_v3.mt5.check_setup
-
-# Runs the MT5 bridge once: fetch OHLCV → predict → POST /signal.
-python -m mellytrade_v3.mt5.mt5_bridge
-```
-
-### Claude Code — SessionStart hook
-
-On the Claude Code web sandbox the repo's `SessionStart` hook
-(`.claude/hooks/session-start.sh`, registered in
-`.claude/settings.json`) installs the CI requirements and the backend
-requirements, and exports `PYTHONPATH` so `mellytrade_v3.*` plus the
-root `lstm_model` module are importable from the first command. It is a
-no-op on local sessions (`CLAUDE_CODE_REMOTE` unset or not `true`).
-
-### Tests
-
-- Backend: `cd mellytrade_v3/mellytrade-api && pytest -q` (7 tests)
-- MT5 bridge: `cd mellytrade_v3 && pytest mt5/tests -q` (3 tests)
-
-### Open production items
-
-- Provision a Postgres `DATABASE_URL` (e.g. Cloud SQL).
-- Rotate `FASTAPI_KEY`, `CF_API_SECRET` and real CloudMCP tokens (see
-  `.mcp.json` / `.cursor/mcp.json`).
-- Deploy backend via docker-compose or Cloud Run (image built from
-  `mellytrade-api/`).
+4. [Production Checklist](#production-checklist)
+5. [Monitoring & Logs](#monitoring--logs)
+6. [Troubleshooting](#troubleshooting)
 
 ---
 
