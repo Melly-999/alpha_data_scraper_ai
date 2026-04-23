@@ -9,6 +9,7 @@ from app.services.analytics_service import AnalyticsService
 from app.services.cache import TTLCache
 from app.services.log_service import LogService
 from app.services.mt5_read_adapter import AdapterSnapshot, MT5ReadAdapter
+from app.services.mt5_service import MT5Service
 from app.services.risk_service import RiskService
 from app.services.signal_service import ServiceDependencies, SignalService
 
@@ -175,3 +176,44 @@ def test_analytics_service_returns_read_only_metrics() -> None:
     assert summary.total_trades >= 0
     assert summary.source
     assert summary.highlights
+
+
+def test_mt5_status_contract_matches_read_snapshot_source() -> None:
+    class FakeAdapter(MT5ReadAdapter):
+        def read_status(self, symbols: list[str]) -> AdapterSnapshot | None:
+            return AdapterSnapshot(
+                payload={
+                    "connected": True,
+                    "server": "Demo-Server",
+                    "account_id": "123",
+                    "account_name": "Read Only",
+                    "broker": "Broker",
+                    "currency": "USD",
+                    "leverage": "1:100",
+                    "last_heartbeat": datetime.now(timezone.utc).isoformat(),
+                    "latency_ms": 5,
+                    "symbols_loaded": len(symbols),
+                    "orders_sync": True,
+                    "positions_sync": True,
+                    "build_version": "5.0.0",
+                    "fallback": False,
+                    "read_only": True,
+                    "data_source": "mt5",
+                    "terminal_path": "C:/MT5",
+                    "cache_age_seconds": 0,
+                    "refreshed_at": datetime.now(timezone.utc).isoformat(),
+                    "connection_logs": [],
+                },
+                source="mt5",
+                connected=True,
+                latency_ms=5,
+            )
+
+    status = MT5Service(
+        adapter=FakeAdapter(),
+        tracked_symbols=["EURUSD", "GBPUSD"],
+    ).get_status()
+
+    assert status.fallback is False
+    assert status.data_source == "mt5"
+    assert status.read_only is True

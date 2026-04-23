@@ -29,9 +29,6 @@ export function RiskManagerPage() {
       min_confidence: form.min_confidence,
       cooldown_seconds: form.cooldown_seconds,
       max_open_positions: form.max_open_positions,
-      auto_trade: form.auto_trade,
-      dry_run: form.dry_run,
-      allow_same_signal: form.allow_same_signal,
     };
     const next = await apiPut<RiskConfig, RiskConfigUpdate>("/risk/config", payload);
     setForm(next);
@@ -98,32 +95,49 @@ export function RiskManagerPage() {
                 }
               />
             </label>
-            <label>
-              Auto Trade
-              <input
-                type="checkbox"
-                checked={form.auto_trade}
-                disabled
-                onChange={(event) =>
-                  setForm({ ...form, auto_trade: event.target.checked })
-                }
-              />
-            </label>
-            <label>
-              Dry Run
-              <input
-                type="checkbox"
-                checked={form.dry_run}
-                disabled
-                onChange={(event) =>
-                  setForm({ ...form, dry_run: event.target.checked })
-                }
-              />
-            </label>
+          </div>
+        ) : null}
+
+        {form ? (
+          <div className="stack">
+            <div className="detail-row">
+              <span>Backend-Enforced Safety Controls</span>
+              <strong>Locked in Phase 2</strong>
+            </div>
+            <div className="form-grid">
+              <label>
+                Auto Trade
+                <input
+                  type="checkbox"
+                  checked={form.auto_trade}
+                  disabled
+                  aria-label="Auto Trade (backend-enforced)"
+                />
+              </label>
+              <label>
+                Dry Run
+                <input
+                  type="checkbox"
+                  checked={form.dry_run}
+                  disabled
+                  aria-label="Dry Run (backend-enforced)"
+                />
+              </label>
+              <label>
+                Allow Same Signal
+                <input
+                  type="checkbox"
+                  checked={form.allow_same_signal}
+                  disabled
+                  aria-label="Allow Same Signal (backend-enforced)"
+                />
+              </label>
+            </div>
           </div>
         ) : null}
         <div className="stat-subtle">
-          auto_trade stays off and dry_run stays on in Phase 2.
+          auto_trade stays off, dry_run stays on, and duplicate-signal reuse stays
+          disabled in Phase 2.
         </div>
       </Card>
 

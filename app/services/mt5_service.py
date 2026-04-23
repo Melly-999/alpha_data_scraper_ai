@@ -10,11 +10,6 @@ class MT5Service:
         self._adapter = adapter
         self._tracked_symbols = tracked_symbols
         self._cache: TTLCache[MT5Status] = TTLCache(ttl_seconds=3)
-        self._fallback = True
-
-    @property
-    def fallback_mode(self) -> bool:
-        return self._fallback
 
     def get_status(self) -> MT5Status:
         envelope = self._cache.get_or_set(self._load_status)
@@ -30,5 +25,4 @@ class MT5Service:
             self._adapter.read_status(self._tracked_symbols)
             or self._adapter.fallback_status()
         )
-        self._fallback = snapshot.source != "mt5"
         return MT5Status.model_validate(snapshot.payload)
