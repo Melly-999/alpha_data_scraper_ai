@@ -1,13 +1,30 @@
 import { Card } from "../components/shared/Card";
 import { Table } from "../components/shared/Table";
 import { useMt5Status } from "../hooks/useMt5";
+import { Badge } from "../components/shared/Badge";
 
 export function MT5BridgePage() {
-  const { data } = useMt5Status();
+  const { data, loading, error } = useMt5Status();
+
+  if (loading && !data) {
+    return <div className="state">Loading MT5 bridge…</div>;
+  }
+  if (error && !data) {
+    return <div className="state error">{error}</div>;
+  }
 
   return (
     <div className="page-grid">
-      <Card title="MT5 Status">
+      <Card
+        title="MT5 Status"
+        right={
+          data ? (
+            <Badge tone={data.fallback ? "amber" : "green"}>
+              {data.fallback ? "Fallback Read Model" : "Live Read Adapter"}
+            </Badge>
+          ) : null
+        }
+      >
         {data ? (
           <div className="stack">
             <div className="detail-row">
@@ -21,6 +38,18 @@ export function MT5BridgePage() {
             <div className="detail-row">
               <span>Latency</span>
               <strong>{data.latency_ms} ms</strong>
+            </div>
+            <div className="detail-row">
+              <span>Read Only</span>
+              <strong>{data.read_only ? "Yes" : "No"}</strong>
+            </div>
+            <div className="detail-row">
+              <span>Cache Age</span>
+              <strong>{data.cache_age_seconds}s</strong>
+            </div>
+            <div className="detail-row">
+              <span>Terminal Path</span>
+              <strong>{data.terminal_path || "Unavailable"}</strong>
             </div>
           </div>
         ) : null}
@@ -43,4 +72,3 @@ export function MT5BridgePage() {
     </div>
   );
 }
-

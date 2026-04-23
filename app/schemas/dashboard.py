@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.common import Mode
 
@@ -75,8 +75,11 @@ class DashboardSummary(BaseModel):
     watchlist: list[WatchlistItem]
     activity_feed: list[ActivityFeedItem]
     equity_curve: list[EquityCurvePoint]
+    analytics_summary: "AnalyticsSummary | None" = None
+    degraded_services: list[str] = Field(default_factory=list)
     generated_at: datetime
 
 
+from app.schemas.analytics import AnalyticsSummary  # noqa: E402
 from app.schemas.risk import RiskStatus  # noqa: E402
 from app.schemas.signal import SignalSummary  # noqa: E402

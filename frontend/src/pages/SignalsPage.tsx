@@ -15,17 +15,28 @@ export function SignalsPage() {
   const setSelectedSignalId = useUiStore((state) => state.setSelectedSignalId);
   const [detail, setDetail] = useState<SignalDetail | null>(null);
   const [reasoning, setReasoning] = useState<SignalReasoning | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selectedSignalId) {
       setDetail(null);
       setReasoning(null);
+      setDetailError(null);
       return;
     }
-    void apiGet<SignalDetail>(`/signals/${selectedSignalId}`).then(setDetail);
-    void apiGet<SignalReasoning>(`/signals/${selectedSignalId}/reasoning`).then(
-      setReasoning,
-    );
+    void apiGet<SignalDetail>(`/signals/${selectedSignalId}`)
+      .then((next) => {
+        setDetail(next);
+        setDetailError(null);
+      })
+      .catch((nextError: unknown) => {
+        setDetailError(
+          nextError instanceof Error ? nextError.message : "Failed to load signal detail",
+        );
+      });
+    void apiGet<SignalReasoning>(`/signals/${selectedSignalId}/reasoning`)
+      .then(setReasoning)
+      .catch(() => setReasoning(null));
   }, [selectedSignalId]);
 
   return (
@@ -57,6 +68,12 @@ export function SignalsPage() {
                     <Badge tone="green">ELIGIBLE</Badge>
                   ),
               },
+              {
+                key: "timestamp",
+                label: "Age",
+                render: (row) =>
+                  `${Math.max(0, Math.round((Date.now() - new Date(row.timestamp).getTime()) / 1000))}s`,
+              },
             ]}
             rows={data}
             onRowClick={(row) => setSelectedSignalId(row.id)}
@@ -68,6 +85,7 @@ export function SignalsPage() {
         title={detail ? `${detail.symbol} ${detail.direction}` : "Signal Detail"}
         onClose={() => setSelectedSignalId(null)}
       >
+        {detailError ? <div className="state error">{detailError}</div> : null}
         {detail ? (
           <div className="stack">
             <div className="detail-row">
@@ -75,8 +93,30 @@ export function SignalsPage() {
               <strong>{detail.confidence}%</strong>
             </div>
             <div className="detail-row">
+              <span>Source</span>
+              <Badge tone={detail.provenance.fallback ? "amber" : "green"}>
+                {detail.provenance.signal_source} / {detail.provenance.market_data_source}
+              </Badge>
+            </div>
+            <div className="detail-row">
+              <span>Validation</span>
+              <p>{detail.ai_validation_status ?? "No validation metadata."}</p>
+            </div>
+            <div className="detail-row">
               <span>Reasoning</span>
               <p>{detail.reasoning}</p>
+            </div>
+            <div className="detail-row">
+              <span>Confidence Model</span>
+              <p>{reasoning?.confidence_explainer ?? detail.confidence_explainer}</p>
+            </div>
+            <div className="detail-row">
+              <span>Technical Inputs</span>
+              <ul className="compact-list">
+                {detail.technical_input_summary.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
             </div>
             <div className="detail-row">
               <span>Risk Gates</span>
@@ -88,10 +128,13 @@ export function SignalsPage() {
                 ))}
               </ul>
             </div>
+            <div className="detail-row">
+              <span>Cache</span>
+              <strong>{detail.provenance.cache_age_seconds}s</strong>
+            </div>
           </div>
         ) : null}
       </Drawer>
     </div>
   );
 }
-

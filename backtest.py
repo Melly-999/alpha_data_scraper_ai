@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Callable, Tuple
 import logging
 
-import MetaTrader5 as mt5
 import numpy as np
 import pandas as pd
+
+try:
+    import MetaTrader5 as mt5  # type: ignore
+except Exception:  # pragma: no cover - optional runtime dependency
+    mt5 = None
 
 logger = logging.getLogger("Backtest")
 
@@ -255,6 +259,9 @@ class BacktestEngine:
         lookback_bars: int,
     ) -> Optional[pd.DataFrame]:
         """Fetch OHLC data from MT5."""
+        if mt5 is None:
+            return self._synthetic_historical_data(start_date, end_date, lookback_bars)
+
         # Extend start_date for lookback
         extended_start = start_date - timedelta(
             days=max(int(lookback_bars * 1.5 / 1440), 7)
@@ -265,12 +272,30 @@ class BacktestEngine:
 
         rates = mt5.copy_rates_range(self.symbol, mt5.TIMEFRAME_M1, from_ts, to_ts)
         if rates is None or len(rates) == 0:
-            return None
+            return self._synthetic_historical_data(start_date, end_date, lookback_bars)
 
         df = pd.DataFrame(rates)
         df["time"] = pd.to_datetime(df["time"], unit="s", utc=True)
         # Filter to requested range
         df = df[(df["time"] >= start_date) & (df["time"] <= end_date)]
+        return df.reset_index(drop=True)
+
+    def _synthetic_historical_data(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        lookback_bars: int,
+    ) -> pd.DataFrame:
+        from mt5_fetcher import _synthetic_rates
+
+        bars = max(lookback_bars + 220, 360)
+        df = _synthetic_rates(self.symbol, bars=bars, seed=21)
+        df["time"] = pd.date_range(
+            start=start_date,
+            end=end_date,
+            periods=len(df),
+            tz=timezone.utc,
+        )
         return df.reset_index(drop=True)
 
     def _calculate_lot_size(self, current_price: float) -> float:

@@ -7,6 +7,8 @@ if (-not (Test-Path (Join-Path $frontendRoot "package.json"))) {
     throw "frontend/package.json not found. Expected repo root at: $repoRoot"
 }
 
+& (Join-Path $PSScriptRoot "preflight.ps1")
+
 Set-Location $frontendRoot
 
 Write-Host "Repo root: $repoRoot"
@@ -16,4 +18,3 @@ npm install
 
 Write-Host "Starting frontend dev server ..."
 npm run dev
-

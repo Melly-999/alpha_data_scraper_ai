@@ -25,7 +25,10 @@ def update_risk_config(
     payload: RiskConfigUpdate,
     container: AppContainer = Depends(get_container),
 ) -> RiskConfig:
-    return container.risk_service.update_config(payload)
+    updated = container.risk_service.update_config(payload)
+    container.signal_service.clear_cache()
+    container.dashboard_service.clear_cache()
+    return updated
 
 
 @router.get("/risk/status", response_model=RiskStatus)
@@ -49,4 +52,7 @@ def risk_violations(
 def emergency_stop(
     container: AppContainer = Depends(get_container),
 ) -> EmergencyStopResponse:
-    return container.risk_service.trigger_emergency_stop()
+    response = container.risk_service.trigger_emergency_stop()
+    container.signal_service.clear_cache()
+    container.dashboard_service.clear_cache()
+    return response

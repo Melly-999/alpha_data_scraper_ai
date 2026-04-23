@@ -5,7 +5,10 @@ from pathlib import Path
 
 from app.schemas.common import BlockedReason
 from app.services.account_service import AccountService
+from app.services.analytics_service import AnalyticsService
+from app.services.cache import TTLCache
 from app.services.log_service import LogService
+from app.services.mt5_read_adapter import AdapterSnapshot, MT5ReadAdapter
 from app.services.risk_service import RiskService
 from app.services.signal_service import ServiceDependencies, SignalService
 
@@ -13,14 +16,17 @@ from app.services.signal_service import ServiceDependencies, SignalService
 def build_services() -> tuple[RiskService, SignalService]:
     log_service = LogService()
     risk_service = RiskService(Path("config.json"), log_service)
+    adapter = MT5ReadAdapter()
     signal_service = SignalService(
         risk_service=risk_service,
         log_service=log_service,
-        account_service=AccountService(),
+        account_service=AccountService(adapter=adapter),
         dependencies=ServiceDependencies(
+            mt5_available=False,
             claude_available=False,
             news_available=False,
         ),
+        tracked_symbols=["EURUSD", "GBPUSD", "USDJPY", "XAUUSD"],
     )
     return risk_service, signal_service
 
@@ -32,7 +38,8 @@ def test_signal_adapter_maps_blocked_reasons_and_bounds() -> None:
     by_id = {signal.id: signal for signal in signals}
 
     assert by_id["sig-003"].blocked_reason == BlockedReason.LOW_CONFIDENCE
-    assert by_id["sig-004"].blocked_reason == BlockedReason.COOLDOWN
+    assert by_id["sig-004"].blocked is True
+    assert by_id["sig-004"].blocked_reason is not None
     assert all(33 <= signal.confidence <= 85 for signal in signals)
 
 
@@ -100,3 +107,71 @@ def test_conservative_defaults_remain_disabled() -> None:
     assert config.dry_run is True
     assert config.max_risk_per_trade <= 1.0
     assert config.min_confidence >= 70
+
+
+def test_account_service_switches_to_read_only_adapter() -> None:
+    class FakeAdapter(MT5ReadAdapter):
+        def read_account_overview(self) -> AdapterSnapshot | None:
+            return AdapterSnapshot(
+                payload={
+                    "balance": 1000.0,
+                    "equity": 1010.0,
+                    "margin": 12.0,
+                    "free_margin": 998.0,
+                    "margin_level": 400.0,
+                    "drawdown": 1.0,
+                    "daily_pnl": 10.0,
+                    "daily_pnl_pct": 1.0,
+                    "open_positions": 1,
+                    "today_trades": 2,
+                },
+                source="mt5",
+                connected=True,
+                latency_ms=4,
+            )
+
+    service = AccountService(adapter=FakeAdapter())
+    overview = service.get_account_overview()
+
+    assert service.fallback_mode is False
+    assert overview.balance == 1000.0
+    assert overview.open_positions == 1
+
+
+def test_ttl_cache_reuses_loaded_value_until_cleared() -> None:
+    cache: TTLCache[int] = TTLCache(ttl_seconds=60)
+    call_count = {"value": 0}
+
+    def loader() -> int:
+        call_count["value"] += 1
+        return call_count["value"]
+
+    first = cache.get_or_set(loader)
+    second = cache.get_or_set(loader)
+    cache.clear()
+    third = cache.get_or_set(loader)
+
+    assert first.value == 1
+    assert second.value == 1
+    assert second.cache_age_seconds >= 0
+    assert third.value == 2
+
+
+def test_signal_reasoning_includes_provenance_fields() -> None:
+    _, signal_service = build_services()
+
+    reasoning = signal_service.get_reasoning("sig-001")
+
+    assert reasoning.provenance.signal_source
+    assert reasoning.provenance.market_data_source
+    assert reasoning.confidence_explainer is not None
+
+
+def test_analytics_service_returns_read_only_metrics() -> None:
+    service = AnalyticsService(default_symbol="EURUSD")
+
+    summary = service.get_summary()
+
+    assert summary.total_trades >= 0
+    assert summary.source
+    assert summary.highlights

@@ -8,6 +8,7 @@ def test_health_endpoint_reports_dependencies(client) -> None:
     payload = response.json()
     assert payload["status"] == "ok"
     assert "dependencies" in payload
+    assert payload["workspace"]["startup_mode"] == "repo-root-only"
     assert payload["safety"]["auto_trade"] is False
     assert payload["safety"]["dry_run"] is True
 
@@ -38,6 +39,30 @@ def test_signal_reasoning_contract(client) -> None:
     assert payload["signal_id"] == "sig-001"
     assert isinstance(payload["risk_gate_results"], list)
     assert payload["risk_gate_results"]
+    assert "provenance" in payload
+
+
+def test_signal_detail_exposes_phase2_provenance(client) -> None:
+    response = client.get("/api/signals/sig-001")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["provenance"]["signal_source"]
+    assert payload["provenance"]["market_data_source"]
+    assert "confidence_explainer" in payload
+
+
+def test_analytics_summary_endpoint(client) -> None:
+    response = client.get("/api/analytics/summary")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_trades"] >= 0
+    assert "win_rate" in payload
+    assert "sharpe_ratio" in payload
+    assert "max_drawdown" in payload
+    assert "profit_factor" in payload
+    assert "total_return" in payload
 
 
 def test_risk_config_update_is_sanitized(client) -> None:
@@ -74,3 +99,8 @@ def test_emergency_stop_is_idempotent_and_blocks_execution_paths(client) -> None
         item for item in signals.json() if item["blocked_reason"] == "EMERGENCY_STOP"
     ]
     assert blocked
+
+
+def test_no_live_execution_route_is_exposed(client) -> None:
+    assert client.post("/api/orders").status_code in {404, 405}
+    assert client.post("/api/signals/sig-001/execute").status_code == 404

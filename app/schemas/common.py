@@ -65,3 +65,12 @@ class LogCategory(str, Enum):
 class Mode(str, Enum):
     DRY_RUN = "DRY_RUN"
     LIVE = "LIVE"
+
+
+class DataSource(str, Enum):
+    MT5 = "mt5"
+    FALLBACK = "fallback"
+    SYNTHETIC = "synthetic"
+    TECHNICAL_MODEL = "technical_model"
+    FIXTURE = "fixture"
+    BACKTEST = "backtest"

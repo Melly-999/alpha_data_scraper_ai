@@ -8,6 +8,12 @@ interface TopBarProps {
 }
 
 export function TopBar({ health, systemStatus, riskConfig }: TopBarProps) {
+  const degradedCount = [
+    !health?.dependencies.mt5,
+    !health?.dependencies.claude,
+    !health?.dependencies.news,
+  ].filter(Boolean).length;
+
   return (
     <header className="topbar">
       <div>
@@ -20,6 +26,9 @@ export function TopBar({ health, systemStatus, riskConfig }: TopBarProps) {
         <Badge tone={health?.fallback_mode ? "amber" : "green"}>
           {health?.fallback_mode ? "Fallback Mode" : "Live Dependencies"}
         </Badge>
+        <Badge tone={degradedCount > 0 ? "amber" : "green"}>
+          {degradedCount > 0 ? `${degradedCount} Degraded` : "Dependencies OK"}
+        </Badge>
         <Badge tone={riskConfig?.emergency_pause ? "red" : "green"}>
           {riskConfig?.emergency_pause ? "Emergency Stop" : "Safe Dry Run"}
         </Badge>
@@ -27,4 +36,3 @@ export function TopBar({ health, systemStatus, riskConfig }: TopBarProps) {
     </header>
   );
 }
-

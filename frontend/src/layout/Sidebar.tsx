@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 
 const items = [
   ["dashboard", "Dashboard"],
+  ["analytics", "Analytics"],
   ["signals", "Signals"],
   ["positions", "Positions"],
   ["blotter", "Trade Blotter"],
@@ -18,7 +19,7 @@ export function Sidebar() {
         <div className="brand-mark">MT</div>
         <div>
           <div className="brand-title">MellyTrade</div>
-          <div className="brand-subtitle">Phase 1 Terminal</div>
+          <div className="brand-subtitle">Phase 2 Workstation</div>
         </div>
       </div>
       <nav className="sidebar-nav">
@@ -35,4 +36,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

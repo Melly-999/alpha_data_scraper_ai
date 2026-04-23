@@ -18,4 +18,9 @@ class MT5Status(BaseModel):
     positions_sync: bool
     build_version: str
     fallback: bool
+    read_only: bool = True
+    data_source: str = "fallback"
+    terminal_path: str | None = None
+    refreshed_at: str | None = None
+    cache_age_seconds: int = 0
     connection_logs: list[dict[str, str]]

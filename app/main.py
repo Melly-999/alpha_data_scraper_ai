@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.routes import (
     account,
+    analytics,
     dashboard,
     health,
     logs,
@@ -39,13 +40,13 @@ async def lifespan(app: FastAPI):
         [LogEntry.model_validate(item) for item in prototype_logs()]
     )
     app.state.container = container
-    logger.info("MellyTrade Phase 1 backend initialized")
+    logger.info("MellyTrade Phase 2 backend initialized")
     yield
 
 
 app = FastAPI(
-    title="MellyTrade Phase 1 API",
-    version="0.1.0",
+    title="MellyTrade Phase 2 API",
+    version="0.2.0",
     docs_url="/docs",
     redoc_url=None,
     lifespan=lifespan,
@@ -103,6 +104,7 @@ for router in (
     health.router,
     dashboard.router,
     account.router,
+    analytics.router,
     signals.router,
     positions.router,
     orders.router,

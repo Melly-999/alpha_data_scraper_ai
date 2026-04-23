@@ -5,6 +5,7 @@ import { useHealth } from "./hooks/useHealth";
 import { useRiskConfig } from "./hooks/useRisk";
 import { AppShell } from "./layout/AppShell";
 import { DashboardPage } from "./pages/DashboardPage";
+import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { LogsPage } from "./pages/LogsPage";
 import { MT5BridgePage } from "./pages/MT5BridgePage";
 import { PositionsPage } from "./pages/PositionsPage";
@@ -27,6 +28,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/signals" element={<SignalsPage />} />
         <Route path="/positions" element={<PositionsPage />} />
         <Route path="/blotter" element={<TradeBlotterPage />} />
@@ -38,4 +40,3 @@ export default function App() {
     </AppShell>
   );
 }
-

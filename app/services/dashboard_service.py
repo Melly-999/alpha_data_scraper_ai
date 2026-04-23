@@ -13,11 +13,13 @@ from app.schemas.dashboard import (
     WatchlistItem,
 )
 from app.services.account_service import AccountService
+from app.services.analytics_service import AnalyticsService
+from app.services.cache import TTLCache
 from app.services.fixture_data import (
     prototype_activity_feed,
     prototype_equity_curve,
-    prototype_watchlist,
 )
+from app.services.mt5_read_adapter import MT5ReadAdapter
 from app.services.mt5_service import MT5Service
 from app.services.risk_service import RiskService
 from app.services.signal_service import SignalService
@@ -31,6 +33,11 @@ class DashboardService:
         signal_service: SignalService,
         risk_service: RiskService,
         mt5_service: MT5Service,
+        analytics_service: AnalyticsService,
+        mt5_adapter: MT5ReadAdapter,
+        tracked_symbols: list[str],
+        default_symbol: str,
+        app_version: str,
         fallback_mode: bool,
         claude_available: bool,
         news_available: bool,
@@ -39,11 +46,24 @@ class DashboardService:
         self._signal_service = signal_service
         self._risk_service = risk_service
         self._mt5_service = mt5_service
+        self._analytics_service = analytics_service
+        self._mt5_adapter = mt5_adapter
+        self._tracked_symbols = tracked_symbols
+        self._default_symbol = default_symbol
+        self._app_version = app_version
         self._fallback_mode = fallback_mode
         self._claude_available = claude_available
         self._news_available = news_available
+        self._cache: TTLCache[DashboardSummary] = TTLCache(ttl_seconds=2)
 
     def get_summary(self) -> DashboardSummary:
+        envelope = self._cache.get_or_set(self._build_summary)
+        return envelope.value
+
+    def clear_cache(self) -> None:
+        self._cache.clear()
+
+    def _build_summary(self) -> DashboardSummary:
         account = self._account_service.get_account_overview()
         signals = self._signal_service.list_signals()
         risk_status = self._risk_service.get_status(
@@ -52,6 +72,33 @@ class DashboardService:
             daily_loss_used=abs(account.daily_pnl_pct),
         )
         mt5 = self._mt5_service.get_status()
+        analytics = self._analytics_service.get_summary()
+        watchlist_snapshot = (
+            self._mt5_adapter.read_watchlist(self._tracked_symbols)
+            or self._mt5_adapter.fallback_watchlist()
+        )
+        watchlist_map = {item.symbol: item for item in signals}
+        watchlist: list[WatchlistItem] = []
+        for item in watchlist_snapshot.payload:
+            symbol = str(item["symbol"])
+            related_signal = watchlist_map.get(symbol)
+            watchlist.append(
+                WatchlistItem.model_validate(
+                    {
+                        **item,
+                        "signal": (
+                            related_signal.direction
+                            if related_signal is not None
+                            else "HOLD"
+                        ),
+                        "confidence": (
+                            related_signal.confidence
+                            if related_signal is not None
+                            else None
+                        ),
+                    }
+                )
+            )
         return DashboardSummary(
             system_status=SystemStatus(
                 mt5=ServiceDependencyStatus(
@@ -63,7 +110,7 @@ class DashboardService:
                 api=ApiStatus(
                     healthy=True,
                     uptime="runtime",
-                    version="0.1.0",
+                    version=self._app_version,
                     fallback_mode=self._fallback_mode,
                 ),
                 claude=ServiceDependencyStatus(
@@ -77,7 +124,7 @@ class DashboardService:
                     active=self._news_available,
                     detail="News sentiment pipeline",
                 ),
-                symbol="EURUSD",
+                symbol=self._default_symbol,
                 mode=Mode.DRY_RUN,
                 last_tick=mt5.last_heartbeat,
                 emergency_stop=self._risk_service.get_config().emergency_pause,
@@ -85,9 +132,7 @@ class DashboardService:
             account=account,
             ready_signals=[signal for signal in signals if signal.eligible],
             risk_status=risk_status,
-            watchlist=[
-                WatchlistItem.model_validate(item) for item in prototype_watchlist()
-            ],
+            watchlist=watchlist,
             activity_feed=[
                 ActivityFeedItem.model_validate(item)
                 for item in prototype_activity_feed()
@@ -95,6 +140,18 @@ class DashboardService:
             equity_curve=[
                 EquityCurvePoint.model_validate(item)
                 for item in prototype_equity_curve()
+            ],
+            analytics_summary=analytics,
+            degraded_services=[
+                name
+                for name, degraded in {
+                    "mt5": mt5.fallback,
+                    "signals": self._signal_service.fallback_mode,
+                    "analytics": analytics.fallback,
+                    "news": not self._news_available,
+                    "claude": not self._claude_available,
+                }.items()
+                if degraded
             ],
             generated_at=datetime.now(timezone.utc),
         )

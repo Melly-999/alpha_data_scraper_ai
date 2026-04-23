@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.schemas.common import BlockedReason, ClaudeStatus, Direction
+from app.schemas.common import BlockedReason, ClaudeStatus, DataSource, Direction
 
 
 class RiskGateResult(BaseModel):
@@ -43,6 +43,18 @@ class Technicals(BaseModel):
     atr: float | None = None
     ema20: float | None = None
     ema50: float | None = None
+    score: int | None = None
+    inputs: list[str] = Field(default_factory=list)
+
+
+class SignalProvenance(BaseModel):
+    market_data_source: DataSource
+    signal_source: DataSource
+    validation_source: str
+    confidence_source: str
+    fallback: bool
+    generated_at: datetime
+    cache_age_seconds: int = 0
 
 
 class SignalDetail(SignalSummary):
@@ -50,6 +62,10 @@ class SignalDetail(SignalSummary):
     technicals: Technicals
     timeframes: dict[str, str]
     risk_gate_results: list[RiskGateResult] = Field(default_factory=list)
+    technical_input_summary: list[str] = Field(default_factory=list)
+    confidence_explainer: str | None = None
+    ai_validation_status: str | None = None
+    provenance: SignalProvenance
 
 
 class SignalReasoning(BaseModel):
@@ -59,3 +75,7 @@ class SignalReasoning(BaseModel):
     sentiment_context: str | None = None
     claude_response: str | None = None
     risk_gate_results: list[RiskGateResult]
+    blocked_reason: BlockedReason | None = None
+    eligible: bool
+    confidence_explainer: str | None = None
+    provenance: SignalProvenance

@@ -1,19 +1,34 @@
 from __future__ import annotations
 
 from app.schemas.mt5 import MT5Status
-from app.services.fixture_data import prototype_mt5_status
+from app.services.cache import TTLCache
+from app.services.mt5_read_adapter import MT5ReadAdapter
 
 
 class MT5Service:
-    def __init__(self, *, mt5_available: bool) -> None:
-        self._mt5_available = mt5_available
+    def __init__(self, *, adapter: MT5ReadAdapter, tracked_symbols: list[str]) -> None:
+        self._adapter = adapter
+        self._tracked_symbols = tracked_symbols
+        self._cache: TTLCache[MT5Status] = TTLCache(ttl_seconds=3)
+        self._fallback = True
 
     @property
     def fallback_mode(self) -> bool:
-        return True
+        return self._fallback
 
     def get_status(self) -> MT5Status:
-        data = prototype_mt5_status()
-        data["connected"] = False
-        data["fallback"] = not self._mt5_available
-        return MT5Status.model_validate(data)
+        envelope = self._cache.get_or_set(self._load_status)
+        return envelope.value.model_copy(
+            update={"cache_age_seconds": envelope.cache_age_seconds}
+        )
+
+    def clear_cache(self) -> None:
+        self._cache.clear()
+
+    def _load_status(self) -> MT5Status:
+        snapshot = (
+            self._adapter.read_status(self._tracked_symbols)
+            or self._adapter.fallback_status()
+        )
+        self._fallback = snapshot.source != "mt5"
+        return MT5Status.model_validate(snapshot.payload)

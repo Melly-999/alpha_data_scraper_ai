@@ -103,6 +103,7 @@ export function RiskManagerPage() {
               <input
                 type="checkbox"
                 checked={form.auto_trade}
+                disabled
                 onChange={(event) =>
                   setForm({ ...form, auto_trade: event.target.checked })
                 }
@@ -113,6 +114,7 @@ export function RiskManagerPage() {
               <input
                 type="checkbox"
                 checked={form.dry_run}
+                disabled
                 onChange={(event) =>
                   setForm({ ...form, dry_run: event.target.checked })
                 }
@@ -120,6 +122,9 @@ export function RiskManagerPage() {
             </label>
           </div>
         ) : null}
+        <div className="stat-subtle">
+          auto_trade stays off and dry_run stays on in Phase 2.
+        </div>
       </Card>
 
       <Card title="Risk Status">
@@ -154,4 +159,3 @@ export function RiskManagerPage() {
     </div>
   );
 }
-

@@ -32,6 +32,16 @@ export interface RiskGateResult {
   detail?: string | null;
 }
 
+export interface SignalProvenance {
+  market_data_source: "mt5" | "fallback" | "synthetic" | "technical_model" | "fixture" | "backtest";
+  signal_source: "mt5" | "fallback" | "synthetic" | "technical_model" | "fixture" | "backtest";
+  validation_source: string;
+  confidence_source: string;
+  fallback: boolean;
+  generated_at: string;
+  cache_age_seconds: number;
+}
+
 export interface SignalSummary {
   id: string;
   symbol: string;
@@ -61,9 +71,15 @@ export interface SignalDetail extends SignalSummary {
     atr?: number | null;
     ema20?: number | null;
     ema50?: number | null;
+    score?: number | null;
+    inputs: string[];
   };
   timeframes: Record<string, string>;
   risk_gate_results: RiskGateResult[];
+  technical_input_summary: string[];
+  confidence_explainer?: string | null;
+  ai_validation_status?: string | null;
+  provenance: SignalProvenance;
 }
 
 export interface SignalReasoning {
@@ -73,6 +89,10 @@ export interface SignalReasoning {
   sentiment_context?: string | null;
   claude_response?: string | null;
   risk_gate_results: RiskGateResult[];
+  blocked_reason?: BlockedReason | null;
+  eligible: boolean;
+  confidence_explainer?: string | null;
+  provenance: SignalProvenance;
 }
 
 export interface PositionSummary {
@@ -168,6 +188,11 @@ export interface MT5Status {
   positions_sync: boolean;
   build_version: string;
   fallback: boolean;
+  read_only: boolean;
+  data_source: string;
+  terminal_path?: string | null;
+  refreshed_at?: string | null;
+  cache_age_seconds: number;
   connection_logs: Array<{ time: string; event: string; msg: string }>;
 }
 
@@ -234,7 +259,31 @@ export interface DashboardSummary {
   watchlist: WatchlistItem[];
   activity_feed: ActivityFeedItem[];
   equity_curve: EquityCurvePoint[];
+  analytics_summary?: AnalyticsSummary | null;
+  degraded_services: string[];
   generated_at: string;
+}
+
+export interface AnalyticsMetric {
+  label: string;
+  value: number;
+  formatted: string;
+}
+
+export interface AnalyticsSummary {
+  symbol: string;
+  timeframe: string;
+  total_trades: number;
+  win_rate: number;
+  sharpe_ratio: number;
+  max_drawdown: number;
+  profit_factor: number;
+  total_return: number;
+  source: string;
+  fallback: boolean;
+  generated_at: string;
+  cache_age_seconds: number;
+  highlights: AnalyticsMetric[];
 }
 
 export interface HealthResponse {
@@ -248,6 +297,10 @@ export interface HealthResponse {
     news: boolean;
   };
   fallback_mode: boolean;
+  workspace: {
+    repo_root: string;
+    startup_mode: string;
+  };
   safety: RiskConfig;
 }
 

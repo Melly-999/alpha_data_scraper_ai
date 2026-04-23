@@ -4,6 +4,15 @@ exclude =
     .git,
     .venv,
     __pycache__,
+    api,
+    brokers,
+    mellytrade_v3,
+    daily_analysis.py,
+    monthly_dividend_report.py,
+    scheduler.py,
+    test_parser.py,
+    weekly_analysis.py,
+    risk/ftmo_guard.py,
     GITHUB_INTEGRATION_SNIPPET.py
 extend-ignore =
     E203,

@@ -81,20 +81,19 @@ Preferowana sciezka lokalna na Windows:
 
 ---
 
-## MellyTrade Phase 1
+## MellyTrade Phase 2 Workstation
 
-Nowy pionowy wycinek produktu jest uruchamiany z repo root i nie korzysta z
-legacy snapshotu `alpha_data_scraper_ai/` jako runtime source of truth.
-Lokalny runtime dla Phase 1 jest calkowicie oddzielony od legacy
-`docker-compose.yml` i `example_runner.py`. Te sciezki pozostaja archiwalne i
-nie sa wymagane do uruchomienia nowego `app/` + `frontend/`.
+Nowy read-only workstation jest uruchamiany z repo root i nie korzysta z
+legacy runtime flow jako source of truth. `example_runner.py`, stare
+`api/` entrypointy i legacy `docker-compose.yml` pozostaja archiwalne i nie sa
+wymagane do uruchomienia nowego `app/` + `frontend/`.
 
 ### Windows PowerShell: verify the correct repo root first
 
 Uruchamiaj ponizsze komendy z katalogu repo:
 
 ```powershell
-Set-Location C:\Users\highe\Desktop\alpha_data_scraper_ai-main
+Set-Location C:\Users\highe\Desktop\alpha_data_scraper_ai-phase1-checkpoint
 Get-Location
 Get-ChildItem app, frontend
 ```
@@ -111,7 +110,8 @@ bedzie szukal `package.json` w zlym katalogu.
 ### Backend
 
 ```powershell
-Set-Location C:\Users\highe\Desktop\alpha_data_scraper_ai-main
+Set-Location C:\Users\highe\Desktop\alpha_data_scraper_ai-phase1-checkpoint
+.\scripts\preflight.ps1
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
 ```
 
@@ -123,13 +123,13 @@ Po starcie:
 Alternatywnie, z dowolnego katalogu:
 
 ```powershell
-& "C:\Users\highe\Desktop\alpha_data_scraper_ai-main\scripts\start_backend.ps1"
+& "C:\Users\highe\Desktop\alpha_data_scraper_ai-phase1-checkpoint\scripts\start_backend.ps1"
 ```
 
 ### Frontend
 
 ```powershell
-Set-Location C:\Users\highe\Desktop\alpha_data_scraper_ai-main
+Set-Location C:\Users\highe\Desktop\alpha_data_scraper_ai-phase1-checkpoint
 cd frontend
 npm install
 npm run dev
@@ -147,7 +147,13 @@ Mozesz go nadpisac przez `VITE_API_BASE_URL` w srodowisku lub pliku
 Alternatywnie, z dowolnego katalogu:
 
 ```powershell
-& "C:\Users\highe\Desktop\alpha_data_scraper_ai-main\scripts\start_frontend.ps1"
+& "C:\Users\highe\Desktop\alpha_data_scraper_ai-phase1-checkpoint\scripts\start_frontend.ps1"
+```
+
+Szybki preflight i przypomnienie komend:
+
+```powershell
+& "C:\Users\highe\Desktop\alpha_data_scraper_ai-phase1-checkpoint\scripts\start_workstation.ps1"
 ```
 
 ### Safety defaults
@@ -155,7 +161,8 @@ Alternatywnie, z dowolnego katalogu:
 - `config.json` utrzymuje `autotrade.enabled = false`
 - `dry_run = true`
 - API nie zapisuje runtime zmian risk config do repo-tracked plikow
-- Phase 1 nie wystawia zadnej trasy live execution
+- workstation nie wystawia zadnej trasy live execution
+- adaptery MT5 sa read-only i bez side effects
 
 Jesli masz problem z lokalnym Pythonem, uruchamiaj projekt przez Docker z sekcji ponizej.
 

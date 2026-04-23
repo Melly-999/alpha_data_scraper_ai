@@ -20,7 +20,9 @@ def probe_dependencies() -> DependencyStatus:
     except Exception:
         mt5_available = False
 
-    claude_available = bool(os.getenv("CLAUDE_API_KEY"))
+    claude_available = bool(
+        os.getenv("CLAUDE_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+    )
     news_available = bool(os.getenv("NEWSAPI_KEY"))
     fallback_mode = not (mt5_available and claude_available and news_available)
     return DependencyStatus(

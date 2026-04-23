@@ -14,17 +14,21 @@ class Settings:
     host: str
     port: int
     config_path: Path
+    repo_root: Path
     allowed_origins: list[str]
     default_symbol: str
+    tracked_symbols: list[str]
 
 
 def load_settings() -> Settings:
-    config_path = Path("config.json")
+    repo_root = Path(__file__).resolve().parents[2]
+    config_path = repo_root / "config.json"
     config_data: dict[str, object] = {}
     if config_path.exists():
         config_data = json.loads(config_path.read_text(encoding="utf-8"))
 
     default_symbol = str(config_data.get("symbol", "EURUSD"))
+    tracked_symbols = [default_symbol, "GBPUSD", "USDJPY", "XAUUSD"]
     frontend_origins = os.getenv(
         "MELLYTRADE_ALLOWED_ORIGINS",
         "http://127.0.0.1:5173,http://localhost:5173",
@@ -34,12 +38,14 @@ def load_settings() -> Settings:
     ]
 
     return Settings(
-        app_name="MellyTrade Phase 1",
-        app_version="0.1.0",
+        app_name="MellyTrade Phase 2",
+        app_version="0.2.0",
         api_prefix="/api",
         host="127.0.0.1",
         port=8001,
         config_path=config_path,
+        repo_root=repo_root,
         allowed_origins=origins,
         default_symbol=default_symbol,
+        tracked_symbols=tracked_symbols,
     )

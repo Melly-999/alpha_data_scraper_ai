@@ -28,5 +28,9 @@ def health(container: AppContainer = Depends(get_container)) -> dict[str, object
             "news": container.dependencies.news_available,
         },
         "fallback_mode": container.dependencies.fallback_mode,
+        "workspace": {
+            "repo_root": str(container.settings.repo_root),
+            "startup_mode": "repo-root-only",
+        },
         "safety": container.risk_service.get_config().model_dump(),
     }
