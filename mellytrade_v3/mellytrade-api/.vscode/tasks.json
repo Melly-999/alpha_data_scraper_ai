@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "_comment": "Run tasks from mellytrade_v3/mellytrade-api/. Host/port come from the process env; defaults (127.0.0.1:8000) are injected via the `options.env` block so the task works even without a local .env.",
+  "tasks": [
+    {
+      "label": "MellyTrade API: uvicorn (reload)",
+      "type": "shell",
+      "command": "python -m uvicorn app.main:app --reload --host ${env:FASTAPI_HOST} --port ${env:FASTAPI_PORT}",
+      "options": {
+        "env": {
+          "FASTAPI_HOST": "127.0.0.1",
+          "FASTAPI_PORT": "8000"
+        }
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "MellyTrade API: pytest",
+      "type": "shell",
+      "command": "pytest -q",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    }
+  ]
+}
