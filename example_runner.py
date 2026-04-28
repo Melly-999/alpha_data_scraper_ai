@@ -494,6 +494,48 @@ class TradingPipelineRunner:
         return df[["time", "open", "high", "low", "close", "tick_volume"]]
 
 
+def _run_ibkr_paper_demo(symbols: list[str]) -> int:
+    """Demonstrate the safe IBKR paper adapter without touching MT5/Claude.
+
+    Works even when ``ib_insync`` is not installed and TWS / IB Gateway
+    is not running - the adapter degrades to a typed disconnected
+    response and a dry-run report.
+    """
+    from dataclasses import asdict
+
+    from brokers.adapter_models import ExecutionDecision
+    from brokers.paper_factory import get_paper_broker_adapter
+
+    logger.info("=" * 60)
+    logger.info("IBKR Paper Adapter demo (dry-run, no live orders)")
+    logger.info("=" * 60)
+
+    adapter = get_paper_broker_adapter("ibkr-paper")
+    health = adapter.connect()
+    logger.info("Health: %s", asdict(health))
+
+    snapshot = adapter.account_snapshot()
+    logger.info("Account snapshot: %s", asdict(snapshot))
+
+    for idx, symbol in enumerate(symbols, start=1):
+        decision = ExecutionDecision(
+            decision_id=f"demo-{idx:03d}",
+            signal_id=f"sig-{idx:03d}",
+            symbol=symbol,
+            direction="BUY",
+            confidence=72.0,
+            dry_run=True,
+            reason="example_runner demo",
+            metadata={"source": "example_runner", "broker": "ibkr-paper"},
+        )
+        report = adapter.submit_dry_run_report(decision)
+        logger.info("Dry-run report for %s: %s", symbol, asdict(report))
+
+    adapter.disconnect()
+    logger.info("\n✓ IBKR paper demo finished (dry-run only)")
+    return 0
+
+
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(
@@ -505,12 +547,21 @@ def main():
         default=["EURUSD", "GBPUSD"],
         help="Trading symbols",
     )
+    parser.add_argument(
+        "--broker",
+        default="mt5-demo",
+        choices=["mt5-demo", "ibkr-paper"],
+        help="Broker adapter for the optional broker demo path",
+    )
     parser.add_argument("--config", default="config.json", help="Config file path")
     parser.add_argument("--claude-key", help="Claude API key")
     parser.add_argument("--newsapi-key", help="NewsAPI key")
     parser.add_argument("--demo", action="store_true", default=True, help="Demo mode")
 
     args = parser.parse_args()
+
+    if args.broker == "ibkr-paper":
+        return _run_ibkr_paper_demo(args.symbols)
 
     api_keys = {}
     if args.claude_key:
