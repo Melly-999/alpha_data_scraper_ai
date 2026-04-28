@@ -2,14 +2,15 @@ from __future__ import annotations
 
 
 def test_health_endpoint_reports_dependencies(client) -> None:
-    response = client.get("/api/health")
+    for path in ("/api/health", "/health"):
+        response = client.get(path)
 
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["status"] == "ok"
-    assert "dependencies" in payload
-    assert payload["safety"]["auto_trade"] is False
-    assert payload["safety"]["dry_run"] is True
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["status"] == "ok"
+        assert "dependencies" in payload
+        assert payload["safety"]["auto_trade"] is False
+        assert payload["safety"]["dry_run"] is True
 
 
 def test_signals_contract_and_confidence_bounds(client) -> None:
