@@ -15,10 +15,8 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 
-from app.api.deps import get_container
-from app.core.container import AppContainer
 from app.schemas.broker import (
     BrokerAccountResponse,
     BrokerDryRunRequest,
@@ -47,12 +45,10 @@ def _adapter(request: Request) -> PaperBrokerAdapter:
 
 
 @router.get("/broker/health", response_model=BrokerHealthResponse)
-def broker_health(
-    request: Request,
-    container: AppContainer = Depends(get_container),
-) -> BrokerHealthResponse:
+def broker_health(request: Request) -> BrokerHealthResponse:
     adapter = _adapter(request)
     health = adapter.health()
+    container = request.app.state.container
     container.log_service.add(
         category=LogCategory.SYSTEM,
         severity=Severity.DEBUG,
@@ -65,12 +61,10 @@ def broker_health(
 
 
 @router.get("/broker/account", response_model=BrokerAccountResponse)
-def broker_account(
-    request: Request,
-    container: AppContainer = Depends(get_container),
-) -> BrokerAccountResponse:
+def broker_account(request: Request) -> BrokerAccountResponse:
     adapter = _adapter(request)
     snapshot = adapter.account_snapshot()
+    container = request.app.state.container
     container.log_service.add(
         category=LogCategory.SYSTEM,
         severity=Severity.DEBUG,
@@ -89,7 +83,6 @@ def broker_account(
 def broker_dry_run_report(
     payload: BrokerDryRunRequest,
     request: Request,
-    container: AppContainer = Depends(get_container),
 ) -> BrokerExecutionReportResponse:
     adapter = _adapter(request)
     decision = ExecutionDecision(
@@ -107,6 +100,7 @@ def broker_dry_run_report(
     )
     report = adapter.submit_dry_run_report(decision)
 
+    container = request.app.state.container
     container.log_service.add(
         category=LogCategory.EXECUTION,
         severity=Severity.INFO,

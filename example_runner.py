@@ -20,19 +20,15 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from backtest import BacktestMetrics
 
 try:
     import MetaTrader5 as mt5
 except ImportError:
     mt5 = None  # For non-Windows systems
-
-from ai_engine import AIEngine, EngineConfig
-from multi_timeframe import MultiTimeframeAnalyzer
-from news_sentiment import ForexFactoryScraper, NewsAPIClient
-from backtest import BacktestEngine, BacktestMetrics
-from claude_ai import ClaudeAIClient, ClaudeAIIntegration
-from calculator import position_size
 
 # Configure logging
 logging.basicConfig(
@@ -150,6 +146,8 @@ class TradingPipelineRunner:
         results = {}
         for symbol in self.symbols:
             logger.info(f"Analyzing {symbol}")
+            from multi_timeframe import MultiTimeframeAnalyzer
+
             analyzer = MultiTimeframeAnalyzer(symbol=symbol)
 
             try:
@@ -184,6 +182,8 @@ class TradingPipelineRunner:
         try:
             # ForexFactory economic calendar
             logger.info("Fetching ForexFactory economic calendar...")
+            from news_sentiment import ForexFactoryScraper, NewsAPIClient
+
             scraper = ForexFactoryScraper()
             calendar_events = scraper.fetch_calendar()
             logger.info(f"  ✓ Found {len(calendar_events)} events")
@@ -218,6 +218,8 @@ class TradingPipelineRunner:
         logger.info("=" * 60)
         logger.info("STEP 4: AI Engine Unified Signals")
         logger.info("=" * 60)
+
+        from ai_engine import AIEngine, EngineConfig
 
         engine_config = EngineConfig(
             symbols=self.symbols,
@@ -260,6 +262,8 @@ class TradingPipelineRunner:
             return unified_signals
 
         try:
+            from claude_ai import ClaudeAIClient, ClaudeAIIntegration
+
             claude_client = ClaudeAIClient(api_key=claude_key)
             claude_integration = ClaudeAIIntegration(client=claude_client)
 
@@ -321,6 +325,8 @@ class TradingPipelineRunner:
                 continue
 
             try:
+                from backtest import BacktestEngine
+
                 engine = BacktestEngine(symbol=symbol)
 
                 # Create signal function from validated signal
@@ -374,6 +380,8 @@ class TradingPipelineRunner:
 
             try:
                 # Calculate position size
+                from calculator import position_size
+
                 lot_size = position_size(
                     balance=balance,
                     risk_pct=risk_pct,
@@ -532,7 +540,7 @@ def _run_ibkr_paper_demo(symbols: list[str]) -> int:
         logger.info("Dry-run report for %s: %s", symbol, asdict(report))
 
     adapter.disconnect()
-    logger.info("\n✓ IBKR paper demo finished (dry-run only)")
+    logger.info("\nIBKR paper demo finished (dry-run only)")
     return 0
 
 

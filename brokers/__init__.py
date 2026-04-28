@@ -11,7 +11,8 @@ do not have those packages installed.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from importlib import import_module
+from typing import Any
 
 __all__ = [
     "BrokerInterface",
@@ -23,9 +24,6 @@ __all__ = [
 from .broker_interface import BrokerInterface
 from .paper_factory import get_paper_broker_adapter
 
-if TYPE_CHECKING:  # pragma: no cover - typing only
-    from .broker_factory import get_broker as _LegacyGetBroker  # noqa: F401
-
 
 def get_broker(*args: Any, **kwargs: Any) -> Any:
     """Lazy proxy to the legacy :func:`brokers.broker_factory.get_broker`.
@@ -34,6 +32,5 @@ def get_broker(*args: Any, **kwargs: Any) -> Any:
     package import. The function only raises the underlying
     ``ImportError`` if a caller actually requests it.
     """
-    from .broker_factory import get_broker as _legacy_get_broker
-
-    return _legacy_get_broker(*args, **kwargs)
+    broker_factory = import_module(".broker_factory", __name__)
+    return broker_factory.get_broker(*args, **kwargs)
