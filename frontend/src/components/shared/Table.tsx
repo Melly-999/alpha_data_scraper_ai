@@ -17,6 +17,8 @@ export function Table<T extends { id: string }>({
   rows,
   onRowClick,
 }: TableProps<T>) {
+  const hasRows = rows.length > 0;
+
   return (
     <div className="table-wrap">
       <table className="table">
@@ -28,16 +30,27 @@ export function Table<T extends { id: string }>({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.id} onClick={() => onRowClick?.(row)}>
-              {columns.map((column) => (
-                <td key={column.key}>{column.render(row)}</td>
-              ))}
+          {hasRows ? (
+            rows.map((row) => (
+              <tr
+                key={row.id}
+                className={onRowClick ? "table-row-clickable" : undefined}
+                onClick={() => onRowClick?.(row)}
+              >
+                {columns.map((column) => (
+                  <td key={column.key}>{column.render(row)}</td>
+                ))}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td className="table-empty" colSpan={columns.length}>
+                No rows available
+              </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>
   );
 }
-

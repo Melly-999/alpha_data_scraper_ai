@@ -9,9 +9,9 @@ interface DrawerProps {
 
 export function Drawer({ open, title, onClose, children }: DrawerProps) {
   return (
-    <aside className={`drawer ${open ? "open" : ""}`}>
+    <aside className={`drawer ${open ? "open" : ""}`} aria-hidden={!open}>
       <div className="drawer-header">
-        <span>{title}</span>
+        <span className="drawer-title">{title}</span>
         <button type="button" className="drawer-close" onClick={onClose}>
           ×
         </button>
@@ -20,4 +20,3 @@ export function Drawer({ open, title, onClose, children }: DrawerProps) {
     </aside>
   );
 }
-
