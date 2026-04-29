@@ -4,6 +4,19 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Test-BackendReachable {
+    param(
+        [Parameter(Mandatory = $true)][string]$BaseUrl
+    )
+
+    try {
+        Invoke-WebRequest -UseBasicParsing -Method GET -Uri "$BaseUrl/health" -TimeoutSec 3 | Out-Null
+        return $true
+    } catch {
+        return $false
+    }
+}
+
 function Invoke-SmokeJson {
     param(
         [Parameter(Mandatory = $true)][string]$Name,
@@ -26,6 +39,15 @@ function Invoke-SmokeJson {
         Write-Host $_.Exception.Message
         exit 1
     }
+}
+
+# Friendly preflight: print a clear hint if the backend is not running so
+# beginners do not have to decode a generic connection-refused error.
+if (-not (Test-BackendReachable -BaseUrl $BaseUrl)) {
+    Write-Host "FAIL preflight: backend is not running on $BaseUrl."
+    Write-Host "     Start it with: .\scripts\start_backend_ibkr_paper.ps1"
+    Write-Host "     This smoke check is read-only; it does not place orders."
+    exit 1
 }
 
 $health = Invoke-SmokeJson -Name "/health" -Method "GET" -Uri "$BaseUrl/health"

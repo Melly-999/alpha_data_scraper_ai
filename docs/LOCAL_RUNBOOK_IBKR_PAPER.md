@@ -107,6 +107,45 @@ The required safety invariant is:
 supports_live_orders=false
 ```
 
+## Using MellyTrade without TWS Paper
+
+You can keep using MellyTrade locally even when you cannot configure
+TWS Paper API yet. Nothing in this mode places an order, contacts a
+real broker, or risks money.
+
+What works without TWS Paper:
+
+- The FastAPI backend starts normally with
+  `scripts/start_backend_ibkr_paper.ps1`.
+- The dashboard at `http://127.0.0.1:5173/dashboard` renders fully.
+- The Broker Card displays a typed disconnected status (one of
+  `missing_dependency`, `connect_failed`, `disabled`, or `live_blocked`)
+  together with a passive TWS Paper setup checklist so you know what is
+  needed when you choose to wire it up later.
+- All other passive pages (Signals, Positions, Risk, Logs, MT5 Bridge,
+  Trade Blotter, Settings) keep working against the demo data path.
+
+What does not work without TWS Paper:
+
+- `/api/broker/account` reports `connected=false` and zeroed balances -
+  by design.
+- `/api/broker/health` reports a non-`connected` status - by design.
+- `scripts/smoke_ibkr_paper.ps1` will exit early with a friendly hint
+  if the backend itself is not running, and will otherwise pass as long
+  as the typed disconnected snapshot is safe.
+
+Safety invariants that always hold in disconnected mode:
+
+- `supports_live_orders=false`.
+- `Live orders: BLOCKED` chip is visible on the dashboard.
+- No order, reconnect, or execution buttons exist anywhere in the UI.
+- `autotrade.enabled=false` and `dry_run=true` in `config.json`.
+- MT5 execution behaviour is untouched.
+
+When you are ready to wire TWS Paper, follow the `TWS Paper checklist`
+above and the validation flow below. Until then, you can keep
+developing safely.
+
 ## TWS Paper validation flow
 
 After the backend is up (`start_backend_ibkr_paper.ps1`) walk through the
