@@ -17,8 +17,8 @@ def run_monthly_dividend_report():
     notifier = AlphaNotifier()
 
     dividend_info = broker.get_dividend_analysis()
-    cash = broker.get_cash_summary()
-    positions = broker.get_positions()
+    _cash = broker.get_cash_summary()  # noqa: F841 - retained call for parity
+    _positions = broker.get_positions()  # noqa: F841 - retained call for parity
 
     # Claude Harvard Dividend Strategy
     harvard_report = engine.claude.get_full_analysis(
@@ -35,7 +35,7 @@ def run_monthly_dividend_report():
     path = f"reports/monthly_dividend_{ts}.md"
 
     with open(path, "w", encoding="utf-8") as f:
-        f.write(f"# Monthly Dividend Report – Harvard Strategy\n")
+        f.write("# Monthly Dividend Report – Harvard Strategy\n")
         f.write(f"**Data:** {ts}\n\n")
 
         f.write("## Dywidendy (ostatni miesiąc)\n")

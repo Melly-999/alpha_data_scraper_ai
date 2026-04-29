@@ -5,7 +5,6 @@ from daily_analysis import run_daily_analysis
 from weekly_analysis import run_weekly_analysis
 from monthly_dividend_report import run_monthly_dividend_report
 from notifications import AlphaNotifier
-from datetime import datetime
 import logging
 import time
 

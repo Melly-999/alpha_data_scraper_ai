@@ -3,7 +3,6 @@ import pandas as pd
 import yfinance as yf
 import os
 from typing import Dict, List, Union
-from datetime import datetime
 from .broker_interface import BrokerInterface
 import logging
 
@@ -157,7 +156,7 @@ class XTBBroker(BrokerInterface):
             data = yf.download(ticker, period="5d", progress=False)
             if not data.empty:
                 return float(data["Close"].iloc[-1])
-        except:
+        except Exception:
             pass
         return 0.0
 

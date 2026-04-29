@@ -1,5 +1,5 @@
 # brokers/ibkr_broker.py
-from ib_insync import *
+from ib_insync import IB, LimitOrder, MarketOrder, Stock, util
 import pandas as pd
 import logging
 
@@ -62,7 +62,7 @@ class IBKRBroker:
             ticker = self.ib.reqMktData(contract, snapshot=True)
             self.ib.sleep(1)
             return ticker.marketPrice() or 0.0
-        except:
+        except Exception:
             return 0.0
 
     def place_order(

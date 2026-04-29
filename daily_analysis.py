@@ -21,10 +21,10 @@ def run_daily_analysis():
 
     # Get cash data if available
     try:
-        cash = broker.get_cash_summary()
+        _cash = broker.get_cash_summary()  # noqa: F841 - kept for failure coupling
         dividend_info = broker.get_dividend_analysis()
-    except:
-        cash = {}
+    except Exception:
+        _cash = {}  # noqa: F841 - kept for failure coupling
         dividend_info = {}
 
     # Save report
