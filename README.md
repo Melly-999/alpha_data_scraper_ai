@@ -1,363 +1,224 @@
-#  Alpha AI - Automated Trading Terminal
+# MellyTrade / Alpha Data Scraper AI
 
-[![Pytest CI (main)](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml?query=branch%3Amain)
+![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-backend-green)
+![React](https://img.shields.io/badge/React-dashboard-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-frontend-blue)
+![Status](https://img.shields.io/badge/status-paper--trading--workstation-orange)
+![Live Trading](https://img.shields.io/badge/live--trading-blocked-red)
 
-## 3-Layer LSTM | RSI Fusion | Stochastic | MT5 Live Trading Engine
+MellyTrade is an AI-assisted trading workstation designed around safe signal analysis, broker abstraction, dry-run execution, and dashboard-based monitoring.
 
- Alpha AI to zaawansowany terminal tradingowy oparty o:
+The project combines a FastAPI backend, React/TypeScript dashboard, broker adapter architecture, IBKR Paper Trading support, MT5-oriented integration paths, execution and risk controls, and local tooling for safe development and testing.
 
-- **LSTM (3 warstwy) + RSI Fusion**
-- **Stochastic Oscillator**
-- **MACD Histogram**
-- **Bollinger Bands Position**
-- **Dynamiczny system sygnalow BUY/SELL**
-- **Confidence Engine (33-85%)**
-- **Live MT5 Tick Feed**
-- **Wykres w czasie rzeczywistym**
-- **Modulowa architektura (7 plikow)**
+> Current status: local workstation and paper-trading infrastructure. Live trading is intentionally disabled by default.
 
-Projekt jest w pelni testowalny, konteneryzowalny i gotowy do CI/CD.
+## Current Status
 
----
+MellyTrade is currently in a safe local workstation and paper-trading phase.
 
-## Struktura projektu
+Completed:
+- FastAPI backend baseline
+- React/TypeScript dashboard baseline
+- IBKR Paper Adapter v1
+- broker health and account endpoints
+- read-only dashboard Broker card
+- local Windows run scripts
+- smoke testing workflow
+- CI quality cleanup
+
+In progress:
+- MT5 bridge hardening
+- execution v1 reconciliation
+- broker heartbeat and reconnect monitoring
+- dashboard polishing
+
+Intentionally blocked:
+- live trading
+- real-money order execution
+- automatic order placement without manual approval
+
+## Core Features
+
+- FastAPI control plane for health, dashboard, broker, signals, positions, logs, and risk views
+- React and TypeScript dashboard for monitoring system state and broker connectivity
+- IBKR Paper Adapter v1 with safe disconnected-state handling
+- broker health, account, and dry-run reporting endpoints
+- dry-run execution posture with defensive runtime defaults
+- MT5 integration path preserved for future demo and bridge work
+- risk and execution safety posture documented in code and docs
+- local Windows helper scripts for backend startup, frontend startup, environment checks, and smoke tests
+- pytest, mypy, flake8, and black quality workflow
+- safety-first docs and local runbooks
+
+## Architecture
 
 ```text
-grok_alpha_ai/
-|-- config.json
-|-- main.py
-|-- gui.py
-|-- mt5_fetcher.py
-|-- indicators.py
-|-- lstm_model.py
-|-- signal_generator.py
-|-- tests/
-|   |-- test_indicators.py
-|   |-- test_signal_generator.py
-|   |-- test_lstm_model.py
-|   |-- test_integration_pipeline.py
-|   |-- test_integration_gui_pipeline.py
-|   |-- test_stress_extended.py
-|   `-- conftest.py
-|-- profiling/
-|   |-- profile_cpu.py
-|   `-- profile_memory.py
-|-- Dockerfile
-|-- dev.sh
-|-- run_tests.sh
-|-- requirements.txt
-`-- .pre-commit-config.yaml
+Signal / Analysis Layer
+        ↓
+Execution & Risk Layer
+        ↓
+Broker Adapter Interface
+   ├── IBKR Paper Adapter
+   ├── MT5 Demo / Bridge Path
+   └── Future Broker Adapters
+        ↓
+FastAPI Control Plane
+        ↓
+React / TypeScript Dashboard
 ```
 
----
+The dashboard is read-only for broker status, system visibility, and dry-run observability. It does not expose order-entry controls or live execution actions.
 
-## Instalacja
+## Safety-First Design
 
-### 1. Klonowanie repo
+MellyTrade uses defensive defaults:
 
-```bash
-git clone https://github.com/Melly-999/alpha_data_scraper_ai.git
-cd grok_alpha_ai
-```
+- `autotrade.enabled = false`
+- `dry_run = true`
+- IBKR live orders are blocked
+- `supports_live_orders = false` in IBKR Paper Adapter v1
+- live broker execution is not exposed in the dashboard
+- broker health is visible before any future execution path
+- `.env.example` contains placeholders only
+- local smoke tests verify dry-run behavior
 
-### 2. Instalacja zaleznosci
+This project is not financial advice and does not guarantee trading performance.
 
-```bash
-pip install -r requirements.txt
-```
+## Broker Support
 
-Uwaga:
+| Broker / Adapter | Status | Notes |
+|---|---:|---|
+| IBKR Paper | Available | Safe paper and dry-run adapter with health and account endpoints |
+| MT5 | In progress | Demo and integration path preserved |
+| IBKR Live | Blocked | Future work only after manual approval mode and extended paper testing |
+| XTB | Manual / not integrated | Not used as an automated adapter in the current architecture |
 
-- `tensorflow` i `MetaTrader5` sa traktowane jako zaleznosci opcjonalne na niewspieranych wersjach Pythona.
-- Pipeline uruchomi sie bez nich, korzystajac z fallbacku dla modelu i danych syntetycznych.
+## Local Quick Start
 
-### Windows setup
+Adjust paths to your local checkout if your repository lives elsewhere.
 
-Preferowana sciezka lokalna na Windows:
+### Backend — IBKR Paper Mode
 
 ```powershell
-.\setup_windows.ps1
-```
-
----
-
-## MellyTrade Phase 1
-
-Nowy pionowy wycinek produktu jest uruchamiany z repo root i nie korzysta z
-legacy snapshotu `alpha_data_scraper_ai/` jako runtime source of truth.
-Lokalny runtime dla Phase 1 jest calkowicie oddzielony od legacy
-`docker-compose.yml` i `example_runner.py`. Te sciezki pozostaja archiwalne i
-nie sa wymagane do uruchomienia nowego `app/` + `frontend/`.
-
-### Windows PowerShell: verify the correct repo root first
-
-Uruchamiaj ponizsze komendy z katalogu repo:
-
-```powershell
-Set-Location C:\Users\highe\Desktop\alpha_data_scraper_ai-main
-Get-Location
-Get-ChildItem app, frontend
-```
-
-Powinienes widziec:
-
-- `app\__init__.py`
-- `app\main.py`
-- `frontend\package.json`
-
-Jesli jestes w `C:\Windows\System32`, backend nie znajdzie modulu `app`, a npm
-bedzie szukal `package.json` w zlym katalogu.
-
-### Backend
-
-```powershell
-Set-Location C:\Users\highe\Desktop\alpha_data_scraper_ai-main
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
-```
-
-Po starcie:
-
-- `http://127.0.0.1:8001/api/health`
-- `http://127.0.0.1:8001/docs`
-
-Alternatywnie, z dowolnego katalogu:
-
-```powershell
-& "C:\Users\highe\Desktop\alpha_data_scraper_ai-main\scripts\start_backend.ps1"
+cd C:\Users\highe\Desktop\alpha_data_scraper_ai-phase1-checkpoint
+.\scripts\start_backend_ibkr_paper.ps1
 ```
 
 ### Frontend
 
 ```powershell
-Set-Location C:\Users\highe\Desktop\alpha_data_scraper_ai-main
-cd frontend
-npm install
-npm run dev
+cd C:\Users\highe\Desktop\alpha_data_scraper_ai-phase1-checkpoint
+.\scripts\start_frontend.ps1
 ```
 
-Domyslny backend URL dla frontendu:
+Open:
 
 ```text
-http://127.0.0.1:8001/api
+http://127.0.0.1:5173/
 ```
 
-Mozesz go nadpisac przez `VITE_API_BASE_URL` w srodowisku lub pliku
-`.env.example`.
-
-Alternatywnie, z dowolnego katalogu:
+### Smoke Test
 
 ```powershell
-& "C:\Users\highe\Desktop\alpha_data_scraper_ai-main\scripts\start_frontend.ps1"
+cd C:\Users\highe\Desktop\alpha_data_scraper_ai-phase1-checkpoint
+.\scripts\smoke_ibkr_paper.ps1
 ```
 
-### Safety defaults
-
-- `config.json` utrzymuje `autotrade.enabled = false`
-- `dry_run = true`
-- API nie zapisuje runtime zmian risk config do repo-tracked plikow
-- Phase 1 nie wystawia zadnej trasy live execution
-
-Jesli masz problem z lokalnym Pythonem, uruchamiaj projekt przez Docker z sekcji ponizej.
-
----
-
-## Uruchamianie aplikacji
-
-```bash
-python main.py
-```
-
-### Auto-trade MetaTrader5
-
-Auto-trade jest sterowany przez sekcje `autotrade` w `config.json`.
-
-Domyslnie:
-
-- `enabled: false` (brak wysylki zlecen),
-- `dry_run: true` (symulacja requestu do MT5 bez realnego ordera).
-
-Zalecana kolejnosc:
-
-1. Ustaw `enabled: true` i zostaw `dry_run: true`, uruchom aplikacje i sprawdzaj pole `autotrade` w snapshotach.
-2. Po weryfikacji ustaw `dry_run: false`, aby wlaczyc realne zlecenia rynkowe BUY/SELL.
-
-Przykladowe klucze:
-
-- `min_confidence` - minimalna pewnosc sygnalu do wyslania zlecenia,
-- `volume` - wolumen pozycji,
-- `sl_points` / `tp_points` - odleglosc SL/TP w punktach,
-- `cooldown_seconds` - minimalny odstep miedzy kolejnymi zleceniami,
-- `allow_same_signal` - czy pozwolic na kolejne zlecenie w tym samym kierunku.
-
-Gotowe profile (folder `profiles/`):
-
-1. `paper_safe.json` - bezpieczny paper-trading (`dry_run: true`)
-2. `real_conservative.json` - real trading konserwatywny
-3. `real_aggressive.json` - real trading agresywny
-
-Uruchamianie z profilem:
+### Example Runner
 
 ```powershell
-.[0m\.venv\Scripts\python.exe main.py --config profiles/paper_safe.json --continuous --interval 2
+& "C:\AI\MellyTrade_Workspace\02_Repo\alpha_data_scraper_ai\.venv\Scripts\python.exe" example_runner.py --broker ibkr-paper --symbols AAPL MSFT
 ```
 
-```powershell
-.[0m\.venv\Scripts\python.exe main.py --config profiles/real_conservative.json --continuous --interval 2
+## Dashboard
+
+The dashboard includes a read-only Broker card showing:
+
+- broker adapter
+- paper or live mode
+- connection status
+- account snapshot if available
+- `Live orders: BLOCKED`
+- `supports_live_orders = false`
+
+When TWS or IBKR is not connected, the dashboard shows a safe disconnected paper state.
+
+## Dashboard Preview
+
+Screenshots can be added under:
+
+```text
+docs/assets/
 ```
 
-```powershell
-.[0m\.venv\Scripts\python.exe main.py --config profiles/real_aggressive.json --continuous --interval 2
+Example:
+
+```markdown
+![MellyTrade Dashboard](docs/assets/dashboard-broker-card.png)
 ```
 
----
+## Repository Structure
 
-## Testy
-
-Uruchom wszystkie testy:
-
-```bash
-./run_tests.sh
+```text
+app/                  FastAPI application, routes, schemas, services
+brokers/              Broker adapter implementations and models
+execution/            Execution and risk management layer
+frontend/             React and TypeScript dashboard
+scripts/              Local Windows helper scripts
+docs/                 Runbooks and architecture notes
+tests/                Backend and integration tests
+mellytrade_v3/        MT5 and worker integration paths
 ```
 
-PowerShell:
+## Roadmap
 
-```powershell
-.\run_tests.ps1 -q
-```
+### Near-term
+- Connect to a real TWS Paper session
+- Add broker heartbeat and reconnect monitoring
+- Improve broker and account dashboard cards
+- Review and migrate execution v1 branch safely
+- Add structured audit logs for broker dry-run reports
 
-GitHub Actions:
+### Later
+- Manual approval mode before any non-dry-run execution
+- Optional IBKR paper bracket orders behind a disabled safety flag
+- Persistent execution and audit storage
+- Backtest-to-execution reconciliation
+- Production deployment hardening
 
-- Workflow: [Pytest CI](https://github.com/Melly-999/alpha_data_scraper_ai/actions/workflows/pytest.yml)
-- Wszystkie runy: [Actions](https://github.com/Melly-999/alpha_data_scraper_ai/actions)
+### Explicitly not enabled
+- unattended live trading
+- real-money order execution
+- automatic order placement without manual approval
 
-Szybki workflow git dla tego repo:
+## Opis po polsku
 
-```bash
-git add .
-git commit -m "opis zmian"
-git push
-```
+MellyTrade to eksperymentalny terminal tradingowy i workstation do bezpiecznego testowania sygnałów, integracji brokerskich i przepływu dry-run.
 
----
+Projekt łączy backend FastAPI, dashboard React/TypeScript, architekturę broker adapterów, wsparcie IBKR Paper, ścieżkę integracji MT5, mechanizmy kontroli ryzyka oraz lokalne skrypty do uruchamiania i testów.
 
-## Docker
+Aktualny etap projektu to lokalne środowisko paper-trading i research. Handel na prawdziwych pieniądzach jest celowo zablokowany.
 
-Budowanie obrazu:
+Najważniejsze założenia bezpieczeństwa:
+- `autotrade.enabled=false`
+- `dry_run=true`
+- IBKR live orders są zablokowane
+- dashboard nie udostępnia kontrolek do składania zleceń
+- adapter IBKR Paper działa w trybie bezpiecznym i może pokazać stan disconnected, jeśli TWS nie jest uruchomione
 
-```bash
-docker build -t grok-alpha .
-```
+## Disclaimer
 
-Budowanie wersji produkcyjnej na lzejszym obrazie:
+This repository is for educational, research, and paper-trading development purposes only.
 
-```bash
-docker build -f Dockerfile.prod -t grok-alpha:prod .
-```
+It does not provide financial advice, does not guarantee trading performance, and should not be used for unattended live trading. Live trading is intentionally disabled by default and should only be considered after extended paper testing, manual approval workflows, risk review, and legal and tax considerations.
 
-Uruchamianie:
+## Suggested GitHub About
 
-```bash
-docker run --rm -it grok-alpha
-```
+**Description**
 
-Uruchamianie wersji produkcyjnej:
+AI-assisted trading workstation built with FastAPI, React, broker adapters, dry-run execution, IBKR Paper support, MT5 integration, risk controls, and dashboard monitoring.
 
-```bash
-docker run --rm -it grok-alpha:prod
-```
+**Topics**
 
-Docker Compose:
-
-```bash
-docker compose up app
-docker compose run --rm tests
-docker compose run --rm dev
-```
-
----
-
-## Profilowanie wydajnosci
-
-CPU profiling:
-
-```bash
-python profiling/profile_cpu.py
-```
-
-Memory profiling:
-
-```bash
-python profiling/profile_memory.py
-```
-
----
-
-## Pre-commit hooks
-
-Instalacja:
-
-```bash
-pre-commit install
-```
-
-Uruchomienie reczne:
-
-```bash
-pre-commit run --all-files
-```
-
----
-
-## Windows Dev I Test Commands
-
-Setup lokalny:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\setup_windows.ps1
-```
-
-Aktywacja srodowiska:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-Uruchomienie aplikacji:
-
-```powershell
-.\.venv\Scripts\python.exe main.py
-```
-
-Uruchomienie wszystkich testow:
-
-```powershell
-.\run_tests.ps1 -q
-```
-
-Uruchomienie tylko nowych testow pipeline:
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest -q tests/test_integration_pipeline.py tests/test_integration_gui_pipeline.py tests/test_stress_extended.py
-```
-
-Formatowanie, lint i coverage:
-
-```powershell
-bash ./dev.sh
-```
-
-Jesli nie chcesz aktywowac `.venv`, mozesz uzywac bezposrednio:
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe -m black .
-.\.venv\Scripts\python.exe -m flake8 .
-.\.venv\Scripts\python.exe -m mypy .
-```
-
----
-
-## Licencja
-
-MIT License.
+`python`, `fastapi`, `react`, `typescript`, `trading`, `algorithmic-trading`, `paper-trading`, `ibkr`, `mt5`, `risk-management`, `dashboard`, `fintech`, `broker-adapter`, `dry-run`
