@@ -61,6 +61,82 @@ function activityTone(type: string): "green" | "red" | "amber" | "blue" | "muted
   return "muted";
 }
 
+type BrokerStatusCopy = {
+  badge: string;
+  headline: string;
+  body: string;
+  showChecklist: boolean;
+};
+
+function brokerStatusCopy(
+  status: string | undefined,
+  connected: boolean,
+): BrokerStatusCopy {
+  if (connected) {
+    return {
+      badge: "Connected",
+      headline: "IBKR Paper connection is active.",
+      body: "Read-only paper session. No live orders can be placed.",
+      showChecklist: false,
+    };
+  }
+  switch (status) {
+    case "missing_dependency":
+      return {
+        badge: "Setup pending",
+        headline: "IBKR Paper connection is not active.",
+        body:
+          "The optional ib_insync package is not installed. " +
+          "This is safe: no orders can be placed.",
+        showChecklist: true,
+      };
+    case "connect_failed":
+      return {
+        badge: "TWS not reachable",
+        headline: "IBKR Paper connection is not active.",
+        body:
+          "The backend could not reach TWS Paper on the configured port. " +
+          "This is safe: no orders can be placed.",
+        showChecklist: true,
+      };
+    case "disabled":
+      return {
+        badge: "Disabled",
+        headline: "IBKR Paper adapter is disabled.",
+        body:
+          "Set BROKER_ADAPTER=ibkr-paper and IBKR_ENABLED=true to enable " +
+          "the read-only paper adapter. No orders can be placed.",
+        showChecklist: true,
+      };
+    case "live_blocked":
+      return {
+        badge: "Live blocked",
+        headline: "Live mode or live port was requested.",
+        body:
+          "The adapter refused to connect because a live port or live " +
+          "mode was configured. Use port 7497 (TWS paper) or 4002 " +
+          "(Gateway paper).",
+        showChecklist: true,
+      };
+    default:
+      return {
+        badge: status ?? "Disconnected",
+        headline: "IBKR Paper connection is not active.",
+        body:
+          "Safe disconnected paper state. This is safe: no orders can " +
+          "be placed.",
+        showChecklist: true,
+      };
+  }
+}
+
+const BROKER_SETUP_STEPS: ReadonlyArray<string> = [
+  "Open TWS and log into the PaperTrader account.",
+  "Edit > Global Configuration > API > Settings: enable ActiveX and Socket Clients.",
+  "Set the socket port to 7497 and add 127.0.0.1 as a trusted IP.",
+  "Keep Read-Only API ON for the initial validation pass.",
+];
+
 function MetricCard({
   label,
   value,
@@ -255,45 +331,67 @@ export function DashboardPage() {
         <Card title="Broker">
           <div className="dashboard-row-list">
             {brokerHealth.error ? (
-              <div className="state error">Broker status unavailable</div>
+              <div className="state error">
+                Broker status unavailable. The backend may not be running -
+                no orders can be placed.
+              </div>
             ) : (
-              <>
-                <div className="dashboard-row">
-                  <span className="dashboard-symbol">
-                    {brokerHealth.data?.adapter ?? "ibkr_paper"}
-                  </span>
-                  <Badge tone={brokerHealth.data?.connected ? "green" : "amber"}>
-                    {brokerHealth.data?.connected
-                      ? "Connected"
-                      : brokerHealth.data?.status ?? "Disconnected"}
-                  </Badge>
-                </div>
-                <div className="broker-grid broker-grid-v2">
-                  <span>Mode</span>
-                  <strong>{brokerHealth.data?.mode ?? "paper"}</strong>
-                  <span>Live orders</span>
-                  <strong className="danger-text">BLOCKED</strong>
-                  <span>Supports live</span>
-                  <strong>
-                    {brokerHealth.data?.supports_live_orders ? "true" : "false"}
-                  </strong>
-                  <span>Read only</span>
-                  <strong>{brokerHealth.data?.read_only === false ? "false" : "true"}</strong>
-                  <span>Account</span>
-                  <strong>{brokerAccount.data?.account ?? "Disconnected"}</strong>
-                  <span>Cash</span>
-                  <strong>
-                    {brokerAccount.data
-                      ? `${brokerAccount.data.currency} ${brokerAccount.data.cash.toFixed(2)}`
-                      : "Unavailable"}
-                  </strong>
-                </div>
-                {!brokerHealth.data?.connected ? (
-                  <div className="dashboard-safe-note">
-                    Safe disconnected paper state. No order controls are exposed.
-                  </div>
-                ) : null}
-              </>
+              (() => {
+                const isConnected = brokerHealth.data?.connected ?? false;
+                const copy = brokerStatusCopy(brokerHealth.data?.status, isConnected);
+                return (
+                  <>
+                    <div className="dashboard-row">
+                      <span className="dashboard-symbol">
+                        {brokerHealth.data?.adapter ?? "ibkr_paper"}
+                      </span>
+                      <Badge tone={isConnected ? "green" : "amber"}>{copy.badge}</Badge>
+                    </div>
+                    <div className="broker-grid broker-grid-v2">
+                      <span>Mode</span>
+                      <strong>{brokerHealth.data?.mode ?? "paper"}</strong>
+                      <span>Live orders</span>
+                      <strong className="danger-text">BLOCKED</strong>
+                      <span>Supports live</span>
+                      <strong>
+                        {brokerHealth.data?.supports_live_orders ? "true" : "false"}
+                      </strong>
+                      <span>Read only</span>
+                      <strong>
+                        {brokerHealth.data?.read_only === false ? "false" : "true"}
+                      </strong>
+                      <span>Account</span>
+                      <strong>{brokerAccount.data?.account ?? "Not connected"}</strong>
+                      <span>Cash</span>
+                      <strong>
+                        {brokerAccount.data && brokerAccount.data.connected
+                          ? `${brokerAccount.data.currency} ${brokerAccount.data.cash.toFixed(2)}`
+                          : "Unavailable"}
+                      </strong>
+                    </div>
+                    <div className="dashboard-safe-note">
+                      <div className="broker-status-headline">{copy.headline}</div>
+                      <div>{copy.body}</div>
+                    </div>
+                    {copy.showChecklist ? (
+                      <div className="broker-setup-checklist">
+                        <div className="broker-setup-checklist-title">
+                          TWS Paper setup checklist (read-only)
+                        </div>
+                        <ol>
+                          {BROKER_SETUP_STEPS.map((step) => (
+                            <li key={step}>{step}</li>
+                          ))}
+                        </ol>
+                        <div className="broker-setup-checklist-footnote">
+                          The dashboard never reconnects, places, or cancels orders.
+                          See docs/LOCAL_RUNBOOK_IBKR_PAPER.md for the full flow.
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                );
+              })()
             )}
           </div>
         </Card>

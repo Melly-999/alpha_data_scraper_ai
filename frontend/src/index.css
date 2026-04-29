@@ -767,6 +767,43 @@ input {
   padding: 10px 12px;
 }
 
+.broker-status-headline {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.broker-setup-checklist {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 10px 12px 8px;
+}
+
+.broker-setup-checklist-title {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.broker-setup-checklist ol {
+  margin: 0 0 6px;
+  padding-left: 18px;
+}
+
+.broker-setup-checklist li {
+  margin-bottom: 2px;
+}
+
+.broker-setup-checklist-footnote {
+  color: var(--text-secondary);
+  font-size: 11px;
+  opacity: 0.85;
+}
+
 @media (max-width: 1080px) {
   .app-shell {
     grid-template-columns: 1fr;
