@@ -101,7 +101,7 @@ Unsafe/action UI not suitable:
 
 ## Migration stages
 
-Stage 1: dashboard shell v2
+Stage 1: dashboard shell v2 - done
 
 - update `frontend/src/pages/DashboardPage.tsx`
 - update `frontend/src/index.css`
@@ -109,7 +109,7 @@ Stage 1: dashboard shell v2
 - preserve the Broker Card and visible live-order block
 - keep all data from real hooks
 
-Stage 2: shared visual primitives
+Stage 2: shared visual primitives - done
 
 - refine `frontend/src/components/shared/Card.tsx`
 - refine `frontend/src/components/shared/Badge.tsx`
@@ -117,11 +117,16 @@ Stage 2: shared visual primitives
 - refine drawer, button, and gauge styling through shared CSS only
 - keep existing component props and backend data flow unchanged
 
-Stage 3: secondary page alignment
+Stage 3: passive page alignment
 
 - align `SignalsPage`, `MT5BridgePage`, and `RiskManagerPage` visually
 - only use existing real endpoints
 - do not add execution controls
+- do not add signal execution buttons
+- do not add MT5 reconnect controls
+- do not add new risk setting capabilities
+- preserve any existing backend-gated safety controls without expanding their scope
+- use safe passive layouts for any analytics/backtest page unless a real read-only endpoint exists
 
 Stage 4: broker dry-run report visibility
 
@@ -181,6 +186,8 @@ Likely files:
 Any next pass should keep route/API changes separate from visual refactoring.
 
 This pass should not introduce new actions. Shared component polish is limited to density, typography, table states, badge/status presentation, and consistent panel headers.
+
+Stage 3 must also remain passive. No action controls from the Remix prototype were migrated: signal execution buttons, MT5 reconnect controls, mock risk toggles, emergency/live controls, and backtest run controls remain out of scope.
 
 ## Branch alignment requirement
 
