@@ -251,6 +251,32 @@ export interface HealthResponse {
   safety: RiskConfig;
 }
 
+export interface BrokerHealthResponse {
+  adapter: string;
+  mode: string;
+  connected: boolean;
+  host: string;
+  port: number;
+  client_id: number;
+  read_only: boolean;
+  supports_live_orders: boolean;
+  last_error?: string | null;
+  status: string;
+  timestamp: string;
+}
+
+export interface BrokerAccountResponse {
+  adapter: string;
+  connected: boolean;
+  account?: string | null;
+  currency: string;
+  net_liquidation: number;
+  cash: number;
+  buying_power: number;
+  last_error?: string | null;
+  timestamp: string;
+}
+
 export interface EmergencyStopResponse {
   stopped: boolean;
   timestamp: string;

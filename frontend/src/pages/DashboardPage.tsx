@@ -2,10 +2,13 @@ import { Badge } from "../components/shared/Badge";
 import { Card } from "../components/shared/Card";
 import { MiniChart } from "../components/shared/MiniChart";
 import { Table } from "../components/shared/Table";
+import { useBrokerAccount, useBrokerHealth } from "../hooks/useBroker";
 import { useDashboard } from "../hooks/useDashboard";
 
 export function DashboardPage() {
   const { data, loading, error } = useDashboard();
+  const brokerHealth = useBrokerHealth();
+  const brokerAccount = useBrokerAccount();
 
   if (loading && !data) {
     return <div className="state">Loading dashboard…</div>;
@@ -62,6 +65,45 @@ export function DashboardPage() {
                 {data.system_status.news.active ? "Active" : "Unavailable"}
               </Badge>
             </div>
+          </div>
+        </Card>
+        <Card title="Broker">
+          <div className="stack">
+            {brokerHealth.error ? (
+              <div className="state error">Broker status unavailable</div>
+            ) : (
+              <>
+                <div className="status-row">
+                  <span>{brokerHealth.data?.adapter ?? "ibkr_paper"}</span>
+                  <Badge tone={brokerHealth.data?.connected ? "green" : "amber"}>
+                    {brokerHealth.data?.connected
+                      ? "Connected"
+                      : brokerHealth.data?.status ?? "Disconnected"}
+                  </Badge>
+                </div>
+                <div className="broker-grid">
+                  <span>Mode</span>
+                  <strong>{brokerHealth.data?.mode ?? "paper"}</strong>
+                  <span>Live orders</span>
+                  <strong className="danger-text">BLOCKED</strong>
+                  <span>Supports live</span>
+                  <strong>{brokerHealth.data?.supports_live_orders ? "true" : "false"}</strong>
+                  <span>Account</span>
+                  <strong>{brokerAccount.data?.account ?? "Disconnected"}</strong>
+                  <span>Cash</span>
+                  <strong>
+                    {brokerAccount.data
+                      ? `${brokerAccount.data.currency} ${brokerAccount.data.cash.toFixed(2)}`
+                      : "Unavailable"}
+                  </strong>
+                </div>
+                {!brokerHealth.data?.connected ? (
+                  <div className="stat-subtle">
+                    Safe disconnected paper state. No order controls are exposed.
+                  </div>
+                ) : null}
+              </>
+            )}
           </div>
         </Card>
       </div>

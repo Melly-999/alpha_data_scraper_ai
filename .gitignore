@@ -3,14 +3,16 @@
 .env.local
 .env.*.local
 
-# Python
+# Local Python/runtime artifacts
+.venv/
+venv/
+env/
 __pycache__/
+*.pyc
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
-venv/
 ENV/
 build/
 develop-eggs/
@@ -36,6 +38,7 @@ wheels/
 *~
 
 # Logs
+logs/
 *.log
 alpha_ai.log
 scheduler.log
@@ -46,10 +49,29 @@ scheduler.log
 # Data
 data/
 .DS_Store
+output/
+tmp/
 
 # Cache
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
 
 # Docker
 .docker/
+
+# Windows local folder metadata
+desktop.ini
+
+# Frontend artifacts
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+frontend/vite.config.d.ts
+frontend/vite.config.js
+
+# Local secrets
+.env.*
+!.env.example
