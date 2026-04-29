@@ -75,3 +75,6 @@ frontend/vite.config.js
 # Local secrets
 .env.*
 !.env.example
+
+# Local UI prototypes
+_prototypes/
