@@ -20,8 +20,11 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# Anchored: only ignore top-level lib/ / lib64/ from Python venvs.
+# Without the leading slash, these patterns silently catch
+# frontend/src/lib/ and break the frontend TypeScript build.
+/lib/
+/lib64/
 parts/
 sdist/
 var/
