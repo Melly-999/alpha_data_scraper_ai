@@ -22,7 +22,7 @@ def run_weekly_analysis():
     try:
         cash = broker.get_cash_summary()
         dividend_info = broker.get_dividend_analysis()
-    except:
+    except Exception:
         cash = {"net_cash_flow": 0}
         dividend_info = {}
 
