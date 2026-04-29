@@ -177,6 +177,24 @@ input {
   gap: 10px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
+  min-height: 40px;
+  background: rgba(10, 15, 22, 0.38);
+}
+
+.card-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .card-body {
@@ -195,14 +213,22 @@ input {
 }
 
 .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 22px;
   border-radius: 4px;
   border: 1px solid var(--border);
   padding: 3px 8px;
   font-size: 10px;
   font-family: var(--mono);
+  font-weight: 700;
   letter-spacing: 0.08em;
+  line-height: 1;
   text-transform: uppercase;
   background: rgba(15, 20, 27, 0.72);
+  white-space: nowrap;
 }
 
 .badge-green { color: var(--green); border-color: rgba(46, 160, 67, 0.45); background: rgba(46, 160, 67, 0.1); }
@@ -215,30 +241,38 @@ input {
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text-primary);
-  padding: 8px 12px;
+  padding: 7px 11px;
   border-radius: 4px;
   cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .button-danger {
   border-color: rgba(248, 81, 73, 0.45);
+  background: rgba(248, 81, 73, 0.08);
   color: var(--red);
 }
 
 .table-wrap {
   overflow: auto;
+  border-radius: 4px;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 12px;
 }
 
 .table th,
 .table td {
-  padding: 9px 8px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--border-subtle);
   text-align: left;
+  vertical-align: middle;
 }
 
 .table th {
@@ -248,14 +282,35 @@ input {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-weight: 500;
+  background: rgba(10, 15, 22, 0.32);
+  white-space: nowrap;
 }
 
-.table tbody tr {
+.table td {
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.012);
+}
+
+.table-row-clickable {
   cursor: pointer;
 }
 
-.table tbody tr:hover {
+.table-row-clickable:hover {
   background: rgba(56, 139, 253, 0.06);
+}
+
+.table-empty {
+  padding: 18px 10px;
+  text-align: center;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .drawer {
@@ -276,18 +331,33 @@ input {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   font-family: var(--mono);
   font-size: 11px;
+  background: rgba(10, 15, 22, 0.38);
+}
+
+.drawer-title {
+  overflow: hidden;
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .drawer-close {
-  border: none;
-  background: transparent;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-2);
   color: var(--text-secondary);
-  font-size: 20px;
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .drawer-body,
@@ -344,13 +414,16 @@ input {
   display: flex;
   justify-content: space-between;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .gauge-track {
-  height: 6px;
+  height: 5px;
   background: rgba(48, 54, 61, 0.8);
-  border-radius: 999px;
+  border-radius: 4px;
   overflow: hidden;
 }
 

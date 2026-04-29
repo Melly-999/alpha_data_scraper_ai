@@ -6,6 +6,9 @@ interface BadgeProps {
 }
 
 export function Badge({ children, tone = "muted" }: BadgeProps) {
-  return <span className={`badge badge-${tone}`}>{children}</span>;
+  return (
+    <span className={`badge badge-${tone}`} data-tone={tone}>
+      {children}
+    </span>
+  );
 }
-

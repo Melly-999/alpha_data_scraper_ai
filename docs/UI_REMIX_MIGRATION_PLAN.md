@@ -49,7 +49,7 @@ The current frontend uses real backend endpoints:
 - MT5 status: existing MT5 status endpoint
 - logs: existing logs endpoint
 
-Broker dry-run report exists at `/api/broker/dry-run-report`, but the current dashboard pass does not need to call it.
+Broker dry-run report submission exists at `POST /api/broker/dry-run-report`, but passive dashboard UI must not call it as read state.
 
 ## Target UI direction
 
@@ -114,6 +114,8 @@ Stage 2: shared visual primitives
 - refine `frontend/src/components/shared/Card.tsx`
 - refine `frontend/src/components/shared/Badge.tsx`
 - refine `frontend/src/components/shared/Table.tsx`
+- refine drawer, button, and gauge styling through shared CSS only
+- keep existing component props and backend data flow unchanged
 
 Stage 3: secondary page alignment
 
@@ -123,16 +125,20 @@ Stage 3: secondary page alignment
 
 Stage 4: broker dry-run report visibility
 
-- add read-only dry-run report display only if needed
-- use `GET /api/broker/dry-run-report`
-- do not add mutation endpoints or controls
+- add read-only dry-run report display only if a safe read endpoint exists
+- do not call `POST /api/broker/dry-run-report` from passive dashboard UI
+- if report history is needed, first add a dedicated read-only endpoint such as:
+  - `GET /api/broker/dry-run-reports`
+  - or `GET /api/execution/reports`
+- do not add mutation endpoints or order controls
 
 ## API mapping
 
 - health: `/health` and `/api/health`
 - broker health: `/api/broker/health`
 - broker account: `/api/broker/account`
-- dry-run report: `/api/broker/dry-run-report`
+- dry-run report submission: `POST /api/broker/dry-run-report`
+- dry-run report history: not currently exposed as a read-only dashboard endpoint
 - dashboard: `/api/dashboard/summary`
 - risk: `/api/risk/config`, `/api/risk/status`, `/api/risk/violations`
 - MT5: existing MT5 status endpoint only
@@ -173,6 +179,8 @@ Likely files:
 - `frontend/src/pages/RiskManagerPage.tsx`
 
 Any next pass should keep route/API changes separate from visual refactoring.
+
+This pass should not introduce new actions. Shared component polish is limited to density, typography, table states, badge/status presentation, and consistent panel headers.
 
 ## Branch alignment requirement
 
