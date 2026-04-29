@@ -289,6 +289,27 @@ input {
   gap: 6px;
 }
 
+.broker-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 8px 12px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.broker-grid span {
+  color: var(--text-secondary);
+}
+
+.broker-grid strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.danger-text {
+  color: var(--red);
+}
+
 .activity-item {
   display: flex;
   gap: 12px;

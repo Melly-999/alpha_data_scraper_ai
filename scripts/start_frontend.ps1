@@ -11,8 +11,13 @@ Set-Location $frontendRoot
 
 Write-Host "Repo root: $repoRoot"
 Write-Host "Frontend root: $frontendRoot"
-Write-Host "Installing frontend dependencies if needed ..."
-npm install
+
+if (-not (Test-Path (Join-Path $frontendRoot "node_modules"))) {
+    Write-Host "Installing frontend dependencies ..."
+    npm install
+} else {
+    Write-Host "Frontend dependencies already installed."
+}
 
 Write-Host "Starting frontend dev server ..."
 npm run dev
