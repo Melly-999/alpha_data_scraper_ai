@@ -106,3 +106,34 @@ The required safety invariant is:
 ```text
 supports_live_orders=false
 ```
+
+## TWS Paper validation flow
+
+After the backend is up (`start_backend_ibkr_paper.ps1`) walk through the
+states below. Each one keeps the system read-only and dry-run; none of
+them places an order.
+
+| State | How to reproduce | Health response (key fields) |
+| --- | --- | --- |
+| Without TWS | Start backend, leave TWS closed | `connected=false`, `status` in `{connect_failed, missing_dependency}`, `supports_live_orders=false` |
+| TWS Paper running | Login to PaperTrader, enable ActiveX/Socket Clients, port `7497`, trusted IP `127.0.0.1`, restart TWS | `connected=true`, `mode=paper`, `port=7497`, `supports_live_orders=false` |
+| Live port misconfigured | `$env:IBKR_PORT="7496"` (the start script will refuse) | start script aborts before contacting TWS |
+| Live port via raw env | Set live port and start uvicorn manually | `connected=false`, `status=live_blocked`, `last_error` starts with `live_port_blocked` |
+
+After each state, fetch:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8001/api/broker/health  | ConvertFrom-Json | ConvertTo-Json -Depth 6
+Invoke-WebRequest http://127.0.0.1:8001/api/broker/account | ConvertFrom-Json | ConvertTo-Json -Depth 6
+```
+
+Open the dashboard at `http://127.0.0.1:5173/dashboard` and confirm:
+
+* `Live orders: BLOCKED` chip is visible.
+* `supports_live_orders=false` chip is visible.
+* The Broker card matches the adapter health (mode/port/account).
+* No order, reconnect, or execution buttons are present anywhere on the
+  page. The dashboard remains read-only.
+
+If any of these invariants is violated, stop and report - do not bypass
+the gate, do not enable live orders, do not modify the risk settings.

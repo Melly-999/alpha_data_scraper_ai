@@ -113,6 +113,77 @@ The example runner can also exercise the path without TWS:
 python example_runner.py --broker ibkr-paper --symbols AAPL MSFT
 ```
 
+## Connection validation (TWS Paper)
+
+This section is the safety-first checklist for validating that the
+backend can reach a real TWS **Paper** session without ever exposing a
+live trading surface. Nothing here places an order; the only effect of
+following these steps is a clearer health snapshot.
+
+### TWS Paper setup
+
+1. Log into **PaperTrader** (not the live account).
+2. `Edit -> Global Configuration -> API -> Settings`:
+   * Enable **ActiveX and Socket Clients**.
+   * **Socket port:** `7497` (TWS paper). Do **not** use `7496` (live).
+   * **Trusted IP Addresses:** `127.0.0.1`.
+   * **Read-Only API:** ON for the initial validation pass.
+3. Click `OK`, then restart TWS so the API listener picks up the change.
+
+### Backend environment (PowerShell)
+
+```powershell
+$env:BROKER_ADAPTER = "ibkr-paper"
+$env:IBKR_ENABLED   = "true"
+$env:IBKR_PORT      = "7497"
+$env:IBKR_CLIENT_ID = "1"
+
+.\scripts\start_backend_ibkr_paper.ps1
+```
+
+The script also pins `IBKR_MODE=paper`, `IBKR_HOST=127.0.0.1`, and
+`IBKR_READ_ONLY=true` if they are not already set, and refuses to start
+when `IBKR_PORT` is a live port (`7496` or `4001`).
+
+### Validation calls
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8001/api/broker/health  | ConvertFrom-Json | ConvertTo-Json -Depth 6
+Invoke-WebRequest http://127.0.0.1:8001/api/broker/account | ConvertFrom-Json | ConvertTo-Json -Depth 6
+```
+
+### Expected health-state map
+
+| Scenario | `connected` | `mode` | `status` | `last_error` (prefix) |
+| --- | --- | --- | --- | --- |
+| Adapter disabled (`IBKR_ENABLED=false`) | `false` | `disabled` | `disabled` | `adapter_disabled` |
+| `ib_insync` not installed | `false` | `paper` | `missing_dependency` | `missing_dependency:` |
+| TWS Paper not running on `7497` | `false` | `paper` | `connect_failed` | `connect_failed:` |
+| TWS Paper running, API enabled | `true` | `paper` | `connected` | `null` |
+| Live port (`7496`/`4001`) configured | `false` | `paper` | `live_blocked` | `live_port_blocked:` |
+| `IBKR_MODE=live` | `false` | `live` | `live_blocked` | `live_mode_blocked:` |
+
+In every row above, `supports_live_orders` is `false` and the FastAPI
+app keeps serving requests. The account endpoint mirrors the same
+state: when `connected=false` the balances are zeroed and `last_error`
+explains why, never raising or leaking credentials.
+
+### Dashboard expectations
+
+* Broker card shows `adapter=ibkr_paper`, the configured `mode` and
+  `port`, and a `Live orders: BLOCKED` chip.
+* `supports_live_orders=false` is rendered as a green chip.
+* When disconnected, the card surfaces "Safe disconnected paper state.
+  No order controls are exposed." — there is intentionally **no**
+  reconnect button, no order button, no execution control.
+
+### Account-identifier hygiene
+
+The dashboard and logs surface the optional `IBKR_ACCOUNT` label
+verbatim if the operator chose to set it. Treat it as non-secret -
+prefer leaving it blank, or set it to a short alias (e.g. `paper-1`)
+rather than a full DU/U account number.
+
 ## What remains blocked before live
 
 * Live order placement (`supports_live_orders()` returns `False`).

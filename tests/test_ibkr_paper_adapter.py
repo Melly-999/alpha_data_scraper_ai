@@ -270,3 +270,91 @@ def test_config_defaults_keep_live_blocked(
     assert cfg.port == 7497
     assert cfg.allow_live_orders is False
     assert cfg.allow_paper_orders is False
+
+
+# ---------------------------------------------------------------------------
+# Connection-validation environment parsing
+# ---------------------------------------------------------------------------
+
+
+def test_config_picks_up_paper_validation_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The env triple documented in the runbook must produce a paper config."""
+    monkeypatch.setenv("BROKER_ADAPTER", "ibkr-paper")
+    monkeypatch.setenv("IBKR_ENABLED", "true")
+    monkeypatch.setenv("IBKR_PORT", "7497")
+    monkeypatch.setenv("IBKR_CLIENT_ID", "1")
+
+    cfg = IBKRPaperConfig.from_env()
+    assert cfg.enabled is True
+    assert cfg.mode == "paper"
+    assert cfg.host == "127.0.0.1"
+    assert cfg.port == 7497
+    assert cfg.client_id == 1
+    assert cfg.read_only is True
+    assert cfg.allow_live_orders is False
+
+
+def test_config_falls_back_when_port_invalid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("IBKR_PORT", "not-a-number")
+    monkeypatch.setenv("IBKR_CLIENT_ID", "")
+    cfg = IBKRPaperConfig.from_env()
+    # Bad / empty values must fall back to safe paper defaults.
+    assert cfg.port == 7497
+    assert cfg.client_id == 1
+
+
+# ---------------------------------------------------------------------------
+# Health status mapping
+# ---------------------------------------------------------------------------
+
+
+def test_health_status_inferred_for_disabled_adapter() -> None:
+    health = IBKRPaperAdapter().health()
+    assert health.mode == "disabled"
+    assert health.status == "disabled"
+    assert health.supports_live_orders is False
+
+
+def test_health_status_inferred_for_live_port(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("brokers.ibkr_paper._HAS_IB_INSYNC", True)
+    adapter = IBKRPaperAdapter(
+        config=IBKRPaperConfig(enabled=True, mode="paper", port=7496)
+    )
+    adapter.connect()
+    health = adapter.health()
+    assert health.status == "live_blocked"
+    assert health.connected is False
+
+
+def test_health_status_inferred_for_missing_dependency(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("brokers.ibkr_paper._HAS_IB_INSYNC", False)
+    adapter = IBKRPaperAdapter(
+        config=IBKRPaperConfig(enabled=True, mode="paper", port=7497)
+    )
+    adapter.connect()
+    health = adapter.health()
+    assert health.status == "missing_dependency"
+    assert (health.last_error or "").startswith("missing_dependency")
+    assert health.supports_live_orders is False
+
+
+def test_account_snapshot_zeroed_when_disconnected() -> None:
+    """Disconnected snapshot must never leak garbage balances."""
+    adapter = IBKRPaperAdapter(
+        config=IBKRPaperConfig(enabled=True, mode="paper", port=7497)
+    )
+    snap = adapter.account_snapshot()
+    assert snap.connected is False
+    assert snap.net_liquidation == 0.0
+    assert snap.cash == 0.0
+    assert snap.buying_power == 0.0
+    # Currency stays a known default; never None.
+    assert snap.currency == "USD"
