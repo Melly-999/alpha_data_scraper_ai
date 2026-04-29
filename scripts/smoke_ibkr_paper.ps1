@@ -45,11 +45,36 @@ if ($brokerHealth.adapter -ne "ibkr_paper" -or $brokerHealth.supports_live_order
     Write-Host "FAIL broker health safety fields"
     exit 1
 }
+# Paper-only invariants: mode must stay paper, the port must be a known
+# paper port, and the typed status must be one of the safe states. With
+# TWS Paper running we expect connected=true; without it we accept any of
+# the safe disconnected states the adapter exposes.
+$allowedStatuses = @("connected", "ok", "missing_dependency", "connect_failed", "disabled")
+if ($brokerHealth.mode -ne "paper" -and $brokerHealth.mode -ne "disabled") {
+    Write-Host "FAIL broker health mode=$($brokerHealth.mode) (must be paper or disabled)"
+    exit 1
+}
+if ($brokerHealth.port -notin @(7497, 4002, 0)) {
+    Write-Host "FAIL broker health port=$($brokerHealth.port) (must be a paper port)"
+    exit 1
+}
+if ($brokerHealth.status -notin $allowedStatuses) {
+    Write-Host "FAIL broker health status=$($brokerHealth.status) not in $($allowedStatuses -join ', ')"
+    exit 1
+}
 
 $account = Invoke-SmokeJson -Name "/api/broker/account" -Method "GET" -Uri "$BaseUrl/api/broker/account"
 if ($account.adapter -ne "ibkr_paper") {
     Write-Host "FAIL broker account adapter"
     exit 1
+}
+# Account endpoint must never crash and must always be safe. When
+# disconnected, balances are zeroed and a last_error explains why.
+if ($account.connected -eq $false) {
+    if ($account.net_liquidation -ne 0 -or $account.cash -ne 0 -or $account.buying_power -ne 0) {
+        Write-Host "FAIL disconnected account snapshot is not zeroed"
+        exit 1
+    }
 }
 
 $body = '{"decision_id":"smoke-001","signal_id":"sig-001","symbol":"AAPL","direction":"BUY","confidence":72}'
