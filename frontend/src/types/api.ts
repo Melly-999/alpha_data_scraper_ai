@@ -251,6 +251,33 @@ export interface HealthResponse {
   safety: RiskConfig;
 }
 
+export type LocalChecklistStatus = "pass" | "warn" | "fail";
+
+export interface LocalChecklistCheck {
+  id: string;
+  label: string;
+  status: LocalChecklistStatus;
+  detail: string;
+}
+
+export interface LocalChecklistSummary {
+  dry_run: boolean;
+  auto_trade: boolean;
+  supports_live_orders: boolean;
+  live_orders_blocked: boolean;
+  broker_status: string;
+  broker_mode: string;
+  broker_connected: boolean;
+  broker_read_only: boolean;
+}
+
+export interface LocalChecklistResponse {
+  status: "ok" | "degraded";
+  service: string;
+  checks: LocalChecklistCheck[];
+  summary: LocalChecklistSummary;
+}
+
 export interface BrokerHealthResponse {
   adapter: string;
   mode: string;

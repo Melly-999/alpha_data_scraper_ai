@@ -14,6 +14,7 @@ from app.api.routes import (
     broker,
     dashboard,
     health,
+    local,
     logs,
     mt5,
     orders,
@@ -110,6 +111,7 @@ for router in (
     risk.router,
     mt5.router,
     broker.router,
+    local.router,
     logs.router,
 ):
     app.include_router(router, prefix="/api")

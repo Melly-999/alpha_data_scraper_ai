@@ -117,6 +117,7 @@ Expected:
 
 - Remix UI visible
 - Broker Card visible
+- Local Demo Checklist visible
 - disconnected/setup-pending UX if TWS Paper is not running
 - `Live orders: BLOCKED`
 - `supports_live_orders=false`
@@ -124,7 +125,42 @@ Expected:
 - no reconnect controls
 - account/cash unavailable if disconnected
 
-## 8. TWS Paper optional
+## 8. Dashboard Local Demo Checklist
+
+The dashboard includes a read-only **Local Demo Checklist** card. It is backed by:
+
+```text
+GET /api/local/checklist
+```
+
+This endpoint aggregates existing backend safety state and broker health snapshots. It does not mutate config, connect to live trading, place orders, or call execution endpoints.
+
+Checks:
+
+- Backend API: FastAPI is responding.
+- Dry-run mode: expected `dry_run=true`.
+- Auto-trade: expected `auto_trade=false`.
+- Broker live orders: expected `supports_live_orders=false`.
+- Broker mode/status: paper connected is good; disconnected/setup-pending is safe; live-port configuration is degraded/blocked.
+
+Expected good state:
+
+- Backend API `pass`
+- Dry-run mode `pass`
+- Auto-trade `pass`
+- Broker live orders `pass`
+- Broker mode/status `pass` if TWS Paper is connected, or `warn` if TWS Paper is not running
+
+Broker disconnected can still be safe because the adapter remains read-only, live orders remain blocked, and the dashboard exposes no order controls.
+
+Troubleshooting:
+
+- If Backend API is unavailable, start `.\scripts\start_backend_ibkr_paper.ps1`.
+- If Dry-run or Auto-trade checks fail, stop and inspect config before continuing.
+- If Broker mode/status warns, verify TWS Paper setup only when you need a connected paper session.
+- If Broker mode/status fails because a live port is configured, use paper port `7497`.
+
+## 9. TWS Paper optional
 
 TWS Paper is not required for the local demo. Without TWS, the Broker Card shows a safe disconnected/setup-pending state.
 
@@ -136,7 +172,7 @@ If configuring TWS later:
 - Trusted IP `127.0.0.1`
 - Read-Only API ON
 
-## 9. Troubleshooting
+## 10. Troubleshooting
 
 - backend not running: start it with `.\scripts\start_backend_ibkr_paper.ps1`
 - frontend port busy: close the old dev server or use the Vite URL shown in the terminal
@@ -145,7 +181,7 @@ If configuring TWS later:
 - do not use live port `7496`
 - do not turn off Read-Only API for validation
 
-## 10. Known good checkpoint
+## 11. Known good checkpoint
 
 Current verified state:
 
