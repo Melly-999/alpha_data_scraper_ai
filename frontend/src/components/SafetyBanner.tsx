@@ -9,6 +9,9 @@
 import { useMellyHealth } from "../hooks/useMellyHealth";
 import type { HealthInfo } from "../types/melly";
 
+// Direction B safety invariant: per-trade risk must not exceed 1%.
+const EXPECTED_MAX_RISK_PERCENT = 1.0;
+
 type PillTone = "green" | "amber" | "red" | "muted";
 
 interface PillSpec {
@@ -36,7 +39,7 @@ function pills(health: HealthInfo | null): PillSpec[] {
         tone: "muted",
       },
       {
-        label: "MAX RISK ≤ 1%",
+        label: `MAX RISK ≤ ${EXPECTED_MAX_RISK_PERCENT.toFixed(0)}%`,
         description: "Risk gate not yet loaded",
         tone: "muted",
       },
@@ -49,7 +52,7 @@ function pills(health: HealthInfo | null): PillSpec[] {
     ? "green"
     : "red";
   const riskTone: PillTone =
-    health.max_risk_percent <= 1 ? "green" : "amber";
+    health.max_risk_percent <= EXPECTED_MAX_RISK_PERCENT ? "green" : "amber";
 
   return [
     {
@@ -74,8 +77,10 @@ function pills(health: HealthInfo | null): PillSpec[] {
       tone: liveBlockedTone,
     },
     {
-      label: `MAX RISK ≤ ${health.max_risk_percent.toFixed(2)}%`,
-      description: "Per-trade risk ceiling enforced by the API",
+      label: `MAX RISK ≤ ${EXPECTED_MAX_RISK_PERCENT.toFixed(0)}%`,
+      description: `Per-trade risk ceiling enforced by the API (${health.max_risk_percent.toFixed(
+        2,
+      )}% reported)`,
       tone: riskTone,
     },
   ];

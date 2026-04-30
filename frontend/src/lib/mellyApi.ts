@@ -43,6 +43,24 @@ function appendParam(
   params.append(key, String(value));
 }
 
+function nestedDetail(value: unknown): string | null {
+  if (typeof value === "string" && value.length > 0) {
+    return value;
+  }
+  if (value && typeof value === "object" && "detail" in value) {
+    return nestedDetail((value as { detail?: unknown }).detail);
+  }
+  return null;
+}
+
+function apiErrorMessage(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+  const body = payload as { detail?: unknown; reason?: unknown };
+  return nestedDetail(body.detail) ?? nestedDetail(body.reason);
+}
+
 async function parseError(response: Response): Promise<string> {
   const fallback = `${response.status} ${response.statusText}`;
   try {
@@ -51,26 +69,9 @@ async function parseError(response: Response): Promise<string> {
       return fallback;
     }
     try {
-      const parsed = JSON.parse(text);
-      if (parsed && typeof parsed === "object") {
-        const detail = (parsed as { detail?: unknown }).detail;
-        if (typeof detail === "string" && detail.length > 0) {
-          return detail;
-        }
-        if (
-          detail &&
-          typeof detail === "object" &&
-          "detail" in (detail as Record<string, unknown>)
-        ) {
-          const inner = (detail as { detail?: unknown }).detail;
-          if (typeof inner === "string" && inner.length > 0) {
-            return inner;
-          }
-        }
-        const reason = (parsed as { reason?: unknown }).reason;
-        if (typeof reason === "string" && reason.length > 0) {
-          return reason;
-        }
+      const message = apiErrorMessage(JSON.parse(text));
+      if (message) {
+        return message;
       }
     } catch {
       // not JSON; fall through to text

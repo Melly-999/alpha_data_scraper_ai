@@ -20,6 +20,8 @@ class SignalRecord(Base):
         DateTime(timezone=True), default=_utcnow, index=True, nullable=False
     )
     symbol: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
+    # Enum constraints stay at the API boundary for this patch: SignalIn
+    # validates action, and /signals validates status. DB migration deferred.
     action: Mapped[str] = mapped_column(String(8), nullable=False)  # BUY/SELL/HOLD
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     risk_percent: Mapped[float] = mapped_column(Float, nullable=False)
