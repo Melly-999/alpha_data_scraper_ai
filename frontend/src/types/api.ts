@@ -310,3 +310,26 @@ export interface EmergencyStopResponse {
   config: RiskConfig;
   violation: RiskViolation;
 }
+
+export type AuditSeverity = "info" | "success" | "warning" | "error" | "safety";
+
+export interface AuditEvent {
+  id: string;
+  timestamp: string;
+  type: string;
+  severity: AuditSeverity;
+  source: string;
+  message: string;
+  read_only: boolean;
+  metadata: Record<string, unknown>;
+}
+
+export interface AuditEventFeedResponse {
+  dry_run: boolean;
+  auto_trade: boolean;
+  read_only: boolean;
+  events: AuditEvent[];
+  degraded: boolean;
+  fallback: boolean;
+  generated_at: string;
+}

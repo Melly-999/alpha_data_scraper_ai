@@ -7,8 +7,10 @@ import { useDashboard } from "../hooks/useDashboard";
 import { useHealth } from "../hooks/useHealth";
 import { useLocalChecklist } from "../hooks/useLocalChecklist";
 import { useRiskConfig } from "../hooks/useRisk";
+import { useTerminalEvents } from "../hooks/useTerminalEvents";
 import type {
   ActivityFeedItem,
+  AuditEvent,
   LocalChecklistCheck,
   SignalSummary,
   WatchlistItem,
@@ -250,6 +252,43 @@ function ActivityRows({ rows }: { rows: ActivityFeedItem[] }) {
   );
 }
 
+function auditSeverityTone(
+  severity: AuditEvent["severity"],
+): "green" | "red" | "amber" | "blue" | "muted" {
+  switch (severity) {
+    case "safety":
+      return "blue";
+    case "success":
+      return "green";
+    case "warning":
+      return "amber";
+    case "error":
+      return "red";
+    default:
+      return "muted";
+  }
+}
+
+function AuditEventRows({ events }: { events: AuditEvent[] }) {
+  if (events.length === 0) {
+    return <div className="state">No audit events available.</div>;
+  }
+  return (
+    <div className="dashboard-row-list">
+      {events.map((event) => (
+        <div key={event.id} className="dashboard-row activity-row">
+          <span className="activity-time">
+            {formatTimestamp(event.timestamp)}
+          </span>
+          <Badge tone={auditSeverityTone(event.severity)}>{event.severity}</Badge>
+          <span className="dashboard-muted">{event.source}</span>
+          <span className="dashboard-muted activity-message">{event.message}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function DashboardPage() {
   const { data, loading, error } = useDashboard();
   const health = useHealth();
@@ -257,6 +296,7 @@ export function DashboardPage() {
   const brokerHealth = useBrokerHealth();
   const brokerAccount = useBrokerAccount();
   const localChecklist = useLocalChecklist();
+  const terminalEvents = useTerminalEvents(20);
 
   if (loading && !data) {
     return <div className="state">Loading dashboard...</div>;
@@ -550,6 +590,40 @@ export function DashboardPage() {
               <span>Live orders</span>
               <Badge tone="amber">BLOCKED</Badge>
             </div>
+          </div>
+        </Card>
+
+        <Card
+          title="Audit Events"
+          right={
+            <Badge
+              tone={terminalEvents.data?.degraded ? "amber" : "green"}
+            >
+              {terminalEvents.data?.degraded ? "degraded" : "ok"}
+            </Badge>
+          }
+        >
+          <div className="dashboard-row-list">
+            <div className="dashboard-safe-note">
+              <div className="broker-status-headline">
+                Read-only observability feed
+              </div>
+              <div>
+                Shows system state, safety posture, and degraded/disconnected
+                services. No orders can be placed from this feed.
+              </div>
+            </div>
+            {terminalEvents.error ? (
+              <div className="state error">
+                Audit feed unavailable. Start the backend with
+                {" .\\scripts\\start_backend_ibkr_paper.ps1"}.
+              </div>
+            ) : null}
+            {terminalEvents.data ? (
+              <AuditEventRows events={terminalEvents.data.events} />
+            ) : !terminalEvents.error ? (
+              <div className="state">Loading audit events...</div>
+            ) : null}
           </div>
         </Card>
       </div>
