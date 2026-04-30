@@ -100,6 +100,7 @@ Adjust paths to your local checkout if your repository lives elsewhere.
 
 - Local demo checklist: [docs/LOCAL_DEMO_CHECKLIST.md](docs/LOCAL_DEMO_CHECKLIST.md)
 - Local workstation release notes: [docs/RELEASE_NOTES_LOCAL_WORKSTATION.md](docs/RELEASE_NOTES_LOCAL_WORKSTATION.md)
+- Portfolio case study: [docs/PORTFOLIO_CASE_STUDY_LOCAL_WORKSTATION.md](docs/PORTFOLIO_CASE_STUDY_LOCAL_WORKSTATION.md)
 
 ### Backend — IBKR Paper Mode
 
