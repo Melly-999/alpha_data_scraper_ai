@@ -20,6 +20,7 @@ AuditEventType = Literal[
 ]
 
 AlertSeverity = Literal["info", "warning", "error", "success"]
+ReportPeriod = Literal["daily", "weekly"]
 
 
 class SignalIn(BaseModel):
@@ -154,6 +155,27 @@ class AlertOut(BaseModel):
     signal_id: Optional[int] = None
     read_only: bool
     metadata: Dict[str, object] = Field(default_factory=dict)
+
+
+class ReportSignalCounts(BaseModel):
+    total: int
+    accepted: int
+    rejected: int
+
+
+class ReportOut(BaseModel):
+    period: ReportPeriod
+    generated_at: datetime
+    window_start: datetime
+    window_end: datetime
+    safety_posture: HealthOut
+    signal_counts: ReportSignalCounts
+    alert_counts_by_severity: Dict[str, int]
+    alert_counts_by_category: Dict[str, int]
+    latest_audit_events: List[AuditEvent]
+    risk_config_snapshot: RiskConfigOut
+    markdown_summary: str
+    read_only: bool
 
 
 class RejectedOut(BaseModel):

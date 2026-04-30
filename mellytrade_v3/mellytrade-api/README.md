@@ -1,8 +1,8 @@
 # MellyTrade API
 
 Read-only REST API for the MellyTrade Direction B trader dashboard. It exposes
-health, signal history, audit events, risk configuration, and alert-center
-context for decision support.
+health, signal history, audit events, risk configuration, alert-center context,
+and read-only reports for decision support.
 
 ## Safety Notice
 
@@ -210,6 +210,76 @@ Response:
 ]
 ```
 
+### `GET /reports/daily`
+
+Read-only daily report generated from the current UTC day. The report combines
+safety posture, signal counts, alert counts, latest audit events, and a risk
+configuration snapshot. It also includes a `markdown_summary` string for
+dashboard preview/export workflows.
+
+Response:
+
+```json
+{
+  "period": "daily",
+  "generated_at": "2026-04-30T10:15:00Z",
+  "window_start": "2026-04-30T00:00:00Z",
+  "window_end": "2026-04-30T10:15:00Z",
+  "safety_posture": {
+    "status": "ok",
+    "service": "mellytrade-api",
+    "version": "0.1.0",
+    "cooldown_seconds": 60,
+    "min_confidence": 70.0,
+    "max_risk_percent": 1.0,
+    "database": "sqlite",
+    "dry_run": true,
+    "autotrade_enabled": false,
+    "read_only": true,
+    "live_orders_blocked": true
+  },
+  "signal_counts": {
+    "total": 2,
+    "accepted": 1,
+    "rejected": 1
+  },
+  "alert_counts_by_severity": {
+    "success": 3,
+    "info": 1,
+    "warning": 1
+  },
+  "alert_counts_by_category": {
+    "safety": 3,
+    "high_impact_news_placeholder": 1,
+    "risk_gate_failed": 1
+  },
+  "latest_audit_events": [],
+  "risk_config_snapshot": {
+    "min_confidence": 70.0,
+    "max_risk_percent": 1.0,
+    "cooldown_seconds": 60,
+    "dry_run": true,
+    "autotrade_enabled": false,
+    "read_only": true,
+    "live_orders_blocked": true,
+    "gates": [
+      {
+        "name": "max_risk_percent",
+        "active": true,
+        "description": "Reject signals with risk_percent > 1"
+      }
+    ]
+  },
+  "markdown_summary": "## Daily MellyTrade Report\n\n...",
+  "read_only": true
+}
+```
+
+### `GET /reports/weekly`
+
+Read-only weekly report using a rolling seven-day UTC window. The response shape
+matches `GET /reports/daily` with `"period": "weekly"`.
+
 ## Frontend Integration
 
 The React frontend uses the Vite dev proxy:
@@ -234,4 +304,5 @@ contracts stay explicit.
 - No order placement logic
 - `dry_run`, `read_only`, and `live_orders_blocked` are surfaced in responses
 - Risk gate rejection reasons are preserved for audit and alert views
+- Reports summarize existing state only and do not persist or mutate data
 - `max_risk_percent` remains bounded by the Direction B 1% invariant

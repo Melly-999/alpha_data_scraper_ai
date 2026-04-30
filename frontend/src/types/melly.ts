@@ -22,6 +22,7 @@ export type AuditEventType =
 
 export type AuditSeverity = "info" | "warning" | "error";
 export type AlertSeverity = "info" | "warning" | "error" | "success";
+export type ReportPeriod = "daily" | "weekly";
 
 export interface HealthInfo {
   status: string;
@@ -101,6 +102,27 @@ export interface AlertItem {
   signal_id?: number | null;
   read_only: boolean;
   metadata: Record<string, unknown>;
+}
+
+export interface ReportSignalCounts {
+  total: number;
+  accepted: number;
+  rejected: number;
+}
+
+export interface ReportItem {
+  period: ReportPeriod;
+  generated_at: string;
+  window_start: string;
+  window_end: string;
+  safety_posture: HealthInfo;
+  signal_counts: ReportSignalCounts;
+  alert_counts_by_severity: Record<string, number>;
+  alert_counts_by_category: Record<string, number>;
+  latest_audit_events: AuditEvent[];
+  risk_config_snapshot: RiskConfig;
+  markdown_summary: string;
+  read_only: boolean;
 }
 
 export interface SignalsQuery {

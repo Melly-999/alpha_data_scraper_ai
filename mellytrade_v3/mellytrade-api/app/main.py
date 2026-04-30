@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
-from . import alerts, audit, cf_hub
+from . import alerts, audit, cf_hub, reports
 from .auth import require_api_key
 from .config import Settings, get_settings
 from .database import SessionLocal, init_db
@@ -22,6 +22,7 @@ from .schemas import (
     AuditOut,
     HealthOut,
     RejectedOut,
+    ReportOut,
     RiskConfigOut,
     RiskGateStatus,
     SignalIn,
@@ -253,6 +254,26 @@ def list_alerts(
 ) -> List[AlertOut]:
     """Read-only alert center feed derived from existing safety state."""
     return alerts.collect_alerts(db=db, settings=settings, limit=limit)
+
+
+@app.get("/reports/daily", response_model=ReportOut)
+def read_daily_report(
+    settings: Settings = Depends(get_settings),
+    db: Session = Depends(get_db),
+    _: str = Depends(require_api_key),
+) -> ReportOut:
+    """Read-only daily report for Direction B dashboard review."""
+    return reports.build_report(db=db, settings=settings, period="daily")
+
+
+@app.get("/reports/weekly", response_model=ReportOut)
+def read_weekly_report(
+    settings: Settings = Depends(get_settings),
+    db: Session = Depends(get_db),
+    _: str = Depends(require_api_key),
+) -> ReportOut:
+    """Read-only weekly report for Direction B dashboard review."""
+    return reports.build_report(db=db, settings=settings, period="weekly")
 
 
 @app.get("/risk/config", response_model=RiskConfigOut)
