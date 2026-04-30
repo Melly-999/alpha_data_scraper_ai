@@ -21,6 +21,7 @@ from app.api.routes import (
     positions,
     risk,
     signals,
+    terminal,
 )
 from app.core.container import build_container
 from app.core.settings import load_settings
@@ -113,6 +114,7 @@ for router in (
     broker.router,
     local.router,
     logs.router,
+    terminal.router,
 ):
     app.include_router(router, prefix="/api")
 
