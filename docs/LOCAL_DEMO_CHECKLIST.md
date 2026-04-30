@@ -181,7 +181,42 @@ If configuring TWS later:
 - do not use live port `7496`
 - do not turn off Read-Only API for validation
 
-## 11. Known good checkpoint
+## 11. Signal Decision History
+
+`GET /api/signals/decisions` returns a read-only log of dry-run signal decisions.
+
+Smoke check:
+
+```powershell
+curl http://localhost:8000/api/signals/decisions
+```
+
+Expected response fields:
+
+- `dry_run: true`
+- `auto_trade: false`
+- `read_only: true`
+- `decisions`: array of decision records (7 seed records by default)
+- `total`: count matching `len(decisions)`
+
+Each decision record includes `dry_run=true`, `auto_trade=false`, `read_only=true`, `stop_loss_required=true`, `take_profit_required=true`, `max_risk_per_trade=0.01`.
+
+Filter by symbol:
+
+```powershell
+curl "http://localhost:8000/api/signals/decisions?symbol=AAPL"
+```
+
+Safety invariants:
+
+- GET-only — no mutation, no order placement, no broker connection
+- All records have `dry_run=true` and `auto_trade=false`
+- `max_risk_per_trade` is capped at `0.01` (1%)
+- Decision values: `dry_run_allowed`, `blocked`, `watch_only`, `no_action`
+
+The Signals page in the dashboard shows the Decision History section below the signal table.
+
+## 12. Known good checkpoint
 
 Current verified state:
 
