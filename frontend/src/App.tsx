@@ -4,6 +4,7 @@ import { useDashboard } from "./hooks/useDashboard";
 import { useHealth } from "./hooks/useHealth";
 import { useRiskConfig } from "./hooks/useRisk";
 import { AppShell } from "./layout/AppShell";
+import { AlertsPage } from "./pages/AlertsPage";
 import { AuditTrailPage } from "./pages/AuditTrailPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LogsPage } from "./pages/LogsPage";
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/signals" element={<SignalsPage />} />
+        <Route path="/alerts" element={<AlertsPage />} />
         <Route path="/audit" element={<AuditTrailPage />} />
         <Route path="/positions" element={<PositionsPage />} />
         <Route path="/blotter" element={<TradeBlotterPage />} />

@@ -2,6 +2,7 @@ import { Badge } from "../components/shared/Badge";
 import { Card } from "../components/shared/Card";
 import { MiniChart } from "../components/shared/MiniChart";
 import { Table } from "../components/shared/Table";
+import { useAlerts } from "../hooks/useAlerts";
 import { useBrokerAccount, useBrokerHealth } from "../hooks/useBroker";
 import { useDashboard } from "../hooks/useDashboard";
 import { useHealth } from "../hooks/useHealth";
@@ -15,6 +16,7 @@ import type {
   SignalSummary,
   WatchlistItem,
 } from "../types/api";
+import type { AlertItem } from "../types/melly";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -289,6 +291,41 @@ function AuditEventRows({ events }: { events: AuditEvent[] }) {
   );
 }
 
+function alertSeverityTone(
+  severity: AlertItem["severity"],
+): "green" | "red" | "amber" | "blue" | "muted" {
+  switch (severity) {
+    case "success":
+      return "green";
+    case "info":
+      return "blue";
+    case "warning":
+      return "amber";
+    case "error":
+      return "red";
+    default:
+      return "muted";
+  }
+}
+
+function AlertSummaryRows({ alerts }: { alerts: AlertItem[] }) {
+  if (alerts.length === 0) {
+    return <div className="state">No alerts available.</div>;
+  }
+  return (
+    <div className="dashboard-row-list">
+      {alerts.slice(0, 5).map((alert) => (
+        <div key={alert.id} className="dashboard-row activity-row">
+          <span className="activity-time">{formatTimestamp(alert.timestamp)}</span>
+          <Badge tone={alertSeverityTone(alert.severity)}>{alert.severity}</Badge>
+          <span className="dashboard-muted">{alert.category}</span>
+          <span className="dashboard-muted activity-message">{alert.title}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function DashboardPage() {
   const { data, loading, error } = useDashboard();
   const health = useHealth();
@@ -297,6 +334,7 @@ export function DashboardPage() {
   const brokerAccount = useBrokerAccount();
   const localChecklist = useLocalChecklist();
   const terminalEvents = useTerminalEvents(20);
+  const alerts = useAlerts({ limit: 20 });
 
   if (loading && !data) {
     return <div className="state">Loading dashboard...</div>;
@@ -503,6 +541,23 @@ export function DashboardPage() {
 
         <Card title="Activity">
           <ActivityRows rows={data.activity_feed.slice(0, 7)} />
+        </Card>
+
+        <Card
+          title="Alert Summary"
+          right={
+            <Badge tone={alerts.error ? "amber" : "blue"}>
+              {alerts.data?.length ?? 0} alerts
+            </Badge>
+          }
+        >
+          {alerts.error && !alerts.data ? (
+            <div className="state error">{alerts.error}</div>
+          ) : alerts.data ? (
+            <AlertSummaryRows alerts={alerts.data} />
+          ) : (
+            <div className="state">Loading alerts...</div>
+          )}
         </Card>
 
         <Card title="System Health">
