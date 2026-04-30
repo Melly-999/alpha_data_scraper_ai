@@ -10,6 +10,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { LogsPage } from "./pages/LogsPage";
 import { MT5BridgePage } from "./pages/MT5BridgePage";
 import { PositionsPage } from "./pages/PositionsPage";
+import { ReportsPage } from "./pages/ReportsPage";
 import { RiskManagerPage } from "./pages/RiskManagerPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SignalsPage } from "./pages/SignalsPage";
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/signals" element={<SignalsPage />} />
         <Route path="/alerts" element={<AlertsPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
         <Route path="/audit" element={<AuditTrailPage />} />
         <Route path="/positions" element={<PositionsPage />} />
         <Route path="/blotter" element={<TradeBlotterPage />} />

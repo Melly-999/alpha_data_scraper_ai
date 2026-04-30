@@ -4,6 +4,7 @@ const items = [
   ["dashboard", "Dashboard"],
   ["signals", "Signals"],
   ["alerts", "Alerts"],
+  ["reports", "Reports"],
   ["audit", "Audit Trail"],
   ["positions", "Positions"],
   ["blotter", "Trade Blotter"],

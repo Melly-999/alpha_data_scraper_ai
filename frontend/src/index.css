@@ -1117,6 +1117,116 @@ input {
   align-content: start;
 }
 
+.report-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.report-controls label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-secondary);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.report-controls select {
+  min-width: 180px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.report-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.report-summary-grid,
+.report-two-column {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.report-two-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.report-summary-card,
+.report-section,
+.report-count-list {
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.85rem;
+}
+
+.report-badge-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+}
+
+.report-section-title {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 0.65rem;
+}
+
+.report-count-row,
+.report-audit-row {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.report-count-row:last-child,
+.report-audit-row:last-child {
+  border-bottom: 0;
+}
+
+.report-audit-list {
+  display: grid;
+}
+
+.report-audit-row {
+  justify-content: flex-start;
+}
+
+.report-audit-time {
+  min-width: 130px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+
+.report-markdown-preview {
+  max-height: 360px;
+  overflow: auto;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-secondary);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
 @media (max-width: 1080px) {
   .alert-center-row {
     grid-template-columns: 1fr;
@@ -1125,5 +1235,16 @@ input {
 
   .alert-center-source {
     justify-content: flex-start;
+  }
+
+  .report-summary-grid,
+  .report-two-column {
+    grid-template-columns: 1fr;
+  }
+
+  .report-audit-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
   }
 }

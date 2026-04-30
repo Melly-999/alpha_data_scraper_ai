@@ -15,6 +15,7 @@ import type {
   AuditFeed,
   AuditQuery,
   HealthInfo,
+  ReportItem,
   RiskConfig,
   SignalSummary,
   SignalsQuery,
@@ -171,4 +172,12 @@ export function getAlerts(query: AlertsQuery = {}): Promise<AlertItem[]> {
   appendParam(params, "limit", query.limit);
   const qs = params.toString();
   return mellyGet<AlertItem[]>(`/alerts${qs ? `?${qs}` : ""}`);
+}
+
+export function getDailyReport(): Promise<ReportItem> {
+  return mellyGet<ReportItem>("/reports/daily");
+}
+
+export function getWeeklyReport(): Promise<ReportItem> {
+  return mellyGet<ReportItem>("/reports/weekly");
 }
