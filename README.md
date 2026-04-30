@@ -99,6 +99,7 @@ This project is not financial advice and does not guarantee trading performance.
 Adjust paths to your local checkout if your repository lives elsewhere.
 
 - Local demo checklist: [docs/LOCAL_DEMO_CHECKLIST.md](docs/LOCAL_DEMO_CHECKLIST.md)
+- Local workstation release notes: [docs/RELEASE_NOTES_LOCAL_WORKSTATION.md](docs/RELEASE_NOTES_LOCAL_WORKSTATION.md)
 
 ### Backend — IBKR Paper Mode
 
