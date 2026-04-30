@@ -22,6 +22,7 @@ const RAW_BASE = (import.meta.env.VITE_MELLY_API_BASE_URL ??
   "/melly-api") as string;
 const MELLY_BASE = RAW_BASE.replace(/\/+$/, "");
 const MELLY_KEY = (import.meta.env.VITE_MELLY_API_KEY ?? "") as string;
+const REQUEST_TIMEOUT_MS = 10_000;
 
 function joinUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) {
@@ -85,18 +86,30 @@ async function mellyGet<T>(path: string): Promise<T> {
   if (MELLY_KEY) {
     headers["X-API-Key"] = MELLY_KEY;
   }
-  const response = await fetch(joinUrl(path), {
-    method: "GET",
-    headers,
-    credentials: "same-origin",
-  });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(joinUrl(path), {
+      method: "GET",
+      headers,
+      credentials: "same-origin",
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error(await parseError(response));
+    }
+    if (response.status === 204) {
+      return undefined as unknown as T;
+    }
+    return (await response.json()) as T;
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error(`Request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  if (response.status === 204) {
-    return undefined as unknown as T;
-  }
-  return (await response.json()) as T;
 }
 
 export function getHealth(): Promise<HealthInfo> {

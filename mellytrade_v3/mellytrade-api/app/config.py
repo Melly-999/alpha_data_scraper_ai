@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
 from typing import Optional
@@ -10,6 +11,11 @@ try:
     load_dotenv()
 except Exception:  # pragma: no cover - dotenv is optional for tests
     pass
+
+log = logging.getLogger(__name__)
+
+_DEFAULT_KEY = "change-me-api-key"
+_key_warned = False  # warn at most once per module lifetime (resets on test reload)
 
 
 def _float(name: str, default: float) -> float:
@@ -43,7 +49,7 @@ def _bool(name: str, default: bool) -> bool:
 @dataclass(frozen=True)
 class Settings:
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///./mellytrade.db")
-    fastapi_key: str = os.getenv("FASTAPI_KEY", "change-me-api-key")
+    fastapi_key: str = os.getenv("FASTAPI_KEY", _DEFAULT_KEY)
     cf_hub_url: Optional[str] = os.getenv("CF_HUB_URL") or None
     cf_api_secret: Optional[str] = os.getenv("CF_API_SECRET") or None
     cooldown_seconds: int = _int("COOLDOWN_SECONDS", 60)
@@ -58,4 +64,17 @@ class Settings:
 
 
 def get_settings() -> Settings:
-    return Settings()
+    global _key_warned
+    s = Settings()
+    if not s.fastapi_key.strip():
+        raise ValueError(
+            "FASTAPI_KEY must not be empty. "
+            "Set FASTAPI_KEY in your environment or .env file."
+        )
+    if not _key_warned and s.fastapi_key == _DEFAULT_KEY:
+        log.warning(
+            "FASTAPI_KEY is set to the development default; "
+            "set a strong secret before deploying to production."
+        )
+        _key_warned = True
+    return s
