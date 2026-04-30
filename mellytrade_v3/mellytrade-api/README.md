@@ -40,27 +40,28 @@ Signal feed with optional filtering. Confidence is clamped to [33, 85]%.
 - `until` (ISO8601): Only signals before this timestamp
 - `limit` (int, default=50): Max records to return
 
-**Response:**
+**Response:** bare list of signal objects (no wrapper, no total field)
 ```json
-{
-  "signals": [
-    {
-      "id": "sig_abc123",
-      "symbol": "EURUSD",
-      "direction": "BUY",
-      "confidence": 72,
-      "confidence_clamped": 72,
-      "strategy": "MTF_TREND",
-      "risk_pct": 0.85,
-      "status": "accepted",
-      "rejection_reason": null,
-      "dry_run": true,
-      "read_only": true,
-      "created_at": "2026-04-30T10:15:00Z"
-    }
-  ],
-  "total": 145
-}
+[
+  {
+    "id": 1,
+    "symbol": "EURUSD",
+    "action": "BUY",
+    "confidence": 72.0,
+    "confidence_clamped": 72.0,
+    "risk_pct": 0.85,
+    "entry_price": 1.0850,
+    "stop_loss": 1.0830,
+    "take_profit": 1.0890,
+    "source": "alpha_lstm",
+    "status": "accepted",
+    "reason": "",
+    "rejection_reason": null,
+    "dry_run": true,
+    "read_only": true,
+    "created_at": "2026-04-30T10:15:00Z"
+  }
+]
 ```
 
 ### `GET /audit`
