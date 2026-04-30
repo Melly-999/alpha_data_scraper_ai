@@ -4,10 +4,92 @@ import { Badge } from "../components/shared/Badge";
 import { Card } from "../components/shared/Card";
 import { Drawer } from "../components/shared/Drawer";
 import { Table } from "../components/shared/Table";
+import { useSignalDecisions } from "../hooks/useSignalDecisions";
 import { useSignals } from "../hooks/useSignals";
 import { apiGet } from "../lib/api";
 import { useUiStore } from "../stores/useUiStore";
-import type { Direction, SignalDetail, SignalReasoning } from "../types/api";
+import type {
+  DecisionDirection,
+  DecisionRiskStatus,
+  DecisionType,
+  Direction,
+  SignalDecisionRecord,
+  SignalDetail,
+  SignalReasoning,
+} from "../types/api";
+
+function decisionTone(
+  decision: DecisionType,
+): "green" | "red" | "amber" | "muted" {
+  if (decision === "dry_run_allowed") return "green";
+  if (decision === "blocked") return "red";
+  if (decision === "watch_only") return "amber";
+  return "muted";
+}
+
+function riskStatusTone(
+  status: DecisionRiskStatus,
+): "green" | "red" | "amber" | "muted" {
+  if (status === "pass") return "green";
+  if (status === "blocked") return "red";
+  if (status === "warn") return "amber";
+  return "muted";
+}
+
+function decisionDirectionTone(
+  direction: DecisionDirection,
+): "green" | "red" | "amber" {
+  if (direction === "BUY") return "green";
+  if (direction === "SELL") return "red";
+  return "amber";
+}
+
+function SignalDecisionRows({ records }: { records: SignalDecisionRecord[] }) {
+  return (
+    <Table
+      columns={[
+        { key: "symbol", label: "Symbol", render: (row) => row.symbol },
+        {
+          key: "direction",
+          label: "Dir",
+          render: (row) => (
+            <Badge tone={decisionDirectionTone(row.direction)}>
+              {row.direction}
+            </Badge>
+          ),
+        },
+        {
+          key: "confidence",
+          label: "Conf",
+          render: (row) => `${Math.round(row.confidence * 100)}%`,
+        },
+        { key: "strategy", label: "Strategy", render: (row) => row.strategy },
+        {
+          key: "risk_status",
+          label: "Risk",
+          render: (row) => (
+            <Badge tone={riskStatusTone(row.risk_status)}>
+              {row.risk_status}
+            </Badge>
+          ),
+        },
+        {
+          key: "decision",
+          label: "Decision",
+          render: (row) => (
+            <Badge tone={decisionTone(row.decision)}>{row.decision}</Badge>
+          ),
+        },
+        {
+          key: "blocked_reason",
+          label: "Reason",
+          render: (row) => row.blocked_reason ?? "-",
+        },
+      ]}
+      rows={records}
+    />
+  );
+}
 
 function directionTone(direction: Direction): "green" | "red" | "amber" {
   if (direction === "BUY") {
@@ -25,6 +107,11 @@ function formatOptional(value: number | null | undefined) {
 
 export function SignalsPage() {
   const { data, loading, error } = useSignals();
+  const {
+    data: decisionsData,
+    loading: decisionsLoading,
+    error: decisionsError,
+  } = useSignalDecisions(50);
   const selectedSignalId = useUiStore((state) => state.selectedSignalId);
   const setSelectedSignalId = useUiStore((state) => state.setSelectedSignalId);
   const [detail, setDetail] = useState<SignalDetail | null>(null);
@@ -115,6 +202,28 @@ export function SignalsPage() {
               rows={data}
               onRowClick={(row) => setSelectedSignalId(row.id)}
             />
+          ) : null}
+        </Card>
+
+        <Card
+          title="Decision History"
+          right={
+            <Badge tone="muted">
+              {decisionsData ? `${decisionsData.total} records` : "—"} · dry-run
+            </Badge>
+          }
+        >
+          <div className="dashboard-muted" style={{ marginBottom: "0.5rem" }}>
+            Read-only log of dry-run signal decisions. No orders placed.
+          </div>
+          {decisionsLoading && !decisionsData ? (
+            <div className="state">Loading decision history...</div>
+          ) : null}
+          {decisionsError && !decisionsData ? (
+            <div className="state error">{decisionsError}</div>
+          ) : null}
+          {decisionsData ? (
+            <SignalDecisionRows records={decisionsData.decisions} />
           ) : null}
         </Card>
       </div>

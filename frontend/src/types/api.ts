@@ -333,3 +333,42 @@ export interface AuditEventFeedResponse {
   fallback: boolean;
   generated_at: string;
 }
+
+export type DecisionType =
+  | "dry_run_allowed"
+  | "blocked"
+  | "watch_only"
+  | "no_action";
+export type DecisionRiskStatus = "pass" | "warn" | "blocked" | "unknown";
+export type DecisionDirection = "BUY" | "SELL" | "HOLD" | "UNKNOWN";
+
+export interface SignalDecisionRecord {
+  id: string;
+  timestamp: string;
+  symbol: string;
+  direction: DecisionDirection;
+  confidence: number;
+  source: string;
+  strategy: string;
+  risk_status: DecisionRiskStatus;
+  decision: DecisionType;
+  blocked_reason?: string | null;
+  dry_run: boolean;
+  auto_trade: boolean;
+  read_only: boolean;
+  stop_loss_required: boolean;
+  take_profit_required: boolean;
+  max_risk_per_trade: number;
+  metadata: Record<string, unknown>;
+}
+
+export interface SignalDecisionHistoryResponse {
+  dry_run: boolean;
+  auto_trade: boolean;
+  read_only: boolean;
+  total: number;
+  decisions: SignalDecisionRecord[];
+  generated_at: string;
+  degraded: boolean;
+  fallback: boolean;
+}
