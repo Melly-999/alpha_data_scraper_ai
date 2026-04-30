@@ -142,6 +142,54 @@ The dashboard includes:
 
 ---
 
+## mellytrade_v3 API audit feed (v3 signal pipeline)
+
+The `mellytrade_v3/mellytrade-api` service exposes a standalone read-only
+audit/event feed at `GET /events` (no `/api` prefix — this is a separate
+service from the dashboard backend).
+
+**Endpoint:**
+
+```
+GET http://127.0.0.1:8002/events
+```
+
+**PowerShell:**
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8002/events
+Invoke-RestMethod "http://127.0.0.1:8002/events?limit=10"
+```
+
+**Expected safety events:**
+
+| Event type | Severity | Meaning |
+|---|---|---|
+| `dry_run_active` | safety | dry_run=true, no orders |
+| `autotrade_disabled` | safety | autotrade.enabled=false |
+| `live_orders_blocked` | safety | supports_live_orders=false |
+| `max_risk_cap_verified` | safety | max_risk_percent ≤ 1% |
+| `read_only_mode_confirmed` | success | read-only mode active |
+| `backend_started` | success | v3 API started |
+| `broker_disconnected` | warning | IBKR Paper not connected (safe) |
+| `ibkr_disconnected` | warning | ib_insync not connected (safe) |
+| `mt5_disconnected` | warning | MT5 not connected (safe) |
+| `smoke_pending` | warning | smoke test not yet run |
+| `fallback_data_active` | warning | using fixture/demo data |
+
+**Response safety fields:**
+
+- `dry_run: true`
+- `auto_trade: false`
+- `read_only: true`
+- `degraded: true` (expected — warning events present without live connections)
+- `fallback: true` (expected — no live market data)
+
+This feed is **observability only**. It does not place orders, connect brokers,
+change configuration, or expose secrets.
+
+---
+
 ## Safety invariants
 
 These must always hold during local demo:

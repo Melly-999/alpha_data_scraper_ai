@@ -4,19 +4,20 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from . import cf_hub
+from .audit_service import AuditEventService
 from .auth import require_api_key
 from .config import Settings, get_settings
 from .database import SessionLocal, init_db
 from .models import SignalRecord
 from .risk import evaluate
-from .schemas import HealthOut, RejectedOut, SignalIn, SignalOut
+from .schemas import AuditEventFeedResponse, HealthOut, RejectedOut, SignalIn, SignalOut
 
 log = logging.getLogger(__name__)
 
@@ -65,6 +66,23 @@ def get_db() -> Session:  # pragma: no cover - trivial
         yield db
     finally:
         db.close()
+
+
+_audit_service = AuditEventService()
+
+
+@app.get("/events", response_model=AuditEventFeedResponse)
+def list_events(
+    limit: int = Query(default=50, ge=1, le=200),
+    settings: Settings = Depends(get_settings),
+) -> AuditEventFeedResponse:
+    """Read-only audit/event feed.
+
+    Returns a structured list of system audit events showing backend state,
+    safety posture, and service status. GET-only. No mutation, no broker
+    connection, no order placement, no secrets.
+    """
+    return _audit_service.list_events(settings, limit=limit)
 
 
 @app.get("/health", response_model=HealthOut)

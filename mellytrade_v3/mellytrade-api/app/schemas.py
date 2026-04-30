@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Action = Literal["BUY", "SELL", "HOLD"]
+AuditSeverity = Literal["info", "success", "warning", "error", "safety"]
 
 
 class SignalIn(BaseModel):
@@ -66,3 +67,28 @@ class RejectedOut(BaseModel):
     status: Literal["rejected"] = "rejected"
     reason: str
     detail: Optional[str] = None
+
+
+class AuditEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    timestamp: datetime
+    type: str
+    severity: AuditSeverity
+    source: str
+    message: str
+    read_only: bool = True
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class AuditEventFeedResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    dry_run: bool = True
+    auto_trade: bool = False
+    read_only: bool = True
+    degraded: bool
+    fallback: bool
+    generated_at: datetime
+    events: list[AuditEvent]
