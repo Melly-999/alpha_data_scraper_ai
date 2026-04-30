@@ -5,13 +5,19 @@
 // Inputs come from the Sprint 1A `/health` contract. If that backend is
 // unreachable the banner stays visible with neutral pills and surfaces a
 // `degraded` flag so the operator notices the missing telemetry.
+//
+// The max-risk pill label reflects the live value from `/risk/config`
+// (via useMellyRiskConfig) so it tracks the operator's actual configuration
+// rather than a hard-coded frontend constant.
 
 import { useMellyHealth } from "../hooks/useMellyHealth";
+import { useMellyRiskConfig } from "../hooks/useMellyRiskConfig";
 import type { HealthInfo } from "../types/melly";
 import { AccessStatusBanner } from "./AccessStatusBanner";
 
-// Direction B safety invariant: per-trade risk must not exceed 1%.
-const EXPECTED_MAX_RISK_PERCENT = 1.0;
+// Amber warning threshold: pill turns amber when configured max risk exceeds
+// this Direction B safety invariant, even if the backend allows more.
+const AMBER_RISK_THRESHOLD = 1.0;
 
 type PillTone = "green" | "amber" | "red" | "muted";
 
@@ -21,7 +27,9 @@ interface PillSpec {
   tone: PillTone;
 }
 
-function pills(health: HealthInfo | null): PillSpec[] {
+function pills(health: HealthInfo | null, configuredMax: number): PillSpec[] {
+  const riskLabel = `MAX RISK ≤ ${configuredMax.toFixed(1)}%`;
+
   if (!health) {
     return [
       {
@@ -40,7 +48,7 @@ function pills(health: HealthInfo | null): PillSpec[] {
         tone: "muted",
       },
       {
-        label: `MAX RISK ≤ ${EXPECTED_MAX_RISK_PERCENT.toFixed(0)}%`,
+        label: riskLabel,
         description: "Risk gate not yet loaded",
         tone: "muted",
       },
@@ -53,7 +61,7 @@ function pills(health: HealthInfo | null): PillSpec[] {
     ? "green"
     : "red";
   const riskTone: PillTone =
-    health.max_risk_percent <= EXPECTED_MAX_RISK_PERCENT ? "green" : "amber";
+    configuredMax <= AMBER_RISK_THRESHOLD ? "green" : "amber";
 
   return [
     {
@@ -78,19 +86,28 @@ function pills(health: HealthInfo | null): PillSpec[] {
       tone: liveBlockedTone,
     },
     {
-      label: `MAX RISK ≤ ${EXPECTED_MAX_RISK_PERCENT.toFixed(0)}%`,
+      label: riskLabel,
       description: `Per-trade risk ceiling enforced by the API (${health.max_risk_percent.toFixed(
         2,
-      )}% reported)`,
+      )}% configured)`,
       tone: riskTone,
     },
   ];
 }
 
 export function SafetyBanner() {
-  const { data, error } = useMellyHealth();
-  const items = pills(data);
-  const degraded = !data && Boolean(error);
+  const { data: health, error: healthError } = useMellyHealth();
+  const { data: riskConfig } = useMellyRiskConfig();
+
+  // Prefer live /risk/config value; fall back to health's copy, then to the
+  // amber threshold so the label is never blank while data is loading.
+  const configuredMax =
+    riskConfig?.max_risk_percent ??
+    health?.max_risk_percent ??
+    AMBER_RISK_THRESHOLD;
+
+  const items = pills(health, configuredMax);
+  const degraded = !health && Boolean(healthError);
 
   return (
     <div
@@ -113,12 +130,12 @@ export function SafetyBanner() {
       {degraded ? (
         <span
           className="safety-banner-note"
-          title={`Health endpoint unreachable: ${error}`}
+          title={`Health endpoint unreachable: ${healthError}`}
         >
           Safety telemetry unavailable
         </span>
       ) : null}
-      <AccessStatusBanner health={data} healthError={error} />
+      <AccessStatusBanner health={health} healthError={healthError} />
     </div>
   );
 }
