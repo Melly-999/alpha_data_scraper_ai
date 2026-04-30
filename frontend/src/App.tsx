@@ -15,6 +15,7 @@ import { RiskManagerPage } from "./pages/RiskManagerPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SignalsPage } from "./pages/SignalsPage";
 import { TradeBlotterPage } from "./pages/TradeBlotterPage";
+import { WatchlistPage } from "./pages/WatchlistPage";
 
 export default function App() {
   const health = useHealth();
@@ -30,6 +31,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/watchlist" element={<WatchlistPage />} />
         <Route path="/signals" element={<SignalsPage />} />
         <Route path="/alerts" element={<AlertsPage />} />
         <Route path="/reports" element={<ReportsPage />} />

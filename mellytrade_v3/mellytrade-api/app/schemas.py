@@ -21,6 +21,7 @@ AuditEventType = Literal[
 
 AlertSeverity = Literal["info", "warning", "error", "success"]
 ReportPeriod = Literal["daily", "weekly"]
+RiskState = Literal["clear", "blocked", "watch"]
 
 
 class SignalIn(BaseModel):
@@ -175,6 +176,21 @@ class ReportOut(BaseModel):
     latest_audit_events: List[AuditEvent]
     risk_config_snapshot: RiskConfigOut
     markdown_summary: str
+    read_only: bool
+
+
+class WatchlistItemOut(BaseModel):
+    symbol: str
+    name: str
+    asset_class: str
+    last_price: float
+    change_pct: float
+    signal_status: str
+    signal_confidence: Optional[float] = None
+    alert_count: int
+    risk_state: RiskState
+    source: str
+    generated_at: datetime
     read_only: bool
 
 

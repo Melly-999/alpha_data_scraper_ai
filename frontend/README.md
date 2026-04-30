@@ -1,6 +1,6 @@
 # MellyTrade Frontend (React + Vite)
 
-Decision-support trader dashboard for MellyTrade Direction B. Connects to the mellytrade-api backend for read-only signal data, audit trails, alert-center state, reports, and risk snapshots.
+Decision-support trader dashboard for MellyTrade Direction B. Connects to the mellytrade-api backend for read-only signal data, audit trails, alert-center state, watchlist state, reports, and risk snapshots.
 
 **Safety posture:** Read-only, no execution buttons, dry-run and risk limits locked-on by default.
 
@@ -65,6 +65,10 @@ TypeScript validation using tsc (no emit).
 ### Pages
 
 - **Dashboard**: System overview (legacy, from Sprint 1A)
+- **Watchlist**: Read-only market watchlist
+  - Safe fallback market rows enriched by signal status and alert counts
+  - Risk-state badges for clear/watch/blocked rows
+  - Loading/error/empty states with no action buttons
 - **Signals** (new): Signal feed from both legacy API and mellytrade-api
   - Signal review table: symbol, direction, confidence, MTF alignment, risk status
   - Signal detail drawer: entry/SL/TP levels, reasoning, risk gates
@@ -123,6 +127,8 @@ All hooks poll their endpoints and cache results:
   - Returns: `{ data: AlertItem[], loading, error }`
 - **`useDailyReport()` / `useWeeklyReport()`**: Poll `/reports/daily` and `/reports/weekly` every 30s
   - Returns: `{ data: ReportItem, loading, error }`
+- **`useWatchlist()`**: Polls `/watchlist` every 15s
+  - Returns: `{ data: WatchlistItem[], loading, error }`
 
 ### API Client
 
@@ -138,6 +144,7 @@ offline/unreachable, missing API key, and rejected API key states.
 - `getAlerts(query)` → AlertItem[]
 - `getDailyReport()` → ReportItem
 - `getWeeklyReport()` → ReportItem
+- `getWatchlist()` → WatchlistItem[]
 
 Authentication is configured with `VITE_MELLY_API_KEY` for protected read-only
 endpoints. `GET /health` can still load without a key.
@@ -150,7 +157,7 @@ Sprint 1A types are in `src/types/melly.ts` (separate from legacy `src/types/api
 - `Action` (BUY | SELL | HOLD)
 - `HealthInfo`, `SignalSummary`, `RiskConfig`
 - `AuditEvent`, `AuditEventType` (9 types)
-- `AlertItem`, `ReportItem`
+- `AlertItem`, `ReportItem`, `WatchlistItem`
 - `SignalsQuery`, `AuditQuery`
 
 This avoids collision with legacy types (e.g., old `SignalSummary` with different shape).
