@@ -5,8 +5,14 @@ import { Table } from "../components/shared/Table";
 import { useBrokerAccount, useBrokerHealth } from "../hooks/useBroker";
 import { useDashboard } from "../hooks/useDashboard";
 import { useHealth } from "../hooks/useHealth";
+import { useLocalChecklist } from "../hooks/useLocalChecklist";
 import { useRiskConfig } from "../hooks/useRisk";
-import type { ActivityFeedItem, SignalSummary, WatchlistItem } from "../types/api";
+import type {
+  ActivityFeedItem,
+  LocalChecklistCheck,
+  SignalSummary,
+  WatchlistItem,
+} from "../types/api";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -59,6 +65,18 @@ function activityTone(type: string): "green" | "red" | "amber" | "blue" | "muted
     return "green";
   }
   return "muted";
+}
+
+function checklistTone(
+  status: LocalChecklistCheck["status"],
+): "green" | "red" | "amber" {
+  if (status === "pass") {
+    return "green";
+  }
+  if (status === "fail") {
+    return "red";
+  }
+  return "amber";
 }
 
 type BrokerStatusCopy = {
@@ -238,6 +256,7 @@ export function DashboardPage() {
   const riskConfig = useRiskConfig();
   const brokerHealth = useBrokerHealth();
   const brokerAccount = useBrokerAccount();
+  const localChecklist = useLocalChecklist();
 
   if (loading && !data) {
     return <div className="state">Loading dashboard...</div>;
@@ -393,6 +412,45 @@ export function DashboardPage() {
                 );
               })()
             )}
+          </div>
+        </Card>
+
+        <Card
+          title="Local Demo Checklist"
+          right={
+            <Badge tone={localChecklist.data?.status === "ok" ? "green" : "amber"}>
+              {localChecklist.data?.status ?? "checking"}
+            </Badge>
+          }
+        >
+          <div className="dashboard-row-list local-checklist-panel">
+            <div className="dashboard-safe-note">
+              <div className="broker-status-headline">
+                Read-only local workstation checks
+              </div>
+              <div>
+                TWS Paper is optional. Disconnected broker state is safe. No
+                orders can be placed from this dashboard.
+              </div>
+            </div>
+            {localChecklist.error ? (
+              <div className="state error">
+                Backend unreachable. Start it with
+                {" .\\scripts\\start_backend_ibkr_paper.ps1"}.
+              </div>
+            ) : null}
+            {(localChecklist.data?.checks ?? []).map((check) => (
+              <div key={check.id} className="dashboard-row checklist-row">
+                <div>
+                  <div className="dashboard-symbol">{check.label}</div>
+                  <div className="dashboard-muted">{check.detail}</div>
+                </div>
+                <Badge tone={checklistTone(check.status)}>{check.status}</Badge>
+              </div>
+            ))}
+            {!localChecklist.data && !localChecklist.error ? (
+              <div className="state">Checking local demo safety state...</div>
+            ) : null}
           </div>
         </Card>
 
