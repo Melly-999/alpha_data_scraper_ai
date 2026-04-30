@@ -11,13 +11,14 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
-from . import audit, cf_hub
+from . import alerts, audit, cf_hub
 from .auth import require_api_key
 from .config import Settings, get_settings
 from .database import SessionLocal, init_db
 from .models import SignalRecord
 from .risk import evaluate
 from .schemas import (
+    AlertOut,
     AuditOut,
     HealthOut,
     RejectedOut,
@@ -241,6 +242,17 @@ def list_audit_events(
         read_only=settings.read_only,
         live_orders_blocked=_live_orders_blocked(settings),
     )
+
+
+@app.get("/alerts", response_model=List[AlertOut])
+def list_alerts(
+    limit: int = Query(100, ge=1, le=500),
+    settings: Settings = Depends(get_settings),
+    db: Session = Depends(get_db),
+    _: str = Depends(require_api_key),
+) -> List[AlertOut]:
+    """Read-only alert center feed derived from existing safety state."""
+    return alerts.collect_alerts(db=db, settings=settings, limit=limit)
 
 
 @app.get("/risk/config", response_model=RiskConfigOut)

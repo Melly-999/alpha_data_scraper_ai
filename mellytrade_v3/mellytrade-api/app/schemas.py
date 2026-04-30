@@ -19,6 +19,8 @@ AuditEventType = Literal[
     "mt5_connection_status",
 ]
 
+AlertSeverity = Literal["info", "warning", "error", "success"]
+
 
 class SignalIn(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -138,6 +140,20 @@ class AuditOut(BaseModel):
     dry_run: bool
     read_only: bool
     live_orders_blocked: bool
+
+
+class AlertOut(BaseModel):
+    id: str
+    timestamp: datetime
+    severity: AlertSeverity
+    category: str
+    title: str
+    message: str
+    source: str
+    symbol: Optional[str] = None
+    signal_id: Optional[int] = None
+    read_only: bool
+    metadata: Dict[str, object] = Field(default_factory=dict)
 
 
 class RejectedOut(BaseModel):
