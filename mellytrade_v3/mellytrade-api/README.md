@@ -1,14 +1,59 @@
-# MellyTrade API (Sprint 1A)
+# MellyTrade API
 
-Read-only REST API for the MellyTrade Direction B trader dashboard. Provides signal data, audit trails, health status, and risk configuration snapshots.
+Read-only REST API for the MellyTrade Direction B trader dashboard. It exposes
+health, signal history, audit events, risk configuration, and alert-center
+context for decision support.
 
-## Safety First
+## Safety Notice
 
-This API is **read-only by design**. No execution routes are exposed. The system runs with:
-- `dry_run=true` (no live orders)
-- `autotrade=false` (no automated execution)
-- `read_only=true` (decision support only)
-- Max risk capped at 1% per position
+This API is read-only by design for Direction B:
+
+- No live execution endpoints
+- No order placement
+- `autotrade=false`
+- `dry_run=true`
+- `read_only=true`
+- Max risk remains <= 1% per signal
+
+Do not add execution, order placement, close, flatten, or mutation routes to this
+service without an explicitly approved future execution phase.
+
+## Authentication
+
+`GET /health` is public. All other endpoints require the configured
+`FASTAPI_KEY` via the `X-API-Key` header.
+
+```bash
+curl -H "X-API-Key: test-key" http://127.0.0.1:8000/signals
+```
+
+For local development, set `FASTAPI_KEY` in the environment or `.env`. The
+development default logs a warning and must not be used for production.
+
+## Local Backend Startup
+
+```bash
+cd mellytrade_v3/mellytrade-api
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Backend tests:
+
+```bash
+python -m pytest -q
+```
+
+## Smoke Tests
+
+From the repository root, run one of the read-only smoke scripts after starting
+the backend and frontend:
+
+```bash
+bash scripts/smoke-test.sh
+.\scripts\smoke-test.ps1
+```
+
+The smoke scripts validate dashboard read endpoints and do not place orders.
 
 ## Endpoints
 
@@ -16,35 +61,45 @@ This API is **read-only by design**. No execution routes are exposed. The system
 
 System health and safety posture snapshot.
 
-**Response:**
+Response:
+
 ```json
 {
   "status": "ok",
-  "version": "1.0.0",
-  "timestamp": "2026-04-30T10:30:00Z",
+  "service": "mellytrade-api",
+  "version": "0.1.0",
+  "cooldown_seconds": 60,
+  "min_confidence": 70.0,
+  "max_risk_percent": 1.0,
+  "database": "sqlite",
   "dry_run": true,
   "autotrade_enabled": false,
   "read_only": true,
-  "db_healthy": true
+  "live_orders_blocked": true
 }
 ```
 
 ### `GET /signals`
 
-Signal feed with optional filtering. Confidence is clamped to [33, 85]%.
+Signal feed with optional filtering. Confidence is displayed with the Alpha
+pipeline clamp range `[33, 85]`.
 
-**Query Parameters:**
-- `symbol` (str): Filter by symbol (e.g. "EURUSD")
-- `status` (str): Filter by "accepted" or "rejected"
-- `since` (ISO8601): Only signals after this timestamp
-- `until` (ISO8601): Only signals before this timestamp
-- `limit` (int, default=50): Max records to return
+Query parameters:
 
-**Response:** bare list of signal objects (no wrapper, no total field)
+- `symbol`: filter by symbol, for example `EURUSD`
+- `status`: `accepted` or `rejected`
+- `since`: ISO8601 lower timestamp bound
+- `until`: ISO8601 upper timestamp bound
+- `limit`: max records, default `50`, range `1..500`
+
+Response: bare list of signal objects. There is no wrapper object and no
+`total` field.
+
 ```json
 [
   {
     "id": 1,
+    "created_at": "2026-04-30T10:15:00Z",
     "symbol": "EURUSD",
     "action": "BUY",
     "confidence": 72.0,
@@ -58,44 +113,38 @@ Signal feed with optional filtering. Confidence is clamped to [33, 85]%.
     "reason": "",
     "rejection_reason": null,
     "dry_run": true,
-    "read_only": true,
-    "created_at": "2026-04-30T10:15:00Z"
+    "read_only": true
   }
 ]
 ```
 
 ### `GET /audit`
 
-Audit trail of events: signal decisions, risk gates, safety state changes.
+Audit feed derived from persisted signal decisions plus safety-state events.
 
-**Query Parameters:**
-- `event_type` (str): Filter by event type (e.g. "signal_accepted", "risk_gate_failed")
-- `since` (ISO8601): Only events after this timestamp
-- `limit` (int, default=50): Max records to return
+Query parameters:
 
-**Response:**
+- `event_type`: optional audit event type filter
+- `limit`: max records, default `100`, range `1..500`
+
+Response:
+
 ```json
 {
   "events": [
     {
-      "timestamp": "2026-04-30T10:15:00Z",
       "type": "signal_accepted",
+      "timestamp": "2026-04-30T10:15:00Z",
       "severity": "info",
-      "message": "EURUSD BUY signal accepted (confidence 72%)",
-      "signal_id": "sig_abc123",
+      "message": "BUY EURUSD accepted (confidence 72)",
       "detail": {
         "symbol": "EURUSD",
-        "direction": "BUY",
-        "confidence": 72
-      }
-    },
-    {
-      "timestamp": "2026-04-30T10:00:00Z",
-      "type": "dry_run_active",
-      "severity": "info",
-      "message": "Dry-run mode enabled",
-      "signal_id": null,
-      "detail": {}
+        "action": "BUY",
+        "confidence": 72.0,
+        "risk_pct": 0.85,
+        "source": "api"
+      },
+      "signal_id": 1
     }
   ],
   "dry_run": true,
@@ -106,79 +155,83 @@ Audit trail of events: signal decisions, risk gates, safety state changes.
 
 ### `GET /risk/config`
 
-Risk gate configuration snapshot.
+Risk gate configuration and current safety posture.
 
-**Response:**
+Response:
+
 ```json
 {
-  "max_risk_pct": 1.0,
-  "min_confidence_threshold": 70,
-  "max_daily_loss_pct": 5.0,
-  "max_open_positions": 3,
-  "live_orders_blocked": true
+  "min_confidence": 70.0,
+  "max_risk_percent": 1.0,
+  "cooldown_seconds": 60,
+  "dry_run": true,
+  "autotrade_enabled": false,
+  "read_only": true,
+  "live_orders_blocked": true,
+  "gates": [
+    {
+      "name": "max_risk_percent",
+      "active": true,
+      "description": "Reject signals with risk_percent > 1"
+    }
+  ]
 }
 ```
 
-## Authentication
+### `GET /alerts`
 
-All endpoints are public by default. To require authentication, set the `API_KEY` environment variable:
+Read-only alert-center feed. Alerts are derived from safety posture, rejected
+risk/cooldown signal records, backend-degraded conditions where applicable, and
+a high-impact-news placeholder for a future data pass.
 
-```bash
-export API_KEY="your-secret-key"
+Query parameters:
+
+- `limit`: max records, default `100`, range `1..500`
+
+Response:
+
+```json
+[
+  {
+    "id": "safety-dry-run-active",
+    "timestamp": "2026-04-30T10:15:00Z",
+    "severity": "success",
+    "category": "safety",
+    "title": "Dry run active",
+    "message": "No live orders will be sent while dry_run is active.",
+    "source": "settings",
+    "symbol": null,
+    "signal_id": null,
+    "read_only": true,
+    "metadata": {
+      "dry_run": true
+    }
+  }
+]
 ```
-
-Clients must then send the `X-API-Key` header:
-
-```bash
-curl -H "X-API-Key: your-secret-key" http://localhost:8000/signals
-```
-
-## Local Development
-
-### Setup
-
-```bash
-cd mellytrade_v3/mellytrade-api
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-pip install -r requirements.txt
-```
-
-### Run
-
-```bash
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-
-Backend listens on `http://localhost:8000`.
-
-### Test
-
-```bash
-python -m pytest -q
-```
-
-27 tests covering signal filtering, audit events, safety posture, and API contracts.
 
 ## Frontend Integration
 
-The React frontend (`frontend/`) connects to this API via:
+The React frontend uses the Vite dev proxy:
 
-- Base URL: `http://localhost:5173/melly-api` (dev proxy) or `VITE_MELLY_API_BASE_URL` env var
-- API key: optional `VITE_MELLY_API_KEY` env var (sent as `X-API-Key` header)
-- Polling: 12s for audit, 15s for signals, 30s for health, 60s for risk config
+- Browser path: `/melly-api`
+- Backend target: `http://127.0.0.1:8000`
+- Optional override: `VITE_MELLY_API_BASE_URL`
+- Optional key: `VITE_MELLY_API_KEY`, sent as `X-API-Key`
 
-See `frontend/README.md` for frontend setup.
+The frontend Melly client is intentionally GET-only.
 
 ## Type Contracts
 
-TypeScript types for API responses are defined in `frontend/src/types/melly.ts` (separate from legacy `types/api.ts` to avoid collision).
+Frontend contracts live in `frontend/src/types/melly.ts`. They are kept
+separate from legacy `frontend/src/types/api.ts` shapes so Direction B dashboard
+contracts stay explicit.
 
 ## Safety Guarantees
 
-- ✓ No POST/PUT/DELETE endpoints exposed
-- ✓ Confidence clamped to [33, 85]%
-- ✓ Rejection reasons logged for audit trail
-- ✓ Dry-run and read-only flags always present in responses
-- ✓ Risk gates snapshot always available
-- ✓ All timestamps in ISO8601 UTC
+- No POST/PUT/PATCH/DELETE dashboard mutation endpoints
+- No live execution endpoints
+- No order placement logic
+- `dry_run`, `read_only`, and `live_orders_blocked` are surfaced in responses
+- Risk gate rejection reasons are preserved for audit and alert views
+- `max_risk_percent` remains bounded by the Direction B 1% invariant

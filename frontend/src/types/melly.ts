@@ -21,6 +21,7 @@ export type AuditEventType =
   | "mt5_connection_status";
 
 export type AuditSeverity = "info" | "warning" | "error";
+export type AlertSeverity = "info" | "warning" | "error" | "success";
 
 export interface HealthInfo {
   status: string;
@@ -88,6 +89,20 @@ export interface RiskConfig {
   gates: RiskGateStatus[];
 }
 
+export interface AlertItem {
+  id: string;
+  timestamp: string;
+  severity: AlertSeverity;
+  category: string;
+  title: string;
+  message: string;
+  source: string;
+  symbol?: string | null;
+  signal_id?: number | null;
+  read_only: boolean;
+  metadata: Record<string, unknown>;
+}
+
 export interface SignalsQuery {
   symbol?: string;
   status?: "accepted" | "rejected";
@@ -98,5 +113,9 @@ export interface SignalsQuery {
 
 export interface AuditQuery {
   event_type?: AuditEventType;
+  limit?: number;
+}
+
+export interface AlertsQuery {
   limit?: number;
 }

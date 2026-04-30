@@ -10,6 +10,8 @@
 // place orders, modify risk gates, or otherwise mutate the backend.
 
 import type {
+  AlertItem,
+  AlertsQuery,
   AuditFeed,
   AuditQuery,
   HealthInfo,
@@ -138,4 +140,11 @@ export function getAuditFeed(query: AuditQuery = {}): Promise<AuditFeed> {
 
 export function getRiskConfig(): Promise<RiskConfig> {
   return mellyGet<RiskConfig>("/risk/config");
+}
+
+export function getAlerts(query: AlertsQuery = {}): Promise<AlertItem[]> {
+  const params = new URLSearchParams();
+  appendParam(params, "limit", query.limit);
+  const qs = params.toString();
+  return mellyGet<AlertItem[]>(`/alerts${qs ? `?${qs}` : ""}`);
 }
