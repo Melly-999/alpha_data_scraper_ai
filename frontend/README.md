@@ -19,11 +19,15 @@ Create `.env.local` (git-ignored):
 
 ```bash
 # Optional: Backend API base URL (default: /melly-api via dev proxy)
-VITE_MELLY_API_BASE_URL=http://localhost:8000
+VITE_MELLY_API_BASE_URL=/melly-api
 
 # Optional: API authentication key (sent as X-API-Key header)
-VITE_MELLY_API_KEY=your-secret-key
+VITE_MELLY_API_KEY=change-me-local-readonly-key
 ```
+
+Use `frontend/.env.example` as the placeholder template. Do not commit real
+API keys. The dashboard never stores API keys in `localStorage`; Vite reads
+`VITE_MELLY_API_KEY` from the local environment at startup/build time.
 
 ## Development
 
@@ -74,6 +78,10 @@ TypeScript validation using tsc (no emit).
   - Signal decisions, risk gate results, safety state changes
   - Event type filter (9 options)
   - Severity-colored badges (info=blue, warning=amber, error=red)
+- **Alerts**: Read-only Alert Center v1
+  - Safety, risk-gate, cooldown, degraded-backend, and placeholder news alerts
+  - Severity and category filters
+  - No alert action buttons or mutation calls
 - **Positions, Trade Blotter, Risk Manager, MT5 Bridge, Logs, Settings**: Placeholder pages
 
 ### Components
@@ -82,6 +90,11 @@ TypeScript validation using tsc (no emit).
   - DRY RUN | READ-ONLY MODE | LIVE ORDERS BLOCKED | MAX RISK <= 1%
   - Tooltips and color states (green=safe, red=disabled, muted=error)
   - Mounted in AppShell above TopBar
+- **AccessStatusBanner**: Local access state for the Melly API
+  - Backend online/offline
+  - Missing `VITE_MELLY_API_KEY`
+  - 401 unauthorized from protected read-only endpoints
+  - Degraded backend safety posture
 - **Table**: Generic table with sorting, filtering, row click handlers
 - **Card**: Reusable container with title, right-aligned badge
 - **Badge**: Status indicator with 5 tones (green, red, amber, blue, muted)
@@ -101,18 +114,25 @@ All hooks poll their endpoints and cache results:
 - **`useMellySignals(query)`**: Polls `/signals` every 15s (NEW)
   - Params: `symbol?: string`, `status?: string`, `since?: string`, `until?: string`, `limit?: number`
   - Returns: `{ data: SignalSummary[], loading, error }`
+- **`useAlerts(query)`**: Polls `/alerts` every 12s
+  - Params: `limit?: number`
+  - Returns: `{ data: AlertItem[], loading, error }`
 
 ### API Client
 
-All requests are GET-only. No mutation helpers exported.
+All `lib/mellyApi.ts` requests are GET-only. No mutation helpers are exported.
+The client uses a 10s timeout and surfaces explicit messages for backend
+offline/unreachable, missing API key, and rejected API key states.
 
 **`lib/mellyApi.ts`:**
 - `getHealth()` → HealthInfo
-- `getSignals(query)` → { signals: SignalSummary[], total: number }
+- `getSignals(query)` → SignalSummary[] (bare list, no wrapper, no total field)
 - `getAuditFeed(query)` → { events: AuditEvent[], dry_run, read_only, live_orders_blocked }
 - `getRiskConfig()` → RiskConfig
+- `getAlerts(query)` → AlertItem[]
 
-Authentication is optional (set `VITE_MELLY_API_KEY` to enable).
+Authentication is configured with `VITE_MELLY_API_KEY` for protected read-only
+endpoints. `GET /health` can still load without a key.
 
 ## Type System
 

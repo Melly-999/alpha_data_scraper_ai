@@ -890,6 +890,7 @@ input {
   flex-wrap: wrap;
   gap: 0.4rem;
   align-items: center;
+  min-width: 0;
 }
 
 .safety-pill {
@@ -932,6 +933,49 @@ input {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+.access-status-banner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.access-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.access-status-pill-green {
+  background: rgba(46, 160, 67, 0.12);
+  border-color: rgba(46, 160, 67, 0.34);
+  color: #6cd082;
+}
+
+.access-status-pill-amber {
+  background: rgba(210, 153, 34, 0.15);
+  border-color: rgba(210, 153, 34, 0.4);
+  color: #f0c060;
+}
+
+.access-status-pill-red {
+  background: rgba(248, 81, 73, 0.16);
+  border-color: rgba(248, 81, 73, 0.42);
+  color: #f8857d;
 }
 
 .audit-feed-controls {

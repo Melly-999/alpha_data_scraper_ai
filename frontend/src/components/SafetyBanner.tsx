@@ -8,6 +8,7 @@
 
 import { useMellyHealth } from "../hooks/useMellyHealth";
 import type { HealthInfo } from "../types/melly";
+import { AccessStatusBanner } from "./AccessStatusBanner";
 
 // Direction B safety invariant: per-trade risk must not exceed 1%.
 const EXPECTED_MAX_RISK_PERCENT = 1.0;
@@ -117,6 +118,7 @@ export function SafetyBanner() {
           Safety telemetry unavailable
         </span>
       ) : null}
+      <AccessStatusBanner health={data} healthError={error} />
     </div>
   );
 }

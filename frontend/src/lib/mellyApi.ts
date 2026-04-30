@@ -26,6 +26,20 @@ const MELLY_BASE = RAW_BASE.replace(/\/+$/, "");
 const MELLY_KEY = (import.meta.env.VITE_MELLY_API_KEY ?? "") as string;
 const REQUEST_TIMEOUT_MS = 10_000;
 
+export interface MellyClientConfig {
+  baseUrl: string;
+  hasApiKey: boolean;
+  timeoutMs: number;
+}
+
+export function getMellyClientConfig(): MellyClientConfig {
+  return {
+    baseUrl: MELLY_BASE,
+    hasApiKey: MELLY_KEY.trim().length > 0,
+    timeoutMs: REQUEST_TIMEOUT_MS,
+  };
+}
+
 function joinUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) {
     return path;
@@ -99,6 +113,13 @@ async function mellyGet<T>(path: string): Promise<T> {
       signal: controller.signal,
     });
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error(
+          MELLY_KEY
+            ? "Unauthorized: VITE_MELLY_API_KEY was rejected by the backend"
+            : "Unauthorized: configure VITE_MELLY_API_KEY for protected read-only endpoints",
+        );
+      }
       throw new Error(await parseError(response));
     }
     if (response.status === 204) {
@@ -108,6 +129,9 @@ async function mellyGet<T>(path: string): Promise<T> {
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       throw new Error(`Request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`);
+    }
+    if (err instanceof TypeError) {
+      throw new Error("Backend offline or unreachable");
     }
     throw err;
   } finally {
