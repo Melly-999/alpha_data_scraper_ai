@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from .config import get_settings
 
@@ -22,11 +22,3 @@ def init_db() -> None:
     from . import models  # noqa: F401  ensure models are registered
 
     Base.metadata.create_all(bind=engine)
-
-
-def get_session() -> Session:
-    session = SessionLocal()
-    try:
-        return session
-    finally:
-        pass

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function usePollingResource<T>(
   loader: () => Promise<T>,
@@ -7,6 +7,10 @@ export function usePollingResource<T>(
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loaderRef = useRef(loader);
+
+  // Keep the latest loader without restarting the polling loop on each render.
+  loaderRef.current = loader;
 
   useEffect(() => {
     let cancelled = false;
@@ -14,7 +18,7 @@ export function usePollingResource<T>(
 
     const tick = async () => {
       try {
-        const next = await loader();
+        const next = await loaderRef.current();
         if (!cancelled) {
           setData(next);
           setError(null);
@@ -39,7 +43,7 @@ export function usePollingResource<T>(
         window.clearTimeout(timer);
       }
     };
-  }, [loader, intervalMs]);
+  }, [intervalMs]);
 
   return { data, loading, error };
 }

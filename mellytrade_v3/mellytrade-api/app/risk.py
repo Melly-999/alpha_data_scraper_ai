@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -10,6 +11,8 @@ from sqlalchemy.orm import Session
 from .config import Settings
 from .models import SignalRecord
 from .schemas import SignalIn
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -23,6 +26,19 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _reject(signal: SignalIn, reason: str, detail: str = "") -> RiskDecision:
+    log.info(
+        "Risk gate rejected signal: symbol=%s action=%s reason=%s "
+        "confidence=%s risk_pct=%s",
+        signal.symbol,
+        signal.action,
+        reason,
+        signal.confidence,
+        getattr(signal, "risk_percent", None),
+    )
+    return RiskDecision(False, reason, detail)
+
+
 def evaluate(signal: SignalIn, settings: Settings, db: Session) -> RiskDecision:
     """Apply hard risk gates before a signal is persisted or published.
 
@@ -33,35 +49,35 @@ def evaluate(signal: SignalIn, settings: Settings, db: Session) -> RiskDecision:
     - per-symbol cooldown: COOLDOWN_SECONDS since last accepted signal
     """
     if signal.action not in ("BUY", "SELL", "HOLD"):
-        return RiskDecision(False, "invalid_action", signal.action)
+        return _reject(signal, "invalid_action", signal.action)
 
     if signal.action == "HOLD":
         # HOLD is informational; still enforce confidence for consistency.
         if signal.confidence < settings.min_confidence:
-            return RiskDecision(
-                False,
+            return _reject(
+                signal,
                 "confidence_below_min",
                 f"{signal.confidence} < {settings.min_confidence}",
             )
         return RiskDecision(True)
 
     if signal.confidence < settings.min_confidence:
-        return RiskDecision(
-            False,
+        return _reject(
+            signal,
             "confidence_below_min",
             f"{signal.confidence} < {settings.min_confidence}",
         )
 
     if signal.risk_percent > settings.max_risk_percent:
-        return RiskDecision(
-            False,
+        return _reject(
+            signal,
             "risk_above_max",
             f"{signal.risk_percent} > {settings.max_risk_percent}",
         )
 
     # SL/TP presence is enforced by SignalIn schema (gt=0). Extra safety:
     if signal.stop_loss <= 0 or signal.take_profit <= 0:
-        return RiskDecision(False, "missing_sl_tp")
+        return _reject(signal, "missing_sl_tp")
 
     last: Optional[SignalRecord] = db.execute(
         select(SignalRecord)
@@ -78,8 +94,8 @@ def evaluate(signal: SignalIn, settings: Settings, db: Session) -> RiskDecision:
         delta = _utcnow() - last_ts
         if delta < timedelta(seconds=settings.cooldown_seconds):
             remaining = settings.cooldown_seconds - int(delta.total_seconds())
-            return RiskDecision(
-                False,
+            return _reject(
+                signal,
                 "cooldown_active",
                 f"{remaining}s remaining for {signal.symbol}",
             )

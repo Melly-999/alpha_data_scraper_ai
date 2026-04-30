@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { SafetyBanner } from "../components/SafetyBanner";
 import type { HealthResponse, RiskConfig, SystemStatus } from "../types/api";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
@@ -21,6 +22,7 @@ export function AppShell({
     <div className="app-shell">
       <Sidebar />
       <div className="app-main">
+        <SafetyBanner />
         <TopBar health={health} systemStatus={systemStatus} riskConfig={riskConfig} />
         <main className="page-content">{children}</main>
       </div>

@@ -11,10 +11,11 @@ log = logging.getLogger(__name__)
 
 
 async def publish(payload: Dict[str, Any], settings: Settings) -> bool:
-    """Forward accepted signals to the Cloudflare Worker hub.
+    """Best-effort publish of accepted signals to the Cloudflare Worker hub.
 
-    Fails soft: logs a warning and returns False on any error so the API
-    still returns 200 for the persisted signal.
+    Local database persistence remains the source of truth for signal intake.
+    Hub failures are logged and reported as False, but they must not block
+    accepting a signal that already passed local risk gates.
     """
     if not settings.cf_hub_url:
         return False

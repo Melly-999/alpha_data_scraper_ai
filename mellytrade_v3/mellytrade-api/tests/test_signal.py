@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta, timezone
 
 HEADERS = {"X-API-Key": "test-key"}
@@ -47,11 +48,29 @@ def test_signal_rejects_low_confidence(client):
     assert resp.json()["reason"] == "confidence_below_min"
 
 
+def test_signal_rejection_logs_gate_context(client, caplog):
+    caplog.set_level(logging.INFO, logger="app.risk")
+    resp = client.post("/signal", json=_buy(confidence=60), headers=HEADERS)
+    assert resp.status_code == 400
+
+    messages = "\n".join(record.getMessage() for record in caplog.records)
+    assert "symbol=EURUSD" in messages
+    assert "action=BUY" in messages
+    assert "reason=confidence_below_min" in messages
+    assert "confidence=60.0" in messages
+    assert "risk_pct=0.5" in messages
+
+
 def test_signal_rejects_excessive_risk(client):
     resp = client.post("/signal", json=_buy(risk_percent=2.0), headers=HEADERS)
     assert resp.status_code == 400
     assert resp.json()["status"] == "rejected"
     assert resp.json()["reason"] == "risk_above_max"
+
+
+def test_signal_rejects_invalid_action_at_schema_boundary(client):
+    resp = client.post("/signal", json=_buy(action="WAIT"), headers=HEADERS)
+    assert resp.status_code == 422
 
 
 def test_signal_rejects_invalid_sl_tp(client):

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Badge } from "../components/shared/Badge";
 import { Card } from "../components/shared/Card";
 import { Drawer } from "../components/shared/Drawer";
 import { Table } from "../components/shared/Table";
+import { useMellySignals } from "../hooks/useMellySignals";
 import { useSignalDecisions } from "../hooks/useSignalDecisions";
 import { useSignals } from "../hooks/useSignals";
 import { apiGet } from "../lib/api";
@@ -17,6 +18,7 @@ import type {
   SignalDetail,
   SignalReasoning,
 } from "../types/api";
+import type { Action, SignalSummary as MellySignalSummary } from "../types/melly";
 
 function decisionTone(
   decision: DecisionType,
@@ -105,6 +107,20 @@ function formatOptional(value: number | null | undefined) {
   return value == null ? "-" : value.toString();
 }
 
+function actionTone(action: Action): "green" | "red" | "amber" {
+  if (action === "BUY") return "green";
+  if (action === "SELL") return "red";
+  return "amber";
+}
+
+function statusTone(status: string): "green" | "red" | "muted" {
+  if (status === "accepted") return "green";
+  if (status === "rejected") return "red";
+  return "muted";
+}
+
+type MellyStatusFilter = "" | "accepted" | "rejected";
+
 export function SignalsPage() {
   const { data, loading, error } = useSignals();
   const {
@@ -116,6 +132,23 @@ export function SignalsPage() {
   const setSelectedSignalId = useUiStore((state) => state.setSelectedSignalId);
   const [detail, setDetail] = useState<SignalDetail | null>(null);
   const [reasoning, setReasoning] = useState<SignalReasoning | null>(null);
+
+  const [mellySymbol, setMellySymbol] = useState("");
+  const [mellyStatus, setMellyStatus] = useState<MellyStatusFilter>("");
+  const trimmedSymbol = mellySymbol.trim();
+  const {
+    data: mellySignals,
+    loading: mellyLoading,
+    error: mellyError,
+  } = useMellySignals({
+    symbol: trimmedSymbol === "" ? undefined : trimmedSymbol,
+    status: mellyStatus === "" ? undefined : mellyStatus,
+    limit: 50,
+  });
+  const mellyRows = useMemo<MellySignalSummary[]>(
+    () => mellySignals ?? [],
+    [mellySignals],
+  );
 
   useEffect(() => {
     if (!selectedSignalId) {
@@ -224,6 +257,116 @@ export function SignalsPage() {
           ) : null}
           {decisionsData ? (
             <SignalDecisionRows records={decisionsData.decisions} />
+          ) : null}
+        </Card>
+
+        <Card
+          title="API Signal History"
+          right={
+            <Badge tone="muted">
+              {mellyRows.length} entries · read-only
+            </Badge>
+          }
+        >
+          <div className="dashboard-muted" style={{ marginBottom: "0.5rem" }}>
+            Sprint 1A signal records from the MellyTrade API (read-only,
+            confidence clamped to [33, 85]).
+          </div>
+          <div className="audit-feed-controls">
+            <label htmlFor="melly-symbol" className="dashboard-muted">
+              Symbol
+            </label>
+            <input
+              id="melly-symbol"
+              type="text"
+              placeholder="e.g. EURUSD"
+              value={mellySymbol}
+              onChange={(event) => setMellySymbol(event.target.value)}
+              maxLength={16}
+            />
+            <label htmlFor="melly-status" className="dashboard-muted">
+              Status
+            </label>
+            <select
+              id="melly-status"
+              value={mellyStatus}
+              onChange={(event) =>
+                setMellyStatus(event.target.value as MellyStatusFilter)
+              }
+            >
+              <option value="">All</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          {mellyLoading && !mellySignals ? (
+            <div className="state">Loading API signals...</div>
+          ) : null}
+          {mellyError && !mellySignals ? (
+            <div className="state error">{mellyError}</div>
+          ) : null}
+          {mellySignals && mellyRows.length === 0 ? (
+            <div className="state">No signals match this filter.</div>
+          ) : null}
+          {mellyRows.length > 0 ? (
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Symbol</th>
+                    <th>Action</th>
+                    <th>Conf</th>
+                    <th>Clamped</th>
+                    <th>Risk %</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                    <th>Mode</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mellyRows.map((row) => {
+                    const ts = new Date(row.created_at);
+                    const time = Number.isNaN(ts.getTime())
+                      ? row.created_at
+                      : ts.toLocaleString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        });
+                    const rowClass =
+                      row.status === "rejected" ? "signal-row-rejected" : undefined;
+                    return (
+                      <tr key={row.id} className={rowClass}>
+                        <td>{time}</td>
+                        <td>{row.symbol}</td>
+                        <td>
+                          <Badge tone={actionTone(row.action)}>{row.action}</Badge>
+                        </td>
+                        <td>{row.confidence.toFixed(1)}</td>
+                        <td>{row.confidence_clamped.toFixed(1)}</td>
+                        <td>{row.risk_pct.toFixed(2)}%</td>
+                        <td>
+                          <Badge tone={statusTone(row.status)}>{row.status}</Badge>
+                        </td>
+                        <td>{row.rejection_reason ?? row.reason ?? "-"}</td>
+                        <td>
+                          <Badge tone={row.dry_run ? "green" : "amber"}>
+                            {row.dry_run ? "dry-run" : "live"}
+                          </Badge>{" "}
+                          <Badge tone={row.read_only ? "green" : "amber"}>
+                            {row.read_only ? "read-only" : "writable"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           ) : null}
         </Card>
       </div>
