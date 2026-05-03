@@ -266,6 +266,20 @@ is a review-only dry-run state; it is not an order. Blocked filters are useful
 for debugging why signals stop at safety gates. Empty results are safe and
 expected when filters do not match any lifecycle records.
 
+### Export filtered lifecycle records
+
+The Signal Lifecycle panel includes browser-local export actions:
+
+- Export CSV
+- Export JSON
+
+Exports include only the currently filtered read-only lifecycle records already
+loaded in the dashboard. The download is generated in the browser; the backend
+does not write files, persist exports, or create server-side artifacts. Exported
+data is for debugging and observability only. Export actions do not place orders,
+call broker actions, or call MT5 execution. `dry_run_allowed` still does not mean
+an order was placed.
+
 Safety invariants:
 
 - GET-only endpoint

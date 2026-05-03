@@ -1092,6 +1092,49 @@ input {
   margin-bottom: 0.75rem;
 }
 
+.signal-lifecycle-export {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: rgba(13, 17, 23, 0.18);
+}
+
+.signal-lifecycle-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.signal-lifecycle-export-actions button {
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  padding: 0.35rem 0.65rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.signal-lifecycle-export-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.signal-lifecycle-export-actions button:not(:disabled):hover {
+  border-color: var(--accent);
+}
+
 .signal-lifecycle-record {
   border: 1px solid var(--border-subtle);
   border-radius: 8px;

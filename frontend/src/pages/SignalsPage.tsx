@@ -377,6 +377,13 @@ export function SignalsPage() {
           {lifecycleData ? (
             <SignalLifecyclePanel
               records={lifecycleData.lifecycle}
+              generatedAt={lifecycleData.generated_at}
+              filters={{
+                symbol: lifecycleSymbol.trim(),
+                decision: effectiveLifecycleDecision,
+                riskStatus: lifecycleRiskStatus,
+                blockedOnly: lifecycleBlockedOnly,
+              }}
               hasActiveFilters={
                 lifecycleSymbol.trim() !== "" ||
                 effectiveLifecycleDecision !== "" ||
