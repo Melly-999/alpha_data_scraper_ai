@@ -217,6 +217,21 @@ Filter by symbol:
 Invoke-RestMethod "http://127.0.0.1:8001/api/signals/decisions?symbol=AAPL"
 ```
 
+Filter decision history:
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8001/api/signals/decisions?decision=blocked"
+Invoke-RestMethod "http://127.0.0.1:8001/api/signals/decisions?risk_status=pass"
+Invoke-RestMethod "http://127.0.0.1:8001/api/signals/decisions?direction=BUY"
+Invoke-RestMethod "http://127.0.0.1:8001/api/signals/decisions?symbol=AAPL&decision=blocked"
+```
+
+Decision history filters are read-only GET query parameters. They do not
+trigger execution, connect to a broker, place orders, or call MT5 execution.
+`dry_run_allowed` is a review-only dry-run state; it is not an order. Blocked
+filters help debug why decisions stopped. Empty results are safe and expected
+when filters do not match any dry-run decision records.
+
 Safety invariants:
 
 - GET-only — no mutation, no order placement, no broker connection, no MT5 execution

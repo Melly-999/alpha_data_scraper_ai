@@ -4,6 +4,7 @@ import { Badge } from "../components/shared/Badge";
 import { Card } from "../components/shared/Card";
 import { Drawer } from "../components/shared/Drawer";
 import { Table } from "../components/shared/Table";
+import { SignalDecisionHistoryPanel } from "../components/signals/SignalDecisionHistoryPanel";
 import { SignalLifecyclePanel } from "../components/signals/SignalLifecyclePanel";
 import { useMellySignals } from "../hooks/useMellySignals";
 import { useSignalDecisions } from "../hooks/useSignalDecisions";
@@ -16,84 +17,10 @@ import type {
   DecisionRiskStatus,
   DecisionType,
   Direction,
-  SignalDecisionRecord,
   SignalDetail,
   SignalReasoning,
 } from "../types/api";
 import type { Action, SignalSummary as MellySignalSummary } from "../types/melly";
-
-function decisionTone(
-  decision: DecisionType,
-): "green" | "red" | "amber" | "muted" {
-  if (decision === "dry_run_allowed") return "green";
-  if (decision === "blocked") return "red";
-  if (decision === "watch_only") return "amber";
-  return "muted";
-}
-
-function riskStatusTone(
-  status: DecisionRiskStatus,
-): "green" | "red" | "amber" | "muted" {
-  if (status === "pass") return "green";
-  if (status === "blocked") return "red";
-  if (status === "warn") return "amber";
-  return "muted";
-}
-
-function decisionDirectionTone(
-  direction: DecisionDirection,
-): "green" | "red" | "amber" {
-  if (direction === "BUY") return "green";
-  if (direction === "SELL") return "red";
-  return "amber";
-}
-
-function SignalDecisionRows({ records }: { records: SignalDecisionRecord[] }) {
-  return (
-    <Table
-      columns={[
-        { key: "symbol", label: "Symbol", render: (row) => row.symbol },
-        {
-          key: "direction",
-          label: "Dir",
-          render: (row) => (
-            <Badge tone={decisionDirectionTone(row.direction)}>
-              {row.direction}
-            </Badge>
-          ),
-        },
-        {
-          key: "confidence",
-          label: "Conf",
-          render: (row) => `${Math.round(row.confidence * 100)}%`,
-        },
-        { key: "strategy", label: "Strategy", render: (row) => row.strategy },
-        {
-          key: "risk_status",
-          label: "Risk",
-          render: (row) => (
-            <Badge tone={riskStatusTone(row.risk_status)}>
-              {row.risk_status}
-            </Badge>
-          ),
-        },
-        {
-          key: "decision",
-          label: "Decision",
-          render: (row) => (
-            <Badge tone={decisionTone(row.decision)}>{row.decision}</Badge>
-          ),
-        },
-        {
-          key: "blocked_reason",
-          label: "Reason",
-          render: (row) => row.blocked_reason ?? "-",
-        },
-      ]}
-      rows={records}
-    />
-  );
-}
 
 function directionTone(direction: Direction): "green" | "red" | "amber" {
   if (direction === "BUY") {
@@ -122,8 +49,26 @@ function statusTone(status: string): "green" | "red" | "muted" {
 }
 
 type MellyStatusFilter = "" | "accepted" | "rejected";
+type DecisionHistoryDecisionFilter = DecisionType | "";
+type DecisionHistoryRiskStatusFilter = DecisionRiskStatus | "";
+type DecisionHistoryDirectionFilter = DecisionDirection | "";
 type LifecycleDecisionFilter = DecisionType | "";
 type LifecycleRiskStatusFilter = DecisionRiskStatus | "";
+
+function formatDecisionHistoryFilterSummary(
+  symbol: string,
+  decision: DecisionHistoryDecisionFilter,
+  riskStatus: DecisionHistoryRiskStatusFilter,
+  direction: DecisionHistoryDirectionFilter,
+) {
+  const parts = [];
+  const trimmed = symbol.trim();
+  if (trimmed !== "") parts.push(`symbol ${trimmed.toUpperCase()}`);
+  if (decision !== "") parts.push(`decision ${decision}`);
+  if (riskStatus !== "") parts.push(`risk ${riskStatus}`);
+  if (direction !== "") parts.push(`direction ${direction}`);
+  return parts.length === 0 ? "All dry-run decision records" : parts.join(" · ");
+}
 
 function formatLifecycleFilterSummary(
   symbol: string,
@@ -140,11 +85,26 @@ function formatLifecycleFilterSummary(
 
 export function SignalsPage() {
   const { data, loading, error } = useSignals();
+  const [decisionSymbol, setDecisionSymbol] = useState("");
+  const [decisionFilter, setDecisionFilter] =
+    useState<DecisionHistoryDecisionFilter>("");
+  const [decisionRiskStatus, setDecisionRiskStatus] =
+    useState<DecisionHistoryRiskStatusFilter>("");
+  const [decisionDirection, setDecisionDirection] =
+    useState<DecisionHistoryDirectionFilter>("");
+  const [decisionBlockedOnly, setDecisionBlockedOnly] = useState(false);
+  const effectiveDecisionFilter = decisionBlockedOnly ? "blocked" : decisionFilter;
   const {
     data: decisionsData,
     loading: decisionsLoading,
     error: decisionsError,
-  } = useSignalDecisions(50);
+  } = useSignalDecisions({
+    limit: 50,
+    symbol: decisionSymbol,
+    decision: effectiveDecisionFilter,
+    riskStatus: decisionRiskStatus,
+    direction: decisionDirection,
+  });
   const [lifecycleSymbol, setLifecycleSymbol] = useState("");
   const [lifecycleDecision, setLifecycleDecision] =
     useState<LifecycleDecisionFilter>("");
@@ -285,6 +245,86 @@ export function SignalsPage() {
           <div className="dashboard-muted" style={{ marginBottom: "0.5rem" }}>
             Read-only log of dry-run signal decisions. No orders placed.
           </div>
+          <div className="signal-lifecycle-controls">
+            <label>
+              <span>Symbol</span>
+              <input
+                type="text"
+                placeholder="e.g. AAPL"
+                value={decisionSymbol}
+                onChange={(event) => setDecisionSymbol(event.target.value)}
+                maxLength={16}
+              />
+            </label>
+            <label>
+              <span>Decision</span>
+              <select
+                value={effectiveDecisionFilter}
+                disabled={decisionBlockedOnly}
+                onChange={(event) =>
+                  setDecisionFilter(
+                    event.target.value as DecisionHistoryDecisionFilter,
+                  )
+                }
+              >
+                <option value="">All</option>
+                <option value="dry_run_allowed">dry_run_allowed</option>
+                <option value="blocked">blocked</option>
+                <option value="watch_only">watch_only</option>
+                <option value="no_action">no_action</option>
+              </select>
+            </label>
+            <label>
+              <span>Risk status</span>
+              <select
+                value={decisionRiskStatus}
+                onChange={(event) =>
+                  setDecisionRiskStatus(
+                    event.target.value as DecisionHistoryRiskStatusFilter,
+                  )
+                }
+              >
+                <option value="">All</option>
+                <option value="pass">pass</option>
+                <option value="warn">warn</option>
+                <option value="blocked">blocked</option>
+                <option value="unknown">unknown</option>
+              </select>
+            </label>
+            <label>
+              <span>Direction</span>
+              <select
+                value={decisionDirection}
+                onChange={(event) =>
+                  setDecisionDirection(
+                    event.target.value as DecisionHistoryDirectionFilter,
+                  )
+                }
+              >
+                <option value="">All</option>
+                <option value="BUY">BUY</option>
+                <option value="SELL">SELL</option>
+                <option value="HOLD">HOLD</option>
+                <option value="UNKNOWN">UNKNOWN</option>
+              </select>
+            </label>
+            <label className="signal-lifecycle-toggle">
+              <input
+                type="checkbox"
+                checked={decisionBlockedOnly}
+                onChange={(event) => setDecisionBlockedOnly(event.target.checked)}
+              />
+              <span>Show blocked only</span>
+            </label>
+          </div>
+          <div className="signal-lifecycle-summary">
+            {formatDecisionHistoryFilterSummary(
+              decisionSymbol,
+              effectiveDecisionFilter,
+              decisionRiskStatus,
+              decisionDirection,
+            )}
+          </div>
           {decisionsLoading && !decisionsData ? (
             <div className="state">Loading decision history...</div>
           ) : null}
@@ -292,7 +332,15 @@ export function SignalsPage() {
             <div className="state error">{decisionsError}</div>
           ) : null}
           {decisionsData ? (
-            <SignalDecisionRows records={decisionsData.decisions} />
+            <SignalDecisionHistoryPanel
+              records={decisionsData.decisions}
+              hasActiveFilters={
+                decisionSymbol.trim() !== "" ||
+                effectiveDecisionFilter !== "" ||
+                decisionRiskStatus !== "" ||
+                decisionDirection !== ""
+              }
+            />
           ) : null}
         </Card>
 

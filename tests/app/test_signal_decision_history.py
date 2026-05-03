@@ -114,6 +114,84 @@ def test_signal_decisions_symbol_filter_unknown(client) -> None:
     assert payload["decisions"] == []
 
 
+def test_signal_decisions_decision_filter(client) -> None:
+    response = client.get("/api/signals/decisions?decision=blocked")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["decisions"]
+    assert all(rec["decision"] == "blocked" for rec in payload["decisions"])
+    assert payload["total"] == len(payload["decisions"])
+
+
+def test_signal_decisions_risk_status_filter(client) -> None:
+    response = client.get("/api/signals/decisions?risk_status=pass")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["decisions"]
+    assert all(rec["risk_status"] == "pass" for rec in payload["decisions"])
+    assert payload["total"] == len(payload["decisions"])
+
+
+def test_signal_decisions_direction_filter(client) -> None:
+    response = client.get("/api/signals/decisions?direction=BUY")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["decisions"]
+    assert all(rec["direction"] == "BUY" for rec in payload["decisions"])
+    assert payload["total"] == len(payload["decisions"])
+
+
+def test_signal_decisions_symbol_and_decision_filter(client) -> None:
+    response = client.get("/api/signals/decisions?symbol=AAPL&decision=blocked")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["decisions"]
+    for rec in payload["decisions"]:
+        assert rec["symbol"] == "AAPL"
+        assert rec["decision"] == "blocked"
+    assert payload["total"] == len(payload["decisions"])
+
+
+def test_signal_decisions_unmatched_filters_safe_empty(client) -> None:
+    response = client.get("/api/signals/decisions?symbol=AAPL&decision=dry_run_allowed")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["dry_run"] is True
+    assert payload["auto_trade"] is False
+    assert payload["read_only"] is True
+    assert payload["total"] == 0
+    assert payload["decisions"] == []
+
+
+def test_signal_decisions_invalid_decision_rejected(client) -> None:
+    response = client.get("/api/signals/decisions?decision=execute")
+    assert response.status_code == 422
+
+
+def test_signal_decisions_invalid_risk_status_rejected(client) -> None:
+    response = client.get("/api/signals/decisions?risk_status=execute")
+    assert response.status_code == 422
+
+
+def test_signal_decisions_invalid_direction_rejected(client) -> None:
+    response = client.get("/api/signals/decisions?direction=TRADE")
+    assert response.status_code == 422
+
+
+def test_signal_decisions_filtered_records_safe(client) -> None:
+    payload = client.get("/api/signals/decisions?decision=dry_run_allowed").json()
+    assert payload["dry_run"] is True
+    assert payload["auto_trade"] is False
+    assert payload["read_only"] is True
+    for rec in payload["decisions"]:
+        assert rec["dry_run"] is True
+        assert rec["auto_trade"] is False
+        assert rec["read_only"] is True
+        assert rec["stop_loss_required"] is True
+        assert rec["take_profit_required"] is True
+        assert rec["max_risk_per_trade"] <= 0.01
+
+
 def test_signal_decisions_no_secrets(client) -> None:
     payload = client.get("/api/signals/decisions").json()
     raw = str(payload)
