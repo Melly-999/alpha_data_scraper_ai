@@ -4,6 +4,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.schemas.signal_decision import (
+    DecisionDirection,
+    DecisionType,
+    RiskStatus,
     SignalDecisionHistoryResponse,
     SignalDecisionRecord,
 )
@@ -165,6 +168,9 @@ class SignalDecisionHistoryService:
         *,
         limit: int = 50,
         symbol: str | None = None,
+        decision: DecisionType | None = None,
+        risk_status: RiskStatus | None = None,
+        direction: DecisionDirection | None = None,
     ) -> SignalDecisionHistoryResponse:
         bounded = max(_LIMIT_MIN, min(limit, _LIMIT_MAX))
         records = list(_SEED_DECISIONS)
@@ -172,6 +178,12 @@ class SignalDecisionHistoryService:
         if symbol is not None:
             upper = symbol.upper()
             records = [r for r in records if r.symbol.upper() == upper]
+        if decision is not None:
+            records = [r for r in records if r.decision == decision]
+        if risk_status is not None:
+            records = [r for r in records if r.risk_status == risk_status]
+        if direction is not None:
+            records = [r for r in records if r.direction == direction]
 
         paged = records[:bounded]
 

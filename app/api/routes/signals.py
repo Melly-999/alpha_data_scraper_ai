@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.api.deps import get_container
 from app.core.container import AppContainer
 from app.schemas.signal import SignalDetail, SignalReasoning, SignalSummary
-from app.schemas.signal_decision import SignalDecisionHistoryResponse
+from app.schemas.signal_decision import (
+    DecisionDirection,
+    DecisionType,
+    RiskStatus,
+    SignalDecisionHistoryResponse,
+)
 from app.schemas.signal_lifecycle import (
     LifecycleDecision,
     LifecycleRiskStatus,
@@ -31,6 +36,9 @@ def list_signals(
 def signal_decisions(
     limit: int = Query(default=50, ge=1, le=200),
     symbol: str | None = Query(default=None),
+    decision: DecisionType | None = Query(default=None),
+    risk_status: RiskStatus | None = Query(default=None),
+    direction: DecisionDirection | None = Query(default=None),
 ) -> SignalDecisionHistoryResponse:
     """Read-only signal decision history.
 
@@ -38,7 +46,13 @@ def signal_decisions(
     signal: blocked, watch-only, or dry-run-allowed. GET-only. No mutation,
     no order placement, no broker connection.
     """
-    return _decision_service.list_decisions(limit=limit, symbol=symbol)
+    return _decision_service.list_decisions(
+        limit=limit,
+        symbol=symbol,
+        decision=decision,
+        risk_status=risk_status,
+        direction=direction,
+    )
 
 
 @router.get("/signals/lifecycle", response_model=SignalLifecycleResponse)
