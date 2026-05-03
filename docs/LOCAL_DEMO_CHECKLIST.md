@@ -89,6 +89,16 @@ Expected:
 .\scripts\start_frontend.ps1
 ```
 
+For the local workstation demo, `start_frontend.ps1` sets
+`VITE_API_BASE_URL=http://127.0.0.1:8001/api` when the variable is not already
+set. To run Vite manually with the same backend:
+
+```powershell
+$env:VITE_API_BASE_URL='http://127.0.0.1:8001/api'
+cd frontend
+npm run dev
+```
+
 Expected:
 
 - frontend starts on `127.0.0.1:5173`
