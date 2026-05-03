@@ -280,6 +280,15 @@ data is for debugging and observability only. Export actions do not place orders
 call broker actions, or call MT5 execution. `dry_run_allowed` still does not mean
 an order was placed.
 
+### Visual summary
+
+The Signal Lifecycle panel computes a compact visual summary in the browser from
+the currently filtered lifecycle records. It shows counts by decision and risk
+status, a blocked ratio, and average confidence. The blocked ratio helps identify
+how many signals are stopped by safety or risk checks. Average confidence is
+informational only. The summary does not trigger execution, mutate backend state,
+or place orders.
+
 Safety invariants:
 
 - GET-only endpoint
