@@ -1034,6 +1034,70 @@ input {
   color: #f8a09b;
 }
 
+.signal-lifecycle-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.signal-lifecycle-record {
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: rgba(13, 17, 23, 0.22);
+}
+
+.signal-lifecycle-record-header,
+.signal-lifecycle-footer,
+.signal-lifecycle-step-top,
+.signal-lifecycle-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.signal-lifecycle-record-header {
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.signal-lifecycle-steps {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signal-lifecycle-steps li {
+  border-left: 2px solid var(--border);
+  padding-left: 0.75rem;
+}
+
+.signal-lifecycle-step-top {
+  justify-content: space-between;
+}
+
+.signal-lifecycle-step-top span {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.signal-lifecycle-steps p {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.signal-lifecycle-footer {
+  margin-top: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
 .alert-center-controls {
   display: flex;
   flex-wrap: wrap;

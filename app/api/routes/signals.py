@@ -6,11 +6,14 @@ from app.api.deps import get_container
 from app.core.container import AppContainer
 from app.schemas.signal import SignalDetail, SignalReasoning, SignalSummary
 from app.schemas.signal_decision import SignalDecisionHistoryResponse
+from app.schemas.signal_lifecycle import SignalLifecycleResponse
 from app.services.signal_decision_history_service import SignalDecisionHistoryService
+from app.services.signal_lifecycle_service import SignalLifecycleService
 
 router = APIRouter(tags=["signals"])
 
 _decision_service = SignalDecisionHistoryService()
+_lifecycle_service = SignalLifecycleService(_decision_service)
 
 
 @router.get("/signals", response_model=list[SignalSummary])
@@ -32,6 +35,20 @@ def signal_decisions(
     no order placement, no broker connection.
     """
     return _decision_service.list_decisions(limit=limit, symbol=symbol)
+
+
+@router.get("/signals/lifecycle", response_model=SignalLifecycleResponse)
+def signal_lifecycle(
+    limit: int = Query(default=50, ge=1, le=200),
+    symbol: str | None = Query(default=None),
+) -> SignalLifecycleResponse:
+    """Read-only signal lifecycle view.
+
+    Explains the path from signal receipt through confidence, risk, broker
+    safety, dry-run decision, and audit correlation. GET-only. No mutation,
+    no broker connection, no MT5 execution, and no order placement.
+    """
+    return _lifecycle_service.list_lifecycle(limit=limit, symbol=symbol)
 
 
 @router.get("/signals/{signal_id}", response_model=SignalDetail)

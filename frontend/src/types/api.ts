@@ -372,3 +372,60 @@ export interface SignalDecisionHistoryResponse {
   degraded: boolean;
   fallback: boolean;
 }
+
+export type SignalLifecycleStepKey =
+  | "signal_received"
+  | "confidence_checked"
+  | "risk_checked"
+  | "broker_safety_checked"
+  | "dry_run_decision"
+  | "blocked_or_allowed_reason"
+  | "audit_event_reference";
+export type SignalLifecycleStepStatus =
+  | "received"
+  | "passed"
+  | "blocked"
+  | "allowed"
+  | "recorded"
+  | "skipped";
+
+export interface SignalLifecycleStep {
+  key: SignalLifecycleStepKey;
+  label: string;
+  status: SignalLifecycleStepStatus;
+  detail: string;
+  audit_event_id?: string | null;
+}
+
+export interface SignalLifecycleRecord {
+  id: string;
+  signal_id: string;
+  decision_id: string;
+  audit_event_id: string;
+  timestamp: string;
+  symbol: string;
+  direction: DecisionDirection;
+  confidence: number;
+  decision: DecisionType;
+  blocked_reason?: string | null;
+  dry_run: boolean;
+  auto_trade: boolean;
+  read_only: boolean;
+  supports_live_orders: boolean;
+  dry_run_allowed: boolean;
+  order_placed: boolean;
+  max_risk_per_trade: number;
+  steps: SignalLifecycleStep[];
+}
+
+export interface SignalLifecycleResponse {
+  dry_run: boolean;
+  auto_trade: boolean;
+  read_only: boolean;
+  supports_live_orders: boolean;
+  total: number;
+  lifecycle: SignalLifecycleRecord[];
+  generated_at: string;
+  degraded: boolean;
+  fallback: boolean;
+}

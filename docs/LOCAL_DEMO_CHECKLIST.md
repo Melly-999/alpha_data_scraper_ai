@@ -67,8 +67,8 @@ python -m pytest tests/app/test_api_contracts.py tests/app/test_broker_routes.py
 
 Expected:
 
-- 36 passed or current equivalent
-- no blockers
+- current app test suite passes
+- targeted backend tests pass
 
 ## 4. Start backend
 
@@ -188,7 +188,7 @@ If configuring TWS later:
 Smoke check:
 
 ```powershell
-curl http://localhost:8000/api/signals/decisions
+Invoke-RestMethod http://127.0.0.1:8001/api/signals/decisions
 ```
 
 Expected response fields:
@@ -204,24 +204,70 @@ Each decision record includes `dry_run=true`, `auto_trade=false`, `read_only=tru
 Filter by symbol:
 
 ```powershell
-curl "http://localhost:8000/api/signals/decisions?symbol=AAPL"
+Invoke-RestMethod "http://127.0.0.1:8001/api/signals/decisions?symbol=AAPL"
 ```
 
 Safety invariants:
 
-- GET-only — no mutation, no order placement, no broker connection
+- GET-only — no mutation, no order placement, no broker connection, no MT5 execution
 - All records have `dry_run=true` and `auto_trade=false`
 - `max_risk_per_trade` is capped at `0.01` (1%)
 - Decision values: `dry_run_allowed`, `blocked`, `watch_only`, `no_action`
 
 The Signals page in the dashboard shows the Decision History section below the signal table.
 
-## 12. Known good checkpoint
+## 12. Signal Lifecycle View
+
+`GET /api/signals/lifecycle` returns a read-only explanation of each signal path:
+
+```text
+signal received
+-> confidence checked
+-> risk checked
+-> broker safety checked
+-> dry-run decision
+-> blocked/allowed reason
+-> audit event reference
+```
+
+Smoke check:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8001/api/signals/lifecycle
+```
+
+Expected response fields:
+
+- `dry_run: true`
+- `auto_trade: false`
+- `read_only: true`
+- `supports_live_orders: false`
+- `lifecycle`: array of signal lifecycle records
+- every record has `order_placed: false`
+- every record has `max_risk_per_trade <= 0.01`
+
+Filter by symbol:
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8001/api/signals/lifecycle?symbol=AAPL"
+```
+
+Safety invariants:
+
+- GET-only endpoint
+- no mutation, no order placement, no broker connection, no MT5 execution
+- `dry_run_allowed` means review-only simulation; it does not mean an order was placed
+- audit event references are for observability only and do not imply execution
+
+The Signals page in the dashboard shows the Signal Lifecycle section below Decision History.
+
+## 13. Known good checkpoint
 
 Current verified state:
 
-- frontend build passed
-- backend tests passed
+- frontend build passes with 0 TypeScript errors
+- current app test suite passes
+- targeted backend tests pass
 - smoke passed
 - dashboard HTTP 200
 - repo clean and synced
