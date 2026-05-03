@@ -216,7 +216,52 @@ Safety invariants:
 
 The Signals page in the dashboard shows the Decision History section below the signal table.
 
-## 12. Known good checkpoint
+## 12. Signal Lifecycle View
+
+`GET /api/signals/lifecycle` returns a read-only explanation of each signal path:
+
+```text
+signal received
+-> confidence checked
+-> risk checked
+-> broker safety checked
+-> dry-run decision
+-> blocked/allowed reason
+-> audit event reference
+```
+
+Smoke check:
+
+```powershell
+curl http://localhost:8000/api/signals/lifecycle
+```
+
+Expected response fields:
+
+- `dry_run: true`
+- `auto_trade: false`
+- `read_only: true`
+- `supports_live_orders: false`
+- `lifecycle`: array of signal lifecycle records
+- every record has `order_placed: false`
+- every record has `max_risk_per_trade <= 0.01`
+
+Filter by symbol:
+
+```powershell
+curl "http://localhost:8000/api/signals/lifecycle?symbol=AAPL"
+```
+
+Safety invariants:
+
+- GET-only endpoint
+- no mutation, no order placement, no broker connection, no MT5 execution
+- `dry_run_allowed` means review-only simulation; it does not mean an order was placed
+- audit event IDs are references for observability only
+
+The Signals page in the dashboard shows the Signal Lifecycle section below Decision History.
+
+## 13. Known good checkpoint
 
 Current verified state:
 

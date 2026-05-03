@@ -4,8 +4,10 @@ import { Badge } from "../components/shared/Badge";
 import { Card } from "../components/shared/Card";
 import { Drawer } from "../components/shared/Drawer";
 import { Table } from "../components/shared/Table";
+import { SignalLifecyclePanel } from "../components/signals/SignalLifecyclePanel";
 import { useMellySignals } from "../hooks/useMellySignals";
 import { useSignalDecisions } from "../hooks/useSignalDecisions";
+import { useSignalLifecycle } from "../hooks/useSignalLifecycle";
 import { useSignals } from "../hooks/useSignals";
 import { apiGet } from "../lib/api";
 import { useUiStore } from "../stores/useUiStore";
@@ -128,6 +130,11 @@ export function SignalsPage() {
     loading: decisionsLoading,
     error: decisionsError,
   } = useSignalDecisions(50);
+  const {
+    data: lifecycleData,
+    loading: lifecycleLoading,
+    error: lifecycleError,
+  } = useSignalLifecycle(50);
   const selectedSignalId = useUiStore((state) => state.selectedSignalId);
   const setSelectedSignalId = useUiStore((state) => state.setSelectedSignalId);
   const [detail, setDetail] = useState<SignalDetail | null>(null);
@@ -257,6 +264,29 @@ export function SignalsPage() {
           ) : null}
           {decisionsData ? (
             <SignalDecisionRows records={decisionsData.decisions} />
+          ) : null}
+        </Card>
+
+        <Card
+          title="Signal Lifecycle"
+          right={
+            <Badge tone="muted">
+              {lifecycleData ? `${lifecycleData.total} paths` : "-"} · GET-only
+            </Badge>
+          }
+        >
+          <div className="dashboard-muted" style={{ marginBottom: "0.5rem" }}>
+            Read-only signal path from receipt through safety checks, dry-run
+            outcome, and audit correlation. Dry-run allowed is not an order.
+          </div>
+          {lifecycleLoading && !lifecycleData ? (
+            <div className="state">Loading signal lifecycle...</div>
+          ) : null}
+          {lifecycleError && !lifecycleData ? (
+            <div className="state error">{lifecycleError}</div>
+          ) : null}
+          {lifecycleData ? (
+            <SignalLifecyclePanel records={lifecycleData.lifecycle} />
           ) : null}
         </Card>
 
