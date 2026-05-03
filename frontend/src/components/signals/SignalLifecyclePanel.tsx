@@ -28,11 +28,19 @@ function formatTime(value: string) {
 
 export function SignalLifecyclePanel({
   records,
+  hasActiveFilters = false,
 }: {
   records: SignalLifecycleRecord[];
+  hasActiveFilters?: boolean;
 }) {
   if (records.length === 0) {
-    return <div className="state">No lifecycle records available.</div>;
+    return (
+      <div className="state">
+        {hasActiveFilters
+          ? "No lifecycle records match the selected filters."
+          : "No lifecycle records available."}
+      </div>
+    );
   }
 
   return (
@@ -51,6 +59,7 @@ export function SignalLifecyclePanel({
                 {record.decision}
               </Badge>
               <Badge tone="muted">{Math.round(record.confidence * 100)}%</Badge>
+              <Badge tone="muted">{record.risk_status}</Badge>
               <Badge tone="green">dry-run</Badge>
             </div>
           </header>
@@ -70,6 +79,8 @@ export function SignalLifecyclePanel({
           <footer className="signal-lifecycle-footer">
             <span>Decision {record.decision_id}</span>
             <span>Audit {record.audit_event_id}</span>
+            <span>Dry-run explanation only. No order was placed.</span>
+            <span>Live orders remain blocked.</span>
             <span>{record.order_placed ? "order placed" : "no order placed"}</span>
           </footer>
         </article>

@@ -122,6 +122,21 @@ function statusTone(status: string): "green" | "red" | "muted" {
 }
 
 type MellyStatusFilter = "" | "accepted" | "rejected";
+type LifecycleDecisionFilter = DecisionType | "";
+type LifecycleRiskStatusFilter = DecisionRiskStatus | "";
+
+function formatLifecycleFilterSummary(
+  symbol: string,
+  decision: LifecycleDecisionFilter,
+  riskStatus: LifecycleRiskStatusFilter,
+) {
+  const parts = [];
+  const trimmed = symbol.trim();
+  if (trimmed !== "") parts.push(`symbol ${trimmed.toUpperCase()}`);
+  if (decision !== "") parts.push(`decision ${decision}`);
+  if (riskStatus !== "") parts.push(`risk ${riskStatus}`);
+  return parts.length === 0 ? "All lifecycle records" : parts.join(" · ");
+}
 
 export function SignalsPage() {
   const { data, loading, error } = useSignals();
@@ -130,11 +145,25 @@ export function SignalsPage() {
     loading: decisionsLoading,
     error: decisionsError,
   } = useSignalDecisions(50);
+  const [lifecycleSymbol, setLifecycleSymbol] = useState("");
+  const [lifecycleDecision, setLifecycleDecision] =
+    useState<LifecycleDecisionFilter>("");
+  const [lifecycleRiskStatus, setLifecycleRiskStatus] =
+    useState<LifecycleRiskStatusFilter>("");
+  const [lifecycleBlockedOnly, setLifecycleBlockedOnly] = useState(false);
+  const effectiveLifecycleDecision = lifecycleBlockedOnly
+    ? "blocked"
+    : lifecycleDecision;
   const {
     data: lifecycleData,
     loading: lifecycleLoading,
     error: lifecycleError,
-  } = useSignalLifecycle(50);
+  } = useSignalLifecycle({
+    limit: 20,
+    symbol: lifecycleSymbol,
+    decision: effectiveLifecycleDecision,
+    riskStatus: lifecycleRiskStatus,
+  });
   const selectedSignalId = useUiStore((state) => state.selectedSignalId);
   const setSelectedSignalId = useUiStore((state) => state.setSelectedSignalId);
   const [detail, setDetail] = useState<SignalDetail | null>(null);
@@ -279,6 +308,66 @@ export function SignalsPage() {
             Read-only signal path from receipt through safety checks, dry-run
             outcome, and audit correlation. Dry-run allowed is not an order.
           </div>
+          <div className="signal-lifecycle-controls">
+            <label>
+              <span>Symbol</span>
+              <input
+                type="text"
+                placeholder="e.g. AAPL"
+                value={lifecycleSymbol}
+                onChange={(event) => setLifecycleSymbol(event.target.value)}
+                maxLength={16}
+              />
+            </label>
+            <label>
+              <span>Decision</span>
+              <select
+                value={effectiveLifecycleDecision}
+                disabled={lifecycleBlockedOnly}
+                onChange={(event) =>
+                  setLifecycleDecision(event.target.value as LifecycleDecisionFilter)
+                }
+              >
+                <option value="">All</option>
+                <option value="dry_run_allowed">dry_run_allowed</option>
+                <option value="blocked">blocked</option>
+                <option value="watch_only">watch_only</option>
+                <option value="no_action">no_action</option>
+              </select>
+            </label>
+            <label>
+              <span>Risk status</span>
+              <select
+                value={lifecycleRiskStatus}
+                onChange={(event) =>
+                  setLifecycleRiskStatus(
+                    event.target.value as LifecycleRiskStatusFilter,
+                  )
+                }
+              >
+                <option value="">All</option>
+                <option value="pass">pass</option>
+                <option value="warn">warn</option>
+                <option value="blocked">blocked</option>
+                <option value="unknown">unknown</option>
+              </select>
+            </label>
+            <label className="signal-lifecycle-toggle">
+              <input
+                type="checkbox"
+                checked={lifecycleBlockedOnly}
+                onChange={(event) => setLifecycleBlockedOnly(event.target.checked)}
+              />
+              <span>Show blocked only</span>
+            </label>
+          </div>
+          <div className="signal-lifecycle-summary">
+            {formatLifecycleFilterSummary(
+              lifecycleSymbol,
+              effectiveLifecycleDecision,
+              lifecycleRiskStatus,
+            )}
+          </div>
           {lifecycleLoading && !lifecycleData ? (
             <div className="state">Loading signal lifecycle...</div>
           ) : null}
@@ -286,7 +375,14 @@ export function SignalsPage() {
             <div className="state error">{lifecycleError}</div>
           ) : null}
           {lifecycleData ? (
-            <SignalLifecyclePanel records={lifecycleData.lifecycle} />
+            <SignalLifecyclePanel
+              records={lifecycleData.lifecycle}
+              hasActiveFilters={
+                lifecycleSymbol.trim() !== "" ||
+                effectiveLifecycleDecision !== "" ||
+                lifecycleRiskStatus !== ""
+              }
+            />
           ) : null}
         </Card>
 
