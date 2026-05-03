@@ -232,6 +232,14 @@ trigger execution, connect to a broker, place orders, or call MT5 execution.
 filters help debug why decisions stopped. Empty results are safe and expected
 when filters do not match any dry-run decision records.
 
+### Export filtered dry-run decision records
+
+The Decision History section can export the currently filtered read-only dry-run
+decision records with `Export CSV` or `Export JSON`. Downloads are generated in
+the browser only; the backend does not write files, persist exports, place
+orders, or call MT5 execution. Exported data is for debugging and observability.
+`dry_run_allowed` still does not mean an order was placed.
+
 Safety invariants:
 
 - GET-only — no mutation, no order placement, no broker connection, no MT5 execution

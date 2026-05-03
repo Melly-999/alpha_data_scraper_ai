@@ -334,6 +334,14 @@ export function SignalsPage() {
           {decisionsData ? (
             <SignalDecisionHistoryPanel
               records={decisionsData.decisions}
+              generatedAt={decisionsData.generated_at}
+              filters={{
+                symbol: decisionSymbol,
+                decision: effectiveDecisionFilter,
+                riskStatus: decisionRiskStatus,
+                direction: decisionDirection,
+                blockedOnly: decisionBlockedOnly,
+              }}
               hasActiveFilters={
                 decisionSymbol.trim() !== "" ||
                 effectiveDecisionFilter !== "" ||
