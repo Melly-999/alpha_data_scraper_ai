@@ -1,4 +1,9 @@
 import { Badge } from "../shared/Badge";
+import {
+  exportSignalLifecycleCsv,
+  exportSignalLifecycleJson,
+  type SignalLifecycleExportFilters,
+} from "../../lib/exportLifecycle";
 import type {
   SignalLifecycleRecord,
   SignalLifecycleStepStatus,
@@ -29,62 +34,105 @@ function formatTime(value: string) {
 export function SignalLifecyclePanel({
   records,
   hasActiveFilters = false,
+  generatedAt,
+  filters,
 }: {
   records: SignalLifecycleRecord[];
   hasActiveFilters?: boolean;
+  generatedAt: string;
+  filters: SignalLifecycleExportFilters;
 }) {
+  const hasRecords = records.length > 0;
+
+  const exportOptions = {
+    generatedAt,
+    filters,
+  };
+
+  const exportActions = (
+    <div className="signal-lifecycle-export">
+      <div className="dashboard-muted">
+        Exports current read-only filtered lifecycle records. No orders are placed.
+      </div>
+      <div className="signal-lifecycle-export-actions">
+        <button
+          type="button"
+          disabled={!hasRecords}
+          onClick={() => exportSignalLifecycleCsv(records, exportOptions)}
+        >
+          Export CSV
+        </button>
+        <button
+          type="button"
+          disabled={!hasRecords}
+          onClick={() => exportSignalLifecycleJson(records, exportOptions)}
+        >
+          Export JSON
+        </button>
+      </div>
+    </div>
+  );
+
   if (records.length === 0) {
     return (
-      <div className="state">
-        {hasActiveFilters
-          ? "No lifecycle records match the selected filters."
-          : "No lifecycle records available."}
-      </div>
+      <>
+        {exportActions}
+        <div className="state">
+          {hasActiveFilters
+            ? "No lifecycle records match the selected filters."
+            : "No lifecycle records available."}
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="signal-lifecycle-list">
-      {records.map((record) => (
-        <article className="signal-lifecycle-record" key={record.id}>
-          <header className="signal-lifecycle-record-header">
-            <div>
-              <div className="card-kicker">{formatTime(record.timestamp)}</div>
-              <strong>
-                {record.symbol} {record.direction}
-              </strong>
-            </div>
-            <div className="signal-lifecycle-badges">
-              <Badge tone={record.decision === "dry_run_allowed" ? "green" : "amber"}>
-                {record.decision}
-              </Badge>
-              <Badge tone="muted">{Math.round(record.confidence * 100)}%</Badge>
-              <Badge tone="muted">{record.risk_status}</Badge>
-              <Badge tone="green">dry-run</Badge>
-            </div>
-          </header>
+    <>
+      {exportActions}
+      <div className="signal-lifecycle-list">
+        {records.map((record) => (
+          <article className="signal-lifecycle-record" key={record.id}>
+            <header className="signal-lifecycle-record-header">
+              <div>
+                <div className="card-kicker">{formatTime(record.timestamp)}</div>
+                <strong>
+                  {record.symbol} {record.direction}
+                </strong>
+              </div>
+              <div className="signal-lifecycle-badges">
+                <Badge
+                  tone={record.decision === "dry_run_allowed" ? "green" : "amber"}
+                >
+                  {record.decision}
+                </Badge>
+                <Badge tone="muted">{Math.round(record.confidence * 100)}%</Badge>
+                <Badge tone="muted">{record.risk_status}</Badge>
+                <Badge tone="green">dry-run</Badge>
+              </div>
+            </header>
 
-          <ol className="signal-lifecycle-steps">
-            {record.steps.map((step) => (
-              <li key={step.key}>
-                <div className="signal-lifecycle-step-top">
-                  <span>{step.label}</span>
-                  <Badge tone={statusTone(step.status)}>{step.status}</Badge>
-                </div>
-                <p>{step.detail}</p>
-              </li>
-            ))}
-          </ol>
+            <ol className="signal-lifecycle-steps">
+              {record.steps.map((step) => (
+                <li key={step.key}>
+                  <div className="signal-lifecycle-step-top">
+                    <span>{step.label}</span>
+                    <Badge tone={statusTone(step.status)}>{step.status}</Badge>
+                  </div>
+                  <p>{step.detail}</p>
+                </li>
+              ))}
+            </ol>
 
-          <footer className="signal-lifecycle-footer">
-            <span>Decision {record.decision_id}</span>
-            <span>Audit {record.audit_event_id}</span>
-            <span>Dry-run explanation only. No order was placed.</span>
-            <span>Live orders remain blocked.</span>
-            <span>{record.order_placed ? "order placed" : "no order placed"}</span>
-          </footer>
-        </article>
-      ))}
-    </div>
+            <footer className="signal-lifecycle-footer">
+              <span>Decision {record.decision_id}</span>
+              <span>Audit {record.audit_event_id}</span>
+              <span>Dry-run explanation only. No order was placed.</span>
+              <span>Live orders remain blocked.</span>
+              <span>{record.order_placed ? "order placed" : "no order placed"}</span>
+            </footer>
+          </article>
+        ))}
+      </div>
+    </>
   );
 }
