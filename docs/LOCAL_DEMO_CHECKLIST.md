@@ -252,6 +252,20 @@ Filter by symbol:
 Invoke-RestMethod "http://127.0.0.1:8001/api/signals/lifecycle?symbol=AAPL"
 ```
 
+Filter by decision or risk status:
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8001/api/signals/lifecycle?decision=blocked"
+Invoke-RestMethod "http://127.0.0.1:8001/api/signals/lifecycle?risk_status=pass"
+Invoke-RestMethod "http://127.0.0.1:8001/api/signals/lifecycle?symbol=AAPL&decision=blocked"
+```
+
+Filters are read-only GET query parameters. They do not trigger execution,
+connect to a broker, place orders, or call MT5 execution. `dry_run_allowed`
+is a review-only dry-run state; it is not an order. Blocked filters are useful
+for debugging why signals stop at safety gates. Empty results are safe and
+expected when filters do not match any lifecycle records.
+
 Safety invariants:
 
 - GET-only endpoint

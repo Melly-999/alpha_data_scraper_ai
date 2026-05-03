@@ -407,6 +407,7 @@ export interface SignalLifecycleRecord {
   direction: DecisionDirection;
   confidence: number;
   decision: DecisionType;
+  risk_status: DecisionRiskStatus;
   blocked_reason?: string | null;
   dry_run: boolean;
   auto_trade: boolean;

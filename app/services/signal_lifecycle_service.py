@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Literal
 
 from app.schemas.signal_decision import SignalDecisionRecord
 from app.schemas.signal_lifecycle import (
+    LifecycleDecision,
+    LifecycleRiskStatus,
     SignalLifecycleRecord,
     SignalLifecycleResponse,
     SignalLifecycleStep,
@@ -44,8 +47,12 @@ def _reason(record: SignalDecisionRecord) -> str:
 
 def _steps(record: SignalDecisionRecord) -> list[SignalLifecycleStep]:
     audit_id = _audit_event_id(record)
-    risk_status = "passed" if record.risk_status == "pass" else "blocked"
-    dry_run_status = "allowed" if record.decision == "dry_run_allowed" else "blocked"
+    risk_step_status: Literal["passed", "blocked"] = (
+        "passed" if record.risk_status == "pass" else "blocked"
+    )
+    dry_run_step_status: Literal["allowed", "blocked"] = (
+        "allowed" if record.decision == "dry_run_allowed" else "blocked"
+    )
     return [
         SignalLifecycleStep(
             key="signal_received",
@@ -62,7 +69,7 @@ def _steps(record: SignalDecisionRecord) -> list[SignalLifecycleStep]:
         SignalLifecycleStep(
             key="risk_checked",
             label="Risk checked",
-            status=risk_status,
+            status=risk_step_status,
             detail=(
                 f"Risk status is {record.risk_status}; max risk per trade remains "
                 f"{_MAX_RISK_PER_TRADE:.2%}."
@@ -77,7 +84,7 @@ def _steps(record: SignalDecisionRecord) -> list[SignalLifecycleStep]:
         SignalLifecycleStep(
             key="dry_run_decision",
             label="Dry-run decision",
-            status=dry_run_status,
+            status=dry_run_step_status,
             detail=(
                 "Dry-run allowed means review-only simulation; no order was placed."
                 if record.decision == "dry_run_allowed"
@@ -118,12 +125,22 @@ class SignalLifecycleService:
         *,
         limit: int = 50,
         symbol: str | None = None,
+        decision: LifecycleDecision | None = None,
+        risk_status: LifecycleRiskStatus | None = None,
     ) -> SignalLifecycleResponse:
-        bounded = max(_LIMIT_MIN, min(limit, _LIMIT_MAX))
         decisions = self._decision_service.list_decisions(
-            limit=bounded,
+            limit=_LIMIT_MAX,
             symbol=symbol,
         ).decisions
+        if decision is not None:
+            decisions = [record for record in decisions if record.decision == decision]
+        if risk_status is not None:
+            decisions = [
+                record for record in decisions if record.risk_status == risk_status
+            ]
+
+        bounded = max(_LIMIT_MIN, min(limit, _LIMIT_MAX))
+        decisions = decisions[:bounded]
         records = [
             SignalLifecycleRecord(
                 id=f"slc-{record.id}",
@@ -135,6 +152,7 @@ class SignalLifecycleService:
                 direction=record.direction,
                 confidence=record.confidence,
                 decision=record.decision,
+                risk_status=record.risk_status,
                 blocked_reason=record.blocked_reason,
                 dry_run=True,
                 auto_trade=False,

@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 LifecycleDecision = Literal["dry_run_allowed", "blocked", "watch_only", "no_action"]
 LifecycleDirection = Literal["BUY", "SELL", "HOLD", "UNKNOWN"]
+LifecycleRiskStatus = Literal["pass", "warn", "blocked", "unknown"]
 LifecycleStepKey = Literal[
     "signal_received",
     "confidence_checked",
@@ -48,6 +49,7 @@ class SignalLifecycleRecord(BaseModel):
     direction: LifecycleDirection
     confidence: float = Field(..., ge=0.0, le=1.0)
     decision: LifecycleDecision
+    risk_status: LifecycleRiskStatus
     blocked_reason: str | None = None
     dry_run: bool = True
     auto_trade: bool = False

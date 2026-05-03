@@ -1039,6 +1039,59 @@ input {
   gap: 0.8rem;
 }
 
+.signal-lifecycle-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: end;
+  margin-bottom: 0.75rem;
+}
+
+.signal-lifecycle-controls label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-secondary);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.signal-lifecycle-controls input,
+.signal-lifecycle-controls select {
+  min-width: 150px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  text-transform: none;
+}
+
+.signal-lifecycle-controls select:disabled {
+  opacity: 0.65;
+}
+
+.signal-lifecycle-toggle {
+  display: inline-flex !important;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  min-height: 34px;
+}
+
+.signal-lifecycle-toggle input {
+  min-width: 0;
+}
+
+.signal-lifecycle-summary {
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  margin-bottom: 0.75rem;
+}
+
 .signal-lifecycle-record {
   border: 1px solid var(--border-subtle);
   border-radius: 8px;

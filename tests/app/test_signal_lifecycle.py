@@ -104,6 +104,72 @@ def test_signal_lifecycle_high_limit_rejected(client) -> None:
     assert response.status_code == 422
 
 
+def test_signal_lifecycle_decision_filter(client) -> None:
+    response = client.get("/api/signals/lifecycle?decision=blocked")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["lifecycle"]
+    for record in payload["lifecycle"]:
+        assert record["decision"] == "blocked"
+
+
+def test_signal_lifecycle_risk_status_filter(client) -> None:
+    response = client.get("/api/signals/lifecycle?risk_status=pass")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["lifecycle"]
+    for record in payload["lifecycle"]:
+        assert record["risk_status"] == "pass"
+
+
+def test_signal_lifecycle_symbol_and_decision_filter(client) -> None:
+    response = client.get("/api/signals/lifecycle?symbol=AAPL&decision=blocked")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["lifecycle"]
+    for record in payload["lifecycle"]:
+        assert record["symbol"] == "AAPL"
+        assert record["decision"] == "blocked"
+
+
+def test_signal_lifecycle_unmatched_filters_safe_empty(client) -> None:
+    response = client.get("/api/signals/lifecycle?symbol=ZZZZZZ&decision=blocked")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["dry_run"] is True
+    assert payload["auto_trade"] is False
+    assert payload["read_only"] is True
+    assert payload["supports_live_orders"] is False
+    assert payload["total"] == 0
+    assert payload["lifecycle"] == []
+
+
+def test_signal_lifecycle_invalid_decision_rejected(client) -> None:
+    response = client.get("/api/signals/lifecycle?decision=execute")
+    assert response.status_code == 422
+
+
+def test_signal_lifecycle_invalid_risk_status_rejected(client) -> None:
+    response = client.get("/api/signals/lifecycle?risk_status=unsafe")
+    assert response.status_code == 422
+
+
+def test_signal_lifecycle_filtered_records_are_safe(client) -> None:
+    response = client.get("/api/signals/lifecycle?decision=dry_run_allowed")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["dry_run"] is True
+    assert payload["auto_trade"] is False
+    assert payload["read_only"] is True
+    for record in payload["lifecycle"]:
+        assert record["dry_run"] is True
+        assert record["auto_trade"] is False
+        assert record["read_only"] is True
+        assert record["supports_live_orders"] is False
+        assert record["order_placed"] is False
+        assert record["max_risk_per_trade"] <= 0.01
+
+
 def test_signal_lifecycle_is_get_only(client) -> None:
     routes = [
         route
