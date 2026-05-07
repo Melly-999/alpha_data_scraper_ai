@@ -14,6 +14,7 @@ import { ReportsPage } from "./pages/ReportsPage";
 import { RiskManagerPage } from "./pages/RiskManagerPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SignalsPage } from "./pages/SignalsPage";
+import { TerminalPage } from "./pages/TerminalPage";
 import { TradeBlotterPage } from "./pages/TradeBlotterPage";
 
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/mt5" element={<MT5BridgePage />} />
         <Route path="/logs" element={<LogsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/terminal" element={<TerminalPage />} />
       </Routes>
     </AppShell>
   );
