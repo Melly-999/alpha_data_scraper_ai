@@ -1,5 +1,10 @@
 import { Badge } from "../shared/Badge";
 import { Table } from "../shared/Table";
+import {
+  exportSignalDecisionsCsv,
+  exportSignalDecisionsJson,
+  type SignalDecisionExportFilters,
+} from "../../lib/exportSignalDecisions";
 import type {
   DecisionDirection,
   DecisionRiskStatus,
@@ -70,11 +75,46 @@ function summarizeDecisions(records: SignalDecisionRecord[]) {
 export function SignalDecisionHistoryPanel({
   records,
   hasActiveFilters = false,
+  generatedAt,
+  filters,
 }: {
   records: SignalDecisionRecord[];
   hasActiveFilters?: boolean;
+  generatedAt: string;
+  filters: SignalDecisionExportFilters;
 }) {
+  const hasRecords = records.length > 0;
   const summary = summarizeDecisions(records);
+
+  const exportOptions = {
+    generatedAt,
+    filters,
+  };
+
+  const exportActions = (
+    <div className="signal-lifecycle-export">
+      <div className="dashboard-muted">
+        Exports current read-only filtered dry-run decision records. No orders are
+        placed.
+      </div>
+      <div className="signal-lifecycle-export-actions">
+        <button
+          type="button"
+          disabled={!hasRecords}
+          onClick={() => exportSignalDecisionsCsv(records, exportOptions)}
+        >
+          Export CSV
+        </button>
+        <button
+          type="button"
+          disabled={!hasRecords}
+          onClick={() => exportSignalDecisionsJson(records, exportOptions)}
+        >
+          Export JSON
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -125,6 +165,7 @@ export function SignalDecisionHistoryPanel({
           </div>
         </div>
       </section>
+      {exportActions}
 
       {records.length === 0 ? (
         <div className="state">
