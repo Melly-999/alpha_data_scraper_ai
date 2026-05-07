@@ -7,11 +7,12 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.exception_handlers import http_exception_handler
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
-from . import alerts, audit, cf_hub, reports
+from . import alerts, audit, cf_hub, reports, terminal
 from .auth import require_api_key
 from .config import Settings, get_settings
 from .database import SessionLocal, init_db
@@ -48,6 +49,24 @@ app = FastAPI(
     ),
     lifespan=lifespan,
 )
+
+# Local-dev CORS for the read-only Terminal UI. Restricted to Vite's loopback
+# origins; production deployments must override via reverse-proxy config.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+        "http://127.0.0.1:5174",
+        "http://localhost:5174",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "OPTIONS"],
+    allow_headers=["Accept", "Content-Type"],
+)
+
+# Read-only Terminal UI endpoints (GET-only, no auth, no execution paths).
+app.include_router(terminal.router)
 
 
 @app.exception_handler(HTTPException)
