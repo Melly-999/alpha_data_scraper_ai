@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 try:
@@ -34,13 +34,25 @@ def _int(name: str, default: int) -> int:
 
 @dataclass(frozen=True)
 class Settings:
-    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./mellytrade.db")
-    fastapi_key: str = os.getenv("FASTAPI_KEY", "change-me-api-key")
-    cf_hub_url: Optional[str] = os.getenv("CF_HUB_URL") or None
-    cf_api_secret: Optional[str] = os.getenv("CF_API_SECRET") or None
-    cooldown_seconds: int = _int("COOLDOWN_SECONDS", 60)
-    min_confidence: float = _float("MIN_CONFIDENCE", 70.0)
-    max_risk_percent: float = _float("MAX_RISK_PERCENT", 1.0)
+    database_url: str = field(
+        default_factory=lambda: os.getenv("DATABASE_URL", "sqlite:///./mellytrade.db")
+    )
+    fastapi_key: str = field(
+        default_factory=lambda: os.getenv("FASTAPI_KEY", "change-me-api-key")
+    )
+    cf_hub_url: Optional[str] = field(
+        default_factory=lambda: os.getenv("CF_HUB_URL") or None
+    )
+    cf_api_secret: Optional[str] = field(
+        default_factory=lambda: os.getenv("CF_API_SECRET") or None
+    )
+    cooldown_seconds: int = field(default_factory=lambda: _int("COOLDOWN_SECONDS", 60))
+    min_confidence: float = field(
+        default_factory=lambda: _float("MIN_CONFIDENCE", 70.0)
+    )
+    max_risk_percent: float = field(
+        default_factory=lambda: _float("MAX_RISK_PERCENT", 1.0)
+    )
 
 
 def get_settings() -> Settings:
