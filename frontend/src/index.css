@@ -1503,3 +1503,60 @@ input {
     gap: 0.35rem;
   }
 }
+
+/* Shared resource-state shell used by polling pages (Positions, Trade
+   Blotter, Logs). Three visual modes: loading, empty, error/degraded.
+   Plus an unobtrusive footer that surfaces "Last updated …" so operators
+   can spot stale panels at a glance. */
+.resource-state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resource-state-loading,
+.resource-state-empty,
+.resource-state-error {
+  padding: 18px 16px;
+  border-radius: 6px;
+  border: 1px dashed var(--border);
+  background: var(--surface-2);
+}
+
+.resource-state-empty {
+  border-style: solid;
+  border-color: var(--border-subtle);
+}
+
+.resource-state-error {
+  border-style: solid;
+  border-color: var(--red);
+  background: rgba(248, 81, 73, 0.08);
+}
+
+.resource-state-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.resource-state-detail {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.resource-state-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 720px) {
+  .resource-state-loading,
+  .resource-state-empty,
+  .resource-state-error {
+    padding: 14px 12px;
+  }
+}
