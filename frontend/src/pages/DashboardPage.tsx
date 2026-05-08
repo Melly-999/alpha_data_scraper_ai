@@ -10,11 +10,13 @@ import { useHealth } from "../hooks/useHealth";
 import { useLocalChecklist } from "../hooks/useLocalChecklist";
 import { useRiskConfig } from "../hooks/useRisk";
 import { useTerminalEvents } from "../hooks/useTerminalEvents";
+import { useTradingPlan } from "../hooks/useTradingPlan";
 import type {
   ActivityFeedItem,
   AuditEvent,
   LocalChecklistCheck,
   SignalSummary,
+  TradingPlanItem,
   WatchlistItem,
 } from "../types/api";
 import type { AlertItem } from "../types/melly";
@@ -272,6 +274,66 @@ function auditSeverityTone(
   }
 }
 
+function biasTone(
+  bias: TradingPlanItem["bias"],
+): "green" | "red" | "blue" | "muted" {
+  switch (bias) {
+    case "bullish":
+      return "green";
+    case "bearish":
+      return "red";
+    case "neutral":
+      return "blue";
+    default:
+      return "muted";
+  }
+}
+
+function riskTierTone(
+  tier: TradingPlanItem["risk_tier"],
+): "green" | "amber" | "red" {
+  switch (tier) {
+    case "low":
+      return "green";
+    case "medium":
+      return "amber";
+    default:
+      return "red";
+  }
+}
+
+function TradingPlanRows({ items }: { items: TradingPlanItem[] }) {
+  return (
+    <div className="dashboard-row-list">
+      {items.map((item) => (
+        <div key={item.instrument} className="trading-plan-row">
+          <div className="trading-plan-row-head">
+            <span className="trading-plan-instrument">{item.instrument}</span>
+            <Badge tone={biasTone(item.bias)}>{item.bias}</Badge>
+            <Badge tone="muted">setup: {item.setup_quality}</Badge>
+            <Badge tone={riskTierTone(item.risk_tier)}>
+              risk: {item.risk_tier}
+            </Badge>
+          </div>
+          {item.setup_area ? (
+            <div className="trading-plan-detail">
+              <span className="trading-plan-label">Area</span>
+              <span>{item.setup_area}</span>
+            </div>
+          ) : null}
+          <div className="trading-plan-detail">
+            <span className="trading-plan-label">No-trade</span>
+            <span>{item.no_trade_condition}</span>
+          </div>
+          {item.notes ? (
+            <div className="trading-plan-notes">{item.notes}</div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function AuditEventRows({ events }: { events: AuditEvent[] }) {
   return (
     <div className="dashboard-row-list">
@@ -340,6 +402,7 @@ export function DashboardPage() {
   const brokerAccount = useBrokerAccount();
   const localChecklist = useLocalChecklist();
   const terminalEvents = useTerminalEvents(20);
+  const tradingPlan = useTradingPlan();
   const alerts = useAlerts({ limit: 20 });
 
   if (loading && !data) {
@@ -692,6 +755,52 @@ export function DashboardPage() {
           </div>
         </Card>
       </div>
+
+      <Card
+        title="Daily Trading Plan Preview"
+        right={
+          <div className="trading-plan-card-tags">
+            <Badge tone="blue">READ-ONLY PLAN PREVIEW</Badge>
+            <Badge tone="amber">NO ORDERS PLACED</Badge>
+          </div>
+        }
+      >
+        <div className="dashboard-row-list">
+          <div className="dashboard-safe-note">
+            <div className="broker-status-headline">
+              Display-only planning context
+            </div>
+            <div>
+              Static planning notes for the session — instrument bias, setup
+              quality, risk tier, and no-trade conditions. Not a trade
+              signal. No orders are placed from this card.
+            </div>
+          </div>
+          <ResourceState
+            loading={tradingPlan.loading}
+            error={tradingPlan.error}
+            empty={
+              !tradingPlan.data || tradingPlan.data.items.length === 0
+            }
+            lastUpdatedAt={tradingPlan.lastUpdatedAt}
+            loadingMessage="Loading trading plan …"
+            emptyMessage="No trading plan items defined yet."
+          >
+            {tradingPlan.data ? (
+              <>
+                <div className="trading-plan-meta">
+                  <span>{tradingPlan.data.label}</span>
+                  <span>
+                    Max risk per trade ≤{" "}
+                    {tradingPlan.data.max_risk_per_trade_pct.toFixed(1)}%
+                  </span>
+                </div>
+                <TradingPlanRows items={tradingPlan.data.items} />
+              </>
+            ) : null}
+          </ResourceState>
+        </div>
+      </Card>
 
       <Card title="Ready Signal Table">
         <Table

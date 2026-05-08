@@ -1584,3 +1584,81 @@ input {
   color: var(--text-muted);
   font-style: italic;
 }
+
+/* Daily Trading Plan Preview card (Task 4). Display-only — no buttons,
+   no clickable rows, no execution affordances. The styling intentionally
+   leans informational rather than action-oriented. */
+.trading-plan-card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.trading-plan-meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border-subtle);
+}
+
+.trading-plan-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.trading-plan-row:last-child {
+  border-bottom: none;
+}
+
+.trading-plan-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.trading-plan-instrument {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.trading-plan-detail {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.trading-plan-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 70px;
+  letter-spacing: 0.02em;
+}
+
+.trading-plan-notes {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+@media (max-width: 720px) {
+  .trading-plan-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .trading-plan-detail {
+    flex-direction: column;
+    gap: 2px;
+  }
+}

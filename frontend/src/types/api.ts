@@ -340,6 +340,37 @@ export interface AuditEventFeedResponse {
   generated_at: string;
 }
 
+// --- Daily Trading Plan Preview (Task 4) ----------------------------------
+//
+// Read-only planning shape served by GET /api/terminal/trading-plan. Mirror
+// of the backend pydantic schema. Deliberately omits any execution-shaped
+// fields (quantity, lot, sl, tp, order id) — the response is display-only
+// and the frontend must never construct an order from it.
+
+export type TradingPlanBias = "bullish" | "bearish" | "neutral" | "wait";
+export type TradingPlanQuality = "low" | "medium" | "high";
+export type TradingPlanRiskTier = "low" | "medium" | "high";
+
+export interface TradingPlanItem {
+  instrument: string;
+  bias: TradingPlanBias;
+  setup_quality: TradingPlanQuality;
+  risk_tier: TradingPlanRiskTier;
+  no_trade_condition: string;
+  setup_area?: string | null;
+  notes?: string | null;
+}
+
+export interface TradingPlanResponse {
+  dry_run: boolean;
+  auto_trade: boolean;
+  read_only: boolean;
+  max_risk_per_trade_pct: number;
+  label: string;
+  items: TradingPlanItem[];
+  generated_at: string;
+}
+
 export type DecisionType =
   | "dry_run_allowed"
   | "blocked"
