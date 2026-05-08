@@ -1,6 +1,7 @@
 import { Badge } from "../components/shared/Badge";
 import { Card } from "../components/shared/Card";
 import { MiniChart } from "../components/shared/MiniChart";
+import { ResourceState } from "../components/shared/ResourceState";
 import { Table } from "../components/shared/Table";
 import { useAlerts } from "../hooks/useAlerts";
 import { useBrokerAccount, useBrokerHealth } from "../hooks/useBroker";
@@ -272,9 +273,6 @@ function auditSeverityTone(
 }
 
 function AuditEventRows({ events }: { events: AuditEvent[] }) {
-  if (events.length === 0) {
-    return <div className="state">No audit events available.</div>;
-  }
   return (
     <div className="dashboard-row-list">
       {events.map((event) => (
@@ -283,8 +281,16 @@ function AuditEventRows({ events }: { events: AuditEvent[] }) {
             {formatTimestamp(event.timestamp)}
           </span>
           <Badge tone={auditSeverityTone(event.severity)}>{event.severity}</Badge>
+          <span className="dashboard-muted activity-type">{event.type}</span>
           <span className="dashboard-muted">{event.source}</span>
-          <span className="dashboard-muted activity-message">{event.message}</span>
+          <div className="activity-message-stack">
+            <span className="activity-message">{event.message}</span>
+            {event.safety_note ? (
+              <span className="activity-safety-note" title="Safety explanation">
+                {event.safety_note}
+              </span>
+            ) : null}
+          </div>
         </div>
       ))}
     </div>
@@ -668,17 +674,21 @@ export function DashboardPage() {
                 services. No orders can be placed from this feed.
               </div>
             </div>
-            {terminalEvents.error ? (
-              <div className="state error">
-                Audit feed unavailable. Start the backend with
-                {" .\\scripts\\start_backend_ibkr_paper.ps1"}.
-              </div>
-            ) : null}
-            {terminalEvents.data ? (
-              <AuditEventRows events={terminalEvents.data.events} />
-            ) : !terminalEvents.error ? (
-              <div className="state">Loading audit events...</div>
-            ) : null}
+            <ResourceState
+              loading={terminalEvents.loading}
+              error={terminalEvents.error}
+              empty={
+                !terminalEvents.data ||
+                terminalEvents.data.events.length === 0
+              }
+              lastUpdatedAt={terminalEvents.lastUpdatedAt}
+              loadingMessage="Loading audit events …"
+              emptyMessage="No audit events recorded yet."
+            >
+              {terminalEvents.data ? (
+                <AuditEventRows events={terminalEvents.data.events} />
+              ) : null}
+            </ResourceState>
           </div>
         </Card>
       </div>

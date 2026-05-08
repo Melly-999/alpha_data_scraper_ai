@@ -1560,3 +1560,27 @@ input {
     padding: 14px 12px;
   }
 }
+
+/* Audit-event row enhancements (Task 2): show event type slug and an
+   optional one-line safety_note under the message. The safety_note is
+   the system explaining *why* an event matters for safety, not advice
+   to the operator. */
+.activity-type {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+.activity-message-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.activity-safety-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}

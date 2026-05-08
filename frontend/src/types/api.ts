@@ -321,6 +321,12 @@ export interface AuditEvent {
   source: string;
   message: string;
   read_only: boolean;
+  /**
+   * Optional one-sentence safety explanation surfaced by the backend.
+   * Older fixtures and pre-Task-2 backends may omit it, so the frontend
+   * always treats it as optional and renders a fallback when absent.
+   */
+  safety_note?: string | null;
   metadata: Record<string, unknown>;
 }
 

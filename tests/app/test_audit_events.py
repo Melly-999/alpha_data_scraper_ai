@@ -155,3 +155,97 @@ def test_terminal_events_generated_at_present(client) -> None:
     payload = client.get("/api/terminal/events").json()
     assert "generated_at" in payload
     assert payload["generated_at"] is not None
+
+
+# --- New event types added in Task 2 ----------------------------------------
+
+NEW_EVENT_TYPES = ("terminal_loaded", "risk_policy_loaded", "smoke_pending")
+
+
+def test_terminal_events_terminal_loaded_present(client) -> None:
+    payload = client.get("/api/terminal/events").json()
+    types = [e["type"] for e in payload["events"]]
+    assert "terminal_loaded" in types
+
+
+def test_terminal_events_risk_policy_loaded_present(client) -> None:
+    payload = client.get("/api/terminal/events").json()
+    types = [e["type"] for e in payload["events"]]
+    assert "risk_policy_loaded" in types
+
+
+def test_terminal_events_default_smoke_is_pending_not_passed(client) -> None:
+    """Default route output must not falsely advertise a passing smoke run."""
+    payload = client.get("/api/terminal/events").json()
+    types = [e["type"] for e in payload["events"]]
+    assert "smoke_pending" in types
+    assert "smoke_passed" not in types
+
+
+def test_terminal_events_event_types_are_in_known_vocabulary(client) -> None:
+    """Every emitted event type must come from the documented vocabulary."""
+    from app.services.audit_event_service import KNOWN_EVENT_TYPES
+
+    payload = client.get("/api/terminal/events").json()
+    for event in payload["events"]:
+        assert event["type"] in KNOWN_EVENT_TYPES, (
+            f"Event type {event['type']!r} is not in KNOWN_EVENT_TYPES; "
+            "add it deliberately to the tuple if it should be emitted."
+        )
+
+
+def test_terminal_events_safety_note_field_present_on_safety_severity(
+    client,
+) -> None:
+    """Every safety-severity event ships a non-empty safety_note explanation."""
+    payload = client.get("/api/terminal/events").json()
+    safety_events = [e for e in payload["events"] if e["severity"] == "safety"]
+    assert safety_events, "expected at least one safety-severity event"
+    for event in safety_events:
+        assert "safety_note" in event
+        note = event["safety_note"]
+        assert isinstance(note, str) and len(note) > 0, (
+            f"safety event {event['id']} has empty safety_note"
+        )
+
+
+def test_terminal_events_safety_note_no_secret_leakage(client) -> None:
+    """The safety_note copy must not include known secret patterns."""
+    payload = client.get("/api/terminal/events").json()
+    notes = " | ".join(
+        e["safety_note"] for e in payload["events"] if e.get("safety_note")
+    )
+    for pattern in SECRET_PATTERNS:
+        assert pattern not in notes, (
+            f"Possible secret pattern {pattern!r} found in safety_note copy"
+        )
+
+
+def test_audit_service_smoke_passed_path_emits_success() -> None:
+    """Direct service call with passed=True flips the smoke event to success."""
+    from app.schemas.risk import RiskConfig
+    from app.services.audit_event_service import AuditEventService
+
+    config = RiskConfig(
+        max_risk_per_trade=1.0,
+        max_daily_loss=2.0,
+        max_drawdown=5.0,
+        min_confidence=70,
+        min_rr=1.5,
+        max_open_positions=3,
+        max_lot_size=0.1,
+        cooldown_seconds=120,
+        allow_same_signal=False,
+        dry_run=True,
+        auto_trade=False,
+        emergency_pause=False,
+    )
+    feed = AuditEventService().list_events(config, smoke_passed=True)
+
+    types = [e.type for e in feed.events]
+    assert "smoke_passed" in types
+    assert "smoke_pending" not in types
+    smoke_event = next(e for e in feed.events if e.type == "smoke_passed")
+    assert smoke_event.severity == "success"
+    assert smoke_event.read_only is True
+    assert smoke_event.safety_note  # non-empty
