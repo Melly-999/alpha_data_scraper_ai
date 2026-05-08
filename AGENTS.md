@@ -425,3 +425,34 @@ MT5_SERVER=...                   # MT5 broker server
 
 **Last Updated**: April 2026  
 **Agent-Focused Context**: See `.ai-agents/` directory for detailed reference guides
+
+---
+
+<!-- BEGIN: free-claude-code worker rules (added 2026-05-08) -->
+
+## Free Claude Code / Local AI Worker Rules
+
+These rules apply **in addition** to all rules above when this repo is being
+edited by a free / local Claude Code worker (OpenRouter, Ollama, or any
+self-hosted gateway). Setup details live in
+[`docs/dev/free_claude_code_setup.md`](./docs/dev/free_claude_code_setup.md);
+ready-made prompts live in
+[`docs/dev/ai_worker_prompt_pack.md`](./docs/dev/ai_worker_prompt_pack.md).
+
+1. **Preserve safety posture.** `autotrade.enabled=false`, `dry_run=true`,
+   and `read_only=true` (where present) are non-negotiable.
+2. **No live execution.** Do not add or modify order routes, order buttons,
+   or any code path under `mt5_trader.py`, `brokers/`, `execution/`, or
+   `execution_service.py`.
+3. **No secrets in code or prompts.** Real keys live in `.env` (git-ignored)
+   and are loaded via `secrets_manager.py`. Never paste them into a model.
+4. **Risk cap stays ≤ 1%.** Do not raise `max_risk` / per-trade risk above 1%.
+5. **Tests before commit.** `python -m pytest -q` must pass locally.
+6. **Minimal diffs.** No drive-by refactors. Touch only what the task asks.
+7. **No push without approval.** Local commits are fine; never `git push`
+   unless the human operator says so.
+8. **Terminal V1 = read-only.** Prefer GET-only / read-only endpoints and
+   data-display UI. No order submission from V1.
+
+<!-- END: free-claude-code worker rules -->
+
