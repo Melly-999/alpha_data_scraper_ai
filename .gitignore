@@ -53,3 +53,14 @@ data/
 
 # Docker
 .docker/
+
+# Editor / OS metadata
+desktop.ini
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Local terminal zip artifact (review before unignoring)
+/MellyTrade Terminal.zip
+
