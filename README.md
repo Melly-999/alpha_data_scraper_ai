@@ -13,6 +13,144 @@ The project combines a FastAPI backend, React/TypeScript dashboard, broker adapt
 
 > Current status: local workstation and paper-trading infrastructure. Live trading is intentionally disabled by default.
 
+---
+
+## MellyTrade Terminal V1
+
+A **read-only, dry-run AI trading terminal prototype** focused on market
+context, signal observability, auditability, risk posture, and a daily
+plan preview. The terminal is built to *explain what the system is doing
+and why it is safe* — not to execute trades.
+
+> **THIS IS A READ-ONLY TOOL. NO LIVE TRADING OCCURS. NO ORDERS ARE PLACED.**
+
+The Terminal V1 surface is GET-only and structurally incapable of placing
+an order. Its safety posture is enforced both by code shape (Pydantic
+schemas without execution-shaped fields, no mutating frontend helpers in
+read-only pages) and by an executable test suite that fails the build if
+the posture ever drifts.
+
+## Terminal V1 Highlights
+
+- **Polished read-only dashboard UX states.** Shared `<ResourceState>`
+  shell renders consistent loading, empty, degraded, and
+  *last-updated-at* states across every polling card.
+- **Read-only audit / event feed with safety notes.** Each event carries
+  `id`, `timestamp`, `type`, `severity`, `read_only=true`, and a
+  one-sentence `safety_note` explaining the safety implication.
+- **Daily Trading Plan Preview.** Static, display-only card with
+  instrument bias, setup quality, risk tier, no-trade conditions, and
+  optional setup-area / notes. No buttons, no clickable rows, no
+  BUY/SELL affordances. The schema deliberately omits any
+  execution-shaped field (quantity, lot, sl, tp, order id).
+- **Safety regression tests.** A 39-assertion pytest file codifies the
+  read-only / dry-run contract as enforceable invariants — if a future
+  change adds a mutating route, an order-placement function call, or
+  raises the per-trade risk cap, the build breaks.
+- **Local demo runbook.** A reviewer-ready walkthrough that covers
+  prerequisites, startup commands, smoke-test endpoints, and the full
+  list of capabilities that are *intentionally* out of scope.
+
+## Safety-First Posture
+
+Terminal V1 enforces the following invariants. Each one has a
+corresponding test that fails the build if the posture drifts.
+
+| Invariant | Value | Where it is enforced |
+|---|---|---|
+| `autotrade.enabled` | `false` | `config.json` + safety regression tests |
+| `autotrade.dry_run` | `true` | `config.json` + safety regression tests |
+| `read_only` | `true` | every emitted audit event, `/api/risk/config`, schema defaults |
+| `max_risk_per_trade` | `≤ 1.0%` | `/api/risk/config`, asserted in tests |
+| Live orders | **blocked** | `live_orders_blocked` audit event always emitted |
+| Execution routes | **none in Terminal V1** | route-inventory test fails on any non-GET method under the Terminal V1 prefixes |
+| Order buttons | **none** | static text-scan test fails on `placeOrder(`, `executeOrder(`, button text like "Place Order" / "Execute Trade" / "Submit Order" |
+| Broker write paths | **none in Terminal V1** | `/broker/dry-run-report` is on a small admin allowlist and is dry-run only |
+| Secrets required for the demo | **none** | the terminal does not authenticate against any live broker |
+
+## Executable Safety Spec
+
+Three pytest files act as the executable safety contract for Terminal V1:
+
+- [`tests/app/test_safety_invariants.py`](tests/app/test_safety_invariants.py)
+  — 39 assertions covering route inventory, `config.json` posture, live
+  `/risk/config` values, audit-feed shape, and a static frontend scan
+  for mutating helpers and order-button text.
+- [`tests/app/test_trading_plan.py`](tests/app/test_trading_plan.py)
+  — 10 assertions locking the Daily Trading Plan response shape, the
+  read-only label, the `≤ 1%` risk cap, the absence of execution-shaped
+  fields, and a 405 proof for POST/PUT/DELETE/PATCH against the route.
+- [`tests/app/test_audit_events.py`](tests/app/test_audit_events.py)
+  — Existing route and audit coverage that this sprint extends.
+
+These tests are deliberately small and fast (the full
+`tests/app/` suite runs in under a second). They are intended to be
+treated as a regression net — if any of them fails, something
+safety-relevant has changed.
+
+## Local Demo
+
+Full reviewer walkthrough lives in
+[`docs/demo/terminal_v1_local_demo.md`](docs/demo/terminal_v1_local_demo.md).
+Quick smoke commands (each verified on this branch):
+
+```powershell
+# Targeted: safety regression net
+py -3.11 -m pytest tests/app/test_safety_invariants.py -q
+
+# Targeted: trading-plan tests
+py -3.11 -m pytest tests/app/test_trading_plan.py -q
+
+# Full local backend test suite
+py -3.11 -m pytest tests/app/ -q
+
+# Frontend type-check + production build
+cd frontend
+npm run build
+```
+
+Expected on this branch: 39 / 10 / 145 backend tests passing and a
+clean Vite production build.
+
+> The free Claude Code / local AI-worker setup that supports this work
+> is tracked on a separate branch and is intentionally **not** linked
+> from this README until the branches are merged.
+
+## Read-only API Surface
+
+The Terminal V1 endpoints are all GET-only. None of them mutate state,
+place orders, or contact a real broker.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/health` | Liveness + safety posture summary |
+| `GET` | `/api/terminal/events` | Read-only audit / event feed with `safety_note` |
+| `GET` | `/api/terminal/trading-plan` | Daily Trading Plan Preview (static, display-only) |
+| `GET` | `/api/risk/config` | Live risk gates: `dry_run`, `auto_trade`, `max_risk_per_trade` |
+| `GET` | `/api/risk/status` | Current gate state given the account snapshot |
+| `GET` | `/api/dashboard/summary` | Aggregate dashboard payload |
+
+A 405 from any other HTTP method against `/api/terminal/trading-plan`
+is part of the test contract — see `test_trading_plan_route_is_get_only`.
+
+## What Is Intentionally Not Supported Yet
+
+Each absence below is a design decision, not an oversight. Several are
+enforced by `tests/app/test_safety_invariants.py`:
+
+- **Live trading** — no Terminal V1 code path sends orders to a real broker.
+- **Order placement** — no order ticket schema, no `POST /orders`, no `POST /trade`.
+- **Order buttons** — no UI affordance for Place Order / Execute Trade / Submit Order / Send Live Order.
+- **Broker write actions** — `POST /broker/dry-run-report` is allowlisted and dry-run only; it is not exposed in the Terminal V1 UI.
+- **MT5 / IBKR live execution** — out of scope; the live execution boundary is upstream of Terminal V1 and intentionally not reachable from it.
+- **Automatic trade execution** — `autotrade.enabled` is `false` in the committed `config.json` and the safety regression test fails if it ever flips to `true`.
+
+Adding any of the above would require an explicit, separate change with
+its own review and tests; on the current branch it would also break the
+safety regression suite by design.
+
+---
+
 ## Current Status
 
 MellyTrade is currently in a safe local workstation and paper-trading phase.

@@ -1,6 +1,7 @@
 import { Badge } from "../components/shared/Badge";
 import { Card } from "../components/shared/Card";
 import { MiniChart } from "../components/shared/MiniChart";
+import { ResourceState } from "../components/shared/ResourceState";
 import { Table } from "../components/shared/Table";
 import { useAlerts } from "../hooks/useAlerts";
 import { useBrokerAccount, useBrokerHealth } from "../hooks/useBroker";
@@ -9,11 +10,13 @@ import { useHealth } from "../hooks/useHealth";
 import { useLocalChecklist } from "../hooks/useLocalChecklist";
 import { useRiskConfig } from "../hooks/useRisk";
 import { useTerminalEvents } from "../hooks/useTerminalEvents";
+import { useTradingPlan } from "../hooks/useTradingPlan";
 import type {
   ActivityFeedItem,
   AuditEvent,
   LocalChecklistCheck,
   SignalSummary,
+  TradingPlanItem,
   WatchlistItem,
 } from "../types/api";
 import type { AlertItem } from "../types/melly";
@@ -271,10 +274,67 @@ function auditSeverityTone(
   }
 }
 
-function AuditEventRows({ events }: { events: AuditEvent[] }) {
-  if (events.length === 0) {
-    return <div className="state">No audit events available.</div>;
+function biasTone(
+  bias: TradingPlanItem["bias"],
+): "green" | "red" | "blue" | "muted" {
+  switch (bias) {
+    case "bullish":
+      return "green";
+    case "bearish":
+      return "red";
+    case "neutral":
+      return "blue";
+    default:
+      return "muted";
   }
+}
+
+function riskTierTone(
+  tier: TradingPlanItem["risk_tier"],
+): "green" | "amber" | "red" {
+  switch (tier) {
+    case "low":
+      return "green";
+    case "medium":
+      return "amber";
+    default:
+      return "red";
+  }
+}
+
+function TradingPlanRows({ items }: { items: TradingPlanItem[] }) {
+  return (
+    <div className="dashboard-row-list">
+      {items.map((item) => (
+        <div key={item.instrument} className="trading-plan-row">
+          <div className="trading-plan-row-head">
+            <span className="trading-plan-instrument">{item.instrument}</span>
+            <Badge tone={biasTone(item.bias)}>{item.bias}</Badge>
+            <Badge tone="muted">setup: {item.setup_quality}</Badge>
+            <Badge tone={riskTierTone(item.risk_tier)}>
+              risk: {item.risk_tier}
+            </Badge>
+          </div>
+          {item.setup_area ? (
+            <div className="trading-plan-detail">
+              <span className="trading-plan-label">Area</span>
+              <span>{item.setup_area}</span>
+            </div>
+          ) : null}
+          <div className="trading-plan-detail">
+            <span className="trading-plan-label">No-trade</span>
+            <span>{item.no_trade_condition}</span>
+          </div>
+          {item.notes ? (
+            <div className="trading-plan-notes">{item.notes}</div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AuditEventRows({ events }: { events: AuditEvent[] }) {
   return (
     <div className="dashboard-row-list">
       {events.map((event) => (
@@ -283,8 +343,16 @@ function AuditEventRows({ events }: { events: AuditEvent[] }) {
             {formatTimestamp(event.timestamp)}
           </span>
           <Badge tone={auditSeverityTone(event.severity)}>{event.severity}</Badge>
+          <span className="dashboard-muted activity-type">{event.type}</span>
           <span className="dashboard-muted">{event.source}</span>
-          <span className="dashboard-muted activity-message">{event.message}</span>
+          <div className="activity-message-stack">
+            <span className="activity-message">{event.message}</span>
+            {event.safety_note ? (
+              <span className="activity-safety-note" title="Safety explanation">
+                {event.safety_note}
+              </span>
+            ) : null}
+          </div>
         </div>
       ))}
     </div>
@@ -334,6 +402,7 @@ export function DashboardPage() {
   const brokerAccount = useBrokerAccount();
   const localChecklist = useLocalChecklist();
   const terminalEvents = useTerminalEvents(20);
+  const tradingPlan = useTradingPlan();
   const alerts = useAlerts({ limit: 20 });
 
   if (loading && !data) {
@@ -668,20 +737,70 @@ export function DashboardPage() {
                 services. No orders can be placed from this feed.
               </div>
             </div>
-            {terminalEvents.error ? (
-              <div className="state error">
-                Audit feed unavailable. Start the backend with
-                {" .\\scripts\\start_backend_ibkr_paper.ps1"}.
-              </div>
-            ) : null}
-            {terminalEvents.data ? (
-              <AuditEventRows events={terminalEvents.data.events} />
-            ) : !terminalEvents.error ? (
-              <div className="state">Loading audit events...</div>
-            ) : null}
+            <ResourceState
+              loading={terminalEvents.loading}
+              error={terminalEvents.error}
+              empty={
+                !terminalEvents.data ||
+                terminalEvents.data.events.length === 0
+              }
+              lastUpdatedAt={terminalEvents.lastUpdatedAt}
+              loadingMessage="Loading audit events …"
+              emptyMessage="No audit events recorded yet."
+            >
+              {terminalEvents.data ? (
+                <AuditEventRows events={terminalEvents.data.events} />
+              ) : null}
+            </ResourceState>
           </div>
         </Card>
       </div>
+
+      <Card
+        title="Daily Trading Plan Preview"
+        right={
+          <div className="trading-plan-card-tags">
+            <Badge tone="blue">READ-ONLY PLAN PREVIEW</Badge>
+            <Badge tone="amber">NO ORDERS PLACED</Badge>
+          </div>
+        }
+      >
+        <div className="dashboard-row-list">
+          <div className="dashboard-safe-note">
+            <div className="broker-status-headline">
+              Display-only planning context
+            </div>
+            <div>
+              Static planning notes for the session — instrument bias, setup
+              quality, risk tier, and no-trade conditions. Not a trade
+              signal. No orders are placed from this card.
+            </div>
+          </div>
+          <ResourceState
+            loading={tradingPlan.loading}
+            error={tradingPlan.error}
+            empty={
+              !tradingPlan.data || tradingPlan.data.items.length === 0
+            }
+            lastUpdatedAt={tradingPlan.lastUpdatedAt}
+            loadingMessage="Loading trading plan …"
+            emptyMessage="No trading plan items defined yet."
+          >
+            {tradingPlan.data ? (
+              <>
+                <div className="trading-plan-meta">
+                  <span>{tradingPlan.data.label}</span>
+                  <span>
+                    Max risk per trade ≤{" "}
+                    {tradingPlan.data.max_risk_per_trade_pct.toFixed(1)}%
+                  </span>
+                </div>
+                <TradingPlanRows items={tradingPlan.data.items} />
+              </>
+            ) : null}
+          </ResourceState>
+        </div>
+      </Card>
 
       <Card title="Ready Signal Table">
         <Table

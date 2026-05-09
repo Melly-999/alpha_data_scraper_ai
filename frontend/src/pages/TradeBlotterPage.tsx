@@ -1,4 +1,5 @@
 import { Card } from "../components/shared/Card";
+import { ResourceState } from "../components/shared/ResourceState";
 import { Table } from "../components/shared/Table";
 import { usePollingResource } from "../hooks/usePollingResource";
 import { apiGet } from "../lib/api";
@@ -9,18 +10,30 @@ export function TradeBlotterPage() {
 
   return (
     <Card title="Trade Blotter">
-      {orders.data ? (
-        <Table
-          columns={[
-            { key: "symbol", label: "Symbol", render: (row) => row.symbol },
-            { key: "direction", label: "Direction", render: (row) => row.direction },
-            { key: "status", label: "Status", render: (row) => row.status },
-            { key: "notes", label: "Notes", render: (row) => row.notes },
-          ]}
-          rows={orders.data}
-        />
-      ) : null}
+      <ResourceState
+        loading={orders.loading}
+        error={orders.error}
+        empty={!orders.data || orders.data.length === 0}
+        lastUpdatedAt={orders.lastUpdatedAt}
+        emptyMessage="No dry-run orders recorded yet."
+        loadingMessage="Loading dry-run blotter …"
+      >
+        {orders.data ? (
+          <Table
+            columns={[
+              { key: "symbol", label: "Symbol", render: (row) => row.symbol },
+              {
+                key: "direction",
+                label: "Direction",
+                render: (row) => row.direction,
+              },
+              { key: "status", label: "Status", render: (row) => row.status },
+              { key: "notes", label: "Notes", render: (row) => row.notes },
+            ]}
+            rows={orders.data}
+          />
+        ) : null}
+      </ResourceState>
     </Card>
   );
 }
-
