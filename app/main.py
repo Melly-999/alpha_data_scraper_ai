@@ -20,6 +20,7 @@ from app.api.routes import (
     orders,
     positions,
     risk,
+    safety,
     signals,
     terminal,
 )
@@ -115,6 +116,7 @@ for router in (
     local.router,
     logs.router,
     terminal.router,
+    safety.router,
 ):
     app.include_router(router, prefix="/api")
 
