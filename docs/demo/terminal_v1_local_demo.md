@@ -256,18 +256,24 @@ When recording a demo or attaching screenshots to a portfolio entry,
 capture the following six views in this order:
 
 1. **Safety banner** — green pills across the top of any page.
+   ![Terminal V1 safety banner](../assets/terminal-v1/terminal-dashboard-safety-banner.png)
 2. **Audit feed with `safety_note`** — Audit Trail page filtered by
    `safety` severity, showing the per-event explanation.
+   ![Terminal V1 audit feed safety notes](../assets/terminal-v1/terminal-audit-feed-safety-notes.png)
 3. **Daily Trading Plan Preview** — Dashboard card with `READ-ONLY PLAN
    PREVIEW` and `NO ORDERS PLACED` tags visible, plus at least three
    instrument rows.
+   ![Terminal V1 daily plan preview](../assets/terminal-v1/terminal-daily-plan-preview.png)
 4. **Degraded / empty / loading state** — Stop the backend, refresh the
    Positions page, capture the red "Backend unavailable" card with the
    "Last successful update at …" line.
+   ![Terminal V1 resource states](../assets/terminal-v1/terminal-resource-states.png)
 5. **Passing backend tests** — terminal output of
    `pytest tests/app/ -q` showing `145 passed`.
+   ![Terminal V1 safety tests passing](../assets/terminal-v1/terminal-safety-tests-passing.png)
 6. **Passing frontend build** — terminal output of `npm run build`
    showing `built in <N> ms` with no TypeScript errors.
+   ![Terminal V1 frontend build passing](../assets/terminal-v1/terminal-build-passing.png)
 
 ---
 

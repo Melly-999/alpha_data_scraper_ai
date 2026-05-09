@@ -17,6 +17,8 @@ The project combines a FastAPI backend, React/TypeScript dashboard, broker adapt
 
 ## MellyTrade Terminal V1
 
+![MellyTrade Terminal V1 dashboard](docs/assets/terminal-v1/terminal-dashboard-safety-banner.png)
+
 A **read-only, dry-run AI trading terminal prototype** focused on market
 context, signal observability, auditability, risk posture, and a daily
 plan preview. The terminal is built to *explain what the system is doing
