@@ -10,11 +10,13 @@ Design contract:
 * No FastAPI routes, no network calls, no broker SDK imports
   (``MetaTrader5``, ``ib_insync``, ``ibapi``, ``alpaca``, ``ccxt``,
   ``requests``, ``httpx``, ``websockets``).
-* Default registry contains exactly one adapter:
+* Default registry contains a safe disconnected adapter and optional
+  read-only adapters:
   :class:`brokers.safe_disconnected.SafeDisconnectedBrokerAdapter`,
   registered under the id ``"safe-disconnected"``, which is also the
-  default. Until a real broker integration ships, the default
-  registry can never return an executable adapter.
+  default, and read-only broker integrations such as
+  :class:`brokers.ibkr_paper_readonly.IBKRPaperReadOnlyAdapter`.
+  The default registry can never return an executable adapter.
 * ``get()`` raises :class:`KeyError` for unknown ids;
   ``get_optional()`` returns ``None`` for callers that prefer that
   shape.
@@ -27,6 +29,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
+from .ibkr_paper_readonly import IBKRPaperReadOnlyAdapter
 from .protocol import BrokerAdapter
 from .safe_disconnected import SafeDisconnectedBrokerAdapter
 
@@ -103,13 +106,14 @@ class BrokerRegistry:
 # Default factory
 # ---------------------------------------------------------------------------
 def create_default_registry() -> BrokerRegistry:
-    """Build a fresh registry containing only the safe-disconnected adapter.
+    """Build a fresh registry containing read-only broker adapters.
 
     A new instance is returned on every call so tests and callers cannot
     accidentally share mutable state.
     """
     registry = BrokerRegistry(default_adapter_id=DEFAULT_ADAPTER_ID)
     registry.register(SafeDisconnectedBrokerAdapter())
+    registry.register(IBKRPaperReadOnlyAdapter())
     return registry
 
 

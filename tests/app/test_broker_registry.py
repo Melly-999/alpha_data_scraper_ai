@@ -2,7 +2,8 @@
 
 Asserts the safety contract:
 
-* Default registry contains exactly the safe-disconnected adapter.
+* Default registry contains safe-disconnected plus ibkr-paper.
+* Default lookup still returns safe-disconnected.
 * Default lookup returns that adapter.
 * Missing-id lookup raises :class:`KeyError`; ``get_optional`` returns
   ``None``.
@@ -51,14 +52,17 @@ def test_default_registry_factories_return_fresh_instances() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test 3 — default registry contains exactly the safe-disconnected adapter.
+# Test 3 — default registry contains safe-disconnected plus ibkr-paper.
 # ---------------------------------------------------------------------------
-def test_default_registry_contains_only_safe_disconnected() -> None:
+def test_default_registry_contains_safe_disconnected_and_ibkr_paper() -> None:
     from brokers.registry import create_default_registry
 
     registry = create_default_registry()
-    assert registry.list_adapter_ids() == ["safe-disconnected"]
-    assert len(registry) == 1
+    assert set(registry.list_adapter_ids()) == {
+        "safe-disconnected",
+        "ibkr-paper",
+    }
+    assert len(registry) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -84,6 +88,15 @@ def test_get_returns_safe_disconnected_adapter() -> None:
     assert isinstance(adapter, SafeDisconnectedBrokerAdapter)
 
 
+def test_get_returns_ibkr_paper_readonly_adapter() -> None:
+    from brokers.ibkr_paper_readonly import IBKRPaperReadOnlyAdapter
+    from brokers.registry import create_default_registry
+
+    registry = create_default_registry()
+    adapter = registry.get("ibkr-paper")
+    assert isinstance(adapter, IBKRPaperReadOnlyAdapter)
+
+
 # ---------------------------------------------------------------------------
 # Test 6 — has() / __contains__.
 # ---------------------------------------------------------------------------
@@ -92,7 +105,9 @@ def test_has_and_contains_for_known_and_unknown_ids() -> None:
 
     registry = create_default_registry()
     assert registry.has("safe-disconnected") is True
+    assert registry.has("ibkr-paper") is True
     assert "safe-disconnected" in registry
+    assert "ibkr-paper" in registry
     assert registry.has("mt5-live") is False
     assert "mt5-live" not in registry
     # Non-string is never present.
@@ -123,9 +138,12 @@ def test_list_adapters_returns_safe_adapter_objects() -> None:
     registry = create_default_registry()
     ids = registry.list_adapter_ids()
     adapters = registry.list_adapters()
-    assert ids == ["safe-disconnected"]
-    assert len(adapters) == 1
-    assert adapters[0].adapter_id == "safe-disconnected"
+    assert set(ids) == {"safe-disconnected", "ibkr-paper"}
+    assert len(adapters) == 2
+    assert {adapter.adapter_id for adapter in adapters} == {
+        "safe-disconnected",
+        "ibkr-paper",
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -182,6 +200,67 @@ def test_default_adapter_positions_validate_into_schema() -> None:
     from brokers.registry import create_default_registry
 
     adapter = create_default_registry().get_default()
+    positions = [BrokerPosition(**dict(p)) for p in adapter.positions()]
+    assert positions == []
+
+
+def test_ibkr_paper_adapter_validates_as_broker_adapter() -> None:
+    from brokers.protocol import BrokerAdapter
+    from brokers.registry import create_default_registry
+
+    adapter = create_default_registry().get("ibkr-paper")
+    assert isinstance(adapter, BrokerAdapter)
+
+
+def test_ibkr_paper_capabilities_validate_into_schema() -> None:
+    from app.schemas.broker import BrokerCapabilities
+    from brokers.registry import create_default_registry
+
+    adapter = create_default_registry().get("ibkr-paper")
+    payload = dict(adapter.capabilities())
+    payload.pop("adapter_id", None)
+    caps = BrokerCapabilities(**payload)
+    assert caps.read_only is True
+    assert caps.paper is True
+    assert caps.execution_enabled is False
+    assert caps.live_orders_blocked is True
+    assert caps.can_place_orders is False
+    assert caps.can_cancel_orders is False
+    assert caps.can_modify_orders is False
+
+
+def test_ibkr_paper_status_validates_as_safe_disconnected_default() -> None:
+    from app.schemas.broker import BrokerStatus
+    from brokers.registry import create_default_registry
+
+    adapter = create_default_registry().get("ibkr-paper")
+    status = BrokerStatus(**dict(adapter.status()))
+    assert status.adapter_id == "ibkr-paper"
+    assert status.connected is False
+    assert status.degraded is True
+    assert status.read_only is True
+    assert status.execution_enabled is False
+    assert status.live_orders_blocked is True
+
+
+def test_ibkr_paper_account_snapshot_validates_as_safe_zero_default() -> None:
+    from app.schemas.broker import BrokerAccountSnapshot
+    from brokers.registry import create_default_registry
+
+    adapter = create_default_registry().get("ibkr-paper")
+    snap = BrokerAccountSnapshot(**dict(adapter.account_snapshot()))
+    assert snap.adapter_id == "ibkr-paper"
+    assert snap.cash == 0.0
+    assert snap.equity == 0.0
+    assert snap.buying_power == 0.0
+    assert snap.read_only is True
+
+
+def test_ibkr_paper_positions_validate_as_empty_default() -> None:
+    from app.schemas.broker import BrokerPosition
+    from brokers.registry import create_default_registry
+
+    adapter = create_default_registry().get("ibkr-paper")
     positions = [BrokerPosition(**dict(p)) for p in adapter.positions()]
     assert positions == []
 

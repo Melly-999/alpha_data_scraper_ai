@@ -453,11 +453,17 @@ def test_account_snapshot_baseline_still_holds() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test 13 — default registry unchanged.
+# Test 13 — default registry includes IBKR paper but keeps safe default.
 # ---------------------------------------------------------------------------
-def test_default_registry_still_only_safe_disconnected() -> None:
+def test_default_registry_includes_ibkr_without_changing_default() -> None:
     from brokers.registry import create_default_registry
+    from brokers.safe_disconnected import SafeDisconnectedBrokerAdapter
 
     registry = create_default_registry()
-    assert registry.list_adapter_ids() == ["safe-disconnected"]
-    assert registry.get_optional("ibkr-paper") is None
+    assert set(registry.list_adapter_ids()) == {
+        "safe-disconnected",
+        "ibkr-paper",
+    }
+    assert registry.default_adapter_id == "safe-disconnected"
+    assert isinstance(registry.get_default(), SafeDisconnectedBrokerAdapter)
+    assert registry.get_optional("ibkr-paper") is not None
