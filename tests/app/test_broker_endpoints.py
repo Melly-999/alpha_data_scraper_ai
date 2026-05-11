@@ -9,13 +9,14 @@ Endpoints under test:
 
 Asserts:
 
-* Each endpoint returns 200 for the default ``safe-disconnected`` adapter.
+* Each endpoint returns 200 for the default ``safe-disconnected`` adapter
+  and the optional read-only ``ibkr-paper`` adapter.
 * Responses validate against the BRK-003 schemas.
 * Missing adapter ids return HTTP 404 with a clear, secret-free message.
 * Non-GET HTTP methods return 405.
 * No broker endpoint path contains any forbidden execution / order
   segment.
-* The default registry still surfaces only ``safe-disconnected``.
+* The default registry still uses ``safe-disconnected`` as the default.
 """
 
 from __future__ import annotations
@@ -31,16 +32,16 @@ from app.schemas.broker import (
 
 
 # ---------------------------------------------------------------------------
-# Test 1 — list endpoint returns 200 + safe-disconnected only.
+# Test 1 — list endpoint returns 200 + both read-only adapters.
 # ---------------------------------------------------------------------------
-def test_list_brokers_returns_safe_disconnected_only(client) -> None:
+def test_list_brokers_returns_safe_disconnected_and_ibkr_paper(client) -> None:
     response = client.get("/api/brokers")
     assert response.status_code == 200, response.text
 
     body = response.json()
     assert body["default_adapter_id"] == "safe-disconnected"
     ids = [a["adapter_id"] for a in body["adapters"]]
-    assert ids == ["safe-disconnected"]
+    assert set(ids) == {"safe-disconnected", "ibkr-paper"}
 
 
 # ---------------------------------------------------------------------------
@@ -48,14 +49,19 @@ def test_list_brokers_returns_safe_disconnected_only(client) -> None:
 # ---------------------------------------------------------------------------
 def test_list_brokers_capabilities_validate(client) -> None:
     body = client.get("/api/brokers").json()
-    entry = body["adapters"][0]
-    caps = BrokerCapabilities(**entry["capabilities"])
-    assert caps.read_only is True
-    assert caps.execution_enabled is False
-    assert caps.live_orders_blocked is True
-    assert caps.can_place_orders is False
-    assert caps.can_cancel_orders is False
-    assert caps.can_modify_orders is False
+    by_id = {entry["adapter_id"]: entry for entry in body["adapters"]}
+
+    for adapter_id in ("safe-disconnected", "ibkr-paper"):
+        caps = BrokerCapabilities(**by_id[adapter_id]["capabilities"])
+        assert caps.read_only is True
+        assert caps.execution_enabled is False
+        assert caps.live_orders_blocked is True
+        assert caps.can_place_orders is False
+        assert caps.can_cancel_orders is False
+        assert caps.can_modify_orders is False
+
+    ibkr_caps = BrokerCapabilities(**by_id["ibkr-paper"]["capabilities"])
+    assert ibkr_caps.paper is True
 
 
 # ---------------------------------------------------------------------------
@@ -99,6 +105,38 @@ def test_positions_endpoint_returns_empty_list(client) -> None:
     assert positions == []
 
 
+def test_ibkr_paper_status_endpoint_returns_safe_default(client) -> None:
+    response = client.get("/api/brokers/ibkr-paper/status")
+    assert response.status_code == 200, response.text
+    status = BrokerStatus(**response.json())
+    assert status.adapter_id == "ibkr-paper"
+    assert status.connected is False
+    assert status.degraded is True
+    assert status.read_only is True
+    assert status.execution_enabled is False
+    assert status.live_orders_blocked is True
+
+
+def test_ibkr_paper_account_endpoint_returns_safe_zero_snapshot(client) -> None:
+    response = client.get("/api/brokers/ibkr-paper/account")
+    assert response.status_code == 200, response.text
+    snap = BrokerAccountSnapshot(**response.json())
+    assert snap.adapter_id == "ibkr-paper"
+    assert snap.cash == 0.0
+    assert snap.equity == 0.0
+    assert snap.buying_power == 0.0
+    assert snap.read_only is True
+
+
+def test_ibkr_paper_positions_endpoint_returns_empty_list(client) -> None:
+    response = client.get("/api/brokers/ibkr-paper/positions")
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert isinstance(body, list)
+    positions = [BrokerPosition(**p) for p in body]
+    assert positions == []
+
+
 # ---------------------------------------------------------------------------
 # Test 6 — missing adapter returns 404 for status / account / positions.
 # ---------------------------------------------------------------------------
@@ -124,6 +162,9 @@ _GET_ONLY_PATHS: tuple[str, ...] = (
     "/api/brokers/safe-disconnected/status",
     "/api/brokers/safe-disconnected/account",
     "/api/brokers/safe-disconnected/positions",
+    "/api/brokers/ibkr-paper/status",
+    "/api/brokers/ibkr-paper/account",
+    "/api/brokers/ibkr-paper/positions",
 )
 
 

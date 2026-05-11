@@ -270,15 +270,20 @@ def test_module_import_pulls_no_broker_or_network_modules() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Default broker registry untouched — still safe-disconnected only
+# Default broker registry includes IBKR paper but keeps safe-disconnected default
 # ---------------------------------------------------------------------------
-def test_default_registry_still_only_safe_disconnected() -> None:
+def test_default_registry_includes_ibkr_without_changing_default() -> None:
     from brokers.registry import create_default_registry
+    from brokers.safe_disconnected import SafeDisconnectedBrokerAdapter
 
     registry = create_default_registry()
-    assert registry.list_adapter_ids() == ["safe-disconnected"]
+    assert set(registry.list_adapter_ids()) == {
+        "safe-disconnected",
+        "ibkr-paper",
+    }
     assert registry.default_adapter_id == "safe-disconnected"
-    assert registry.get_optional("ibkr-paper") is None
+    assert isinstance(registry.get_default(), SafeDisconnectedBrokerAdapter)
+    assert registry.get_optional("ibkr-paper") is not None
 
 
 # ---------------------------------------------------------------------------

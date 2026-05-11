@@ -375,9 +375,15 @@ def test_openapi_forbidden_path_scan_still_passes(client) -> None:
     )
 
 
-def test_default_registry_still_only_safe_disconnected() -> None:
+def test_default_registry_includes_ibkr_without_changing_default() -> None:
     from brokers.registry import create_default_registry
+    from brokers.safe_disconnected import SafeDisconnectedBrokerAdapter
 
     registry = create_default_registry()
-    assert registry.list_adapter_ids() == ["safe-disconnected"]
-    assert registry.get_optional("ibkr-paper") is None
+    assert set(registry.list_adapter_ids()) == {
+        "safe-disconnected",
+        "ibkr-paper",
+    }
+    assert registry.default_adapter_id == "safe-disconnected"
+    assert isinstance(registry.get_default(), SafeDisconnectedBrokerAdapter)
+    assert registry.get_optional("ibkr-paper") is not None
