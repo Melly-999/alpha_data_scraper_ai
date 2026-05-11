@@ -91,6 +91,10 @@ _SAFETY_NOTE_ACCOUNT_MALFORMED: str = (
     "(non-numeric or unreadable values); fell back to safe zero-valued "
     "placeholder. Execution remains blocked."
 )
+_SAFETY_NOTE_POSITION: str = (
+    "IBKR Paper read-only position from connected paper session. "
+    "Execution is blocked at the schema and protocol layer."
+)
 
 # Whitelisted, schema-aligned numeric fields the adapter is willing to
 # surface from an injected client. Any other field on the client's
@@ -102,6 +106,19 @@ _ALLOWED_NUMERIC_ACCOUNT_FIELDS: tuple[str, ...] = (
     "cash",
     "equity",
     "buying_power",
+)
+
+# Whitelisted, schema-aligned optional numeric fields on a per-position
+# payload. ``symbol`` (str) and ``quantity`` (numeric) are handled
+# explicitly. ``currency`` (optional str) is handled separately. Any
+# other field on the client's position payload — ``account_id`` /
+# ``account`` / ``order_id`` / ``execution_id`` / ``trade_id`` /
+# ``password`` / ``token`` / ``secret`` / ``api_key`` /
+# ``credential(s)``, ... — is silently dropped on the way through.
+_ALLOWED_OPTIONAL_POSITION_NUMERIC_FIELDS: tuple[str, ...] = (
+    "average_price",
+    "market_price",
+    "unrealized_pnl",
 )
 
 # Required safety flags an injected client must report. Each must be the
@@ -193,6 +210,90 @@ def _coerce_account_payload(
         if value != value or value in (float("inf"), float("-inf")):
             return None
         out[name] = value
+    return out
+
+
+def _read_client_positions_payload(client: object) -> object | None:
+    """Pull a read-only positions payload from a duck-typed client.
+
+    Tries ``client.positions()`` first, then ``client.get_positions()``.
+    Returns whatever the accessor returns (so the caller can validate
+    the shape), or ``None`` if no accessor exists or it raises.
+
+    Strictly read-only — no method beyond a zero-arg accessor is
+    invoked.
+    """
+    for accessor_name in ("positions", "get_positions"):
+        accessor = getattr(client, accessor_name, None)
+        if callable(accessor):
+            try:
+                return accessor()
+            except Exception:
+                return None
+    return None
+
+
+def _coerce_optional_float(value: object) -> float | None:
+    """Coerce ``value`` to a finite float, or return ``None`` if the
+    value is missing or unreadable. Used for the optional numeric
+    fields on a position. Caller decides what to do with ``None``.
+    """
+    if value is None:
+        return None
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return None
+    if out != out or out in (float("inf"), float("-inf")):
+        return None
+    return out
+
+
+def _coerce_position_item(item: object) -> Mapping[str, Any] | None:
+    """Coerce a raw client position into the BRK-003 ``BrokerPosition``
+    shape. Returns ``None`` if the item is unusable (non-mapping,
+    missing/empty symbol, missing or non-finite quantity).
+
+    Only whitelisted fields are surfaced. Sensitive / execution-shaped
+    keys on the source payload are dropped on the way through.
+    """
+    if not isinstance(item, Mapping):
+        return None
+
+    symbol = item.get("symbol")
+    if not isinstance(symbol, str) or not symbol:
+        return None
+
+    raw_quantity = item.get("quantity")
+    try:
+        quantity = float(raw_quantity)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    if quantity != quantity or quantity in (float("inf"), float("-inf")):
+        return None
+
+    out: dict[str, Any] = {
+        "adapter_id": ADAPTER_ID,
+        "symbol": symbol,
+        "quantity": quantity,
+        "read_only": True,
+        "safety_note": _SAFETY_NOTE_POSITION,
+    }
+
+    for name in _ALLOWED_OPTIONAL_POSITION_NUMERIC_FIELDS:
+        if name in item:
+            coerced = _coerce_optional_float(item.get(name))
+            if coerced is None:
+                # Whole position considered malformed if a present
+                # optional numeric field cannot be parsed safely.
+                return None
+            out[name] = coerced
+
+    if "currency" in item:
+        currency = item.get("currency")
+        if isinstance(currency, str) and currency:
+            out["currency"] = currency
+
     return out
 
 
@@ -386,7 +487,36 @@ class IBKRPaperReadOnlyAdapter:
         )
 
     def positions(self) -> list[Mapping[str, Any]]:
-        return []
+        client = self._client
+
+        # 1. No client → safe empty baseline (matches IBKR-001 behavior).
+        if client is None:
+            return []
+
+        # 2. Client present but reports an unsafe state → empty list.
+        # The adapter never surfaces positions derived from an unsafe
+        # client.
+        if not _client_is_safe(client):
+            return []
+
+        payload = _read_client_positions_payload(client)
+        if payload is None:
+            return []
+
+        # 3. The payload must be a list/tuple. Any other shape degrades
+        # to []; we will not iterate dicts, sets, or arbitrary objects.
+        if not isinstance(payload, (list, tuple)):
+            return []
+
+        # 4. Coerce each item via the whitelist. Drop malformed items
+        # silently — partial visibility is preferred over no visibility,
+        # but every surfaced item must satisfy BRK-003.
+        out: list[Mapping[str, Any]] = []
+        for item in payload:
+            coerced = _coerce_position_item(item)
+            if coerced is not None:
+                out.append(MappingProxyType(coerced))
+        return out
 
 
 __all__ = ["IBKRPaperReadOnlyAdapter", "ADAPTER_ID"]
