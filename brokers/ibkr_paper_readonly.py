@@ -76,6 +76,33 @@ _SAFETY_NOTE_ACCOUNT: str = (
     "No IBKR Paper session connected; account snapshot is a safe "
     "zero-valued placeholder."
 )
+_SAFETY_NOTE_ACCOUNT_CONNECTED: str = (
+    "IBKR Paper read-only account snapshot from connected paper session. "
+    "Execution is blocked; the adapter exposes no order placement or "
+    "cancellation surface."
+)
+_SAFETY_NOTE_ACCOUNT_UNSAFE_CLIENT: str = (
+    "Injected IBKR paper client violated read-only safety flags; account "
+    "snapshot fell back to safe zero-valued placeholder. Execution remains "
+    "blocked."
+)
+_SAFETY_NOTE_ACCOUNT_MALFORMED: str = (
+    "Injected IBKR paper client returned a malformed account snapshot "
+    "(non-numeric or unreadable values); fell back to safe zero-valued "
+    "placeholder. Execution remains blocked."
+)
+
+# Whitelisted, schema-aligned numeric fields the adapter is willing to
+# surface from an injected client. Any other field on the client's
+# account payload (``account_id``, ``account``, ``username``,
+# ``password``, ``token``, ``secret``, ``api_key``, ``credential(s)``,
+# ``order_id``, ``execution_id``, ...) is silently dropped on the way
+# through; only ``currency`` and these three numerics make it out.
+_ALLOWED_NUMERIC_ACCOUNT_FIELDS: tuple[str, ...] = (
+    "cash",
+    "equity",
+    "buying_power",
+)
 
 # Required safety flags an injected client must report. Each must be the
 # canonical value below or the adapter will refuse to surface the client
@@ -105,6 +132,68 @@ def _client_is_safe(client: object) -> bool:
         if _read_flag(client, name) is not expected:
             return False
     return True
+
+
+def _read_client_account_payload(client: object) -> Mapping[str, Any] | None:
+    """Pull a read-only account payload from a duck-typed client.
+
+    Tries the canonical zero-arg accessor ``client.account_snapshot()``
+    first. Falls back to ``client.get_account_snapshot()`` and finally
+    to a plain ``client.account_summary`` attribute, in that order, so
+    tests and later mocked clients can pick whichever shape they
+    prefer. Returns ``None`` if no payload is available or if the
+    accessor raises — the adapter callers degrade safely to a zero
+    snapshot in that case.
+
+    This helper is strictly read-only. No method beyond a zero-arg
+    accessor is invoked, and the result is consumed as a mapping;
+    there is no way for this lookup to place an order, cancel an
+    order, or mutate broker state.
+    """
+    for accessor_name in ("account_snapshot", "get_account_snapshot"):
+        accessor = getattr(client, accessor_name, None)
+        if callable(accessor):
+            try:
+                payload = accessor()
+            except Exception:
+                return None
+            if isinstance(payload, Mapping):
+                return payload
+            # Non-mapping return → degrade safely.
+            return None
+
+    payload = getattr(client, "account_summary", None)
+    if isinstance(payload, Mapping):
+        return payload
+    return None
+
+
+def _coerce_account_payload(
+    payload: Mapping[str, Any],
+) -> Mapping[str, Any] | None:
+    """Convert a raw client payload into the BRK-003 account snapshot
+    shape. Returns ``None`` if any numeric field is unreadable.
+
+    Only whitelisted fields are surfaced — sensitive or execution-shaped
+    keys on the source payload are dropped on the way through.
+    """
+    out: dict[str, Any] = {}
+    currency = payload.get("currency", "USD")
+    if not isinstance(currency, str) or not currency:
+        currency = "USD"
+    out["currency"] = currency
+
+    for name in _ALLOWED_NUMERIC_ACCOUNT_FIELDS:
+        raw = payload.get(name, 0.0)
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            return None
+        # Reject NaN / inf so the schema only sees real numbers.
+        if value != value or value in (float("inf"), float("-inf")):
+            return None
+        out[name] = value
+    return out
 
 
 def _client_reports_connected(client: object) -> bool:
@@ -242,6 +331,48 @@ class IBKRPaperReadOnlyAdapter:
         )
 
     def account_snapshot(self) -> Mapping[str, Any]:
+        client = self._client
+
+        # 1. No client → safe zero baseline (matches IBKR-001 behavior).
+        if client is None:
+            return self._safe_zero_account_snapshot(_SAFETY_NOTE_ACCOUNT)
+
+        # 2. Client present but reports an unsafe state → safe zeros and
+        # a clear safety_note. We never surface a snapshot derived from
+        # an unsafe client.
+        if not _client_is_safe(client):
+            return self._safe_zero_account_snapshot(
+                _SAFETY_NOTE_ACCOUNT_UNSAFE_CLIENT
+            )
+
+        # 3. Client present and safe — pull the read-only payload. The
+        # helper returns None on missing / non-mapping / accessor-error
+        # paths, which we degrade to safe zeros.
+        payload = _read_client_account_payload(client)
+        if payload is None:
+            return self._safe_zero_account_snapshot(_SAFETY_NOTE_ACCOUNT)
+
+        coerced = _coerce_account_payload(payload)
+        if coerced is None:
+            # Malformed numeric data — refuse to surface it.
+            return self._safe_zero_account_snapshot(
+                _SAFETY_NOTE_ACCOUNT_MALFORMED
+            )
+
+        return MappingProxyType(
+            {
+                "adapter_id": ADAPTER_ID,
+                "currency": coerced["currency"],
+                "cash": coerced["cash"],
+                "equity": coerced["equity"],
+                "buying_power": coerced["buying_power"],
+                "read_only": True,
+                "safety_note": _SAFETY_NOTE_ACCOUNT_CONNECTED,
+            }
+        )
+
+    @staticmethod
+    def _safe_zero_account_snapshot(safety_note: str) -> Mapping[str, Any]:
         return MappingProxyType(
             {
                 "adapter_id": ADAPTER_ID,
@@ -250,7 +381,7 @@ class IBKRPaperReadOnlyAdapter:
                 "equity": 0.0,
                 "buying_power": 0.0,
                 "read_only": True,
-                "safety_note": _SAFETY_NOTE_ACCOUNT,
+                "safety_note": safety_note,
             }
         )
 
