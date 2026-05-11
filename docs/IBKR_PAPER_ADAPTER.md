@@ -1,5 +1,37 @@
 # IBKR Paper Adapter (v1)
 
+## Current Read-Only Registry Demo
+
+The current Terminal V1 demo registers `ibkr-paper` as an optional
+read-only broker adapter while keeping `safe-disconnected` as the
+default adapter.
+
+Current registry behavior:
+
+* `safe-disconnected` remains the default adapter.
+* `ibkr-paper` is paper-only and read-only.
+* `execution_enabled=false`.
+* `live_orders_blocked=true`.
+* `can_place_orders=false`, `can_cancel_orders=false`, and
+  `can_modify_orders=false`.
+* The adapter is exposed through GET-only broker registry endpoints:
+  * `GET /api/brokers`
+  * `GET /api/brokers/ibkr-paper/status`
+  * `GET /api/brokers/ibkr-paper/account`
+  * `GET /api/brokers/ibkr-paper/positions`
+* The dashboard renders `ibkr-paper` with the existing display-only
+  `BrokerCard`.
+* The current demo does not require a real TWS or IB Gateway connection.
+* No credentials are stored in the repo, and no account IDs are exposed
+  by the registry card.
+
+See also:
+
+* `docs/demo/ibkr_paper_readonly_demo.md`
+* `docs/architecture/BROKER_SUPPORT_MATRIX.md`
+
+## Legacy Adapter Notes
+
 A **paper / dry-run first** Interactive Brokers adapter that plugs into
 the safe broker-adapter architecture. The existing MetaTrader5 path is
 unchanged, all safety defaults are preserved, and live trading remains
