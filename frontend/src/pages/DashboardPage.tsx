@@ -572,6 +572,10 @@ export function DashboardPage() {
           adapterId="safe-disconnected"
           title="Broker registry: safe-disconnected"
         />
+        <BrokerCard
+          adapterId="ibkr-paper"
+          title="Broker registry: ibkr-paper"
+        />
 
         <Card
           title="Local Demo Checklist"
