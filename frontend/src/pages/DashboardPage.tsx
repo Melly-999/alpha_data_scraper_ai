@@ -1,3 +1,4 @@
+import { BrokerCard } from "../components/BrokerCard";
 import { Badge } from "../components/shared/Badge";
 import { Card } from "../components/shared/Card";
 import { MiniChart } from "../components/shared/MiniChart";
@@ -561,6 +562,16 @@ export function DashboardPage() {
             )}
           </div>
         </Card>
+
+        {/* TERM-008: read-only broker registry view backed by the GET-only
+            /api/brokers/... surface (BRK-008..011). The card is purely
+            display: no order/trade/execute/connect-live affordance. The
+            legacy "Broker" card above (singular /broker/...) is left
+            untouched on purpose. */}
+        <BrokerCard
+          adapterId="safe-disconnected"
+          title="Broker registry: safe-disconnected"
+        />
 
         <Card
           title="Local Demo Checklist"
