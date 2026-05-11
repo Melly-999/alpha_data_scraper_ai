@@ -17,6 +17,30 @@ automation and not financial advice.
 - No account IDs are exposed in the registry card.
 - No real TWS or IB Gateway connection is required for this demo.
 
+## Optional Real Paper Read-Only Connection
+
+The optional real local TWS/Gateway read path is disabled by default.
+Enable it only for a local PaperTrader session:
+
+```powershell
+$env:IBKR_PAPER_READONLY_ENABLED = "true"
+$env:IBKR_PAPER_HOST = "127.0.0.1"
+$env:IBKR_PAPER_PORT = "7497"      # TWS Paper; use 4002 for Gateway Paper
+$env:IBKR_PAPER_CLIENT_ID = "101"
+$env:IBKR_PAPER_TIMEOUT_S = "5"
+```
+
+TWS/Gateway checklist:
+
+- Enable ActiveX and Socket Clients.
+- Keep Read-Only API on.
+- Allow localhost/trusted `127.0.0.1` only where available.
+- Use paper ports only: `7497` for TWS Paper or `4002` for Gateway Paper.
+- Do not add credentials, account IDs, or live ports to the repo.
+
+If the dependency, local socket, or TWS/Gateway setup is missing, the
+adapter remains in the safe disconnected state.
+
 ## Safety Posture
 
 The expected safety posture is:
