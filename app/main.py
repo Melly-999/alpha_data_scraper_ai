@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from app.api.routes import (
     account,
     broker,
+    brokers,
     dashboard,
     health,
     local,
@@ -113,6 +114,7 @@ for router in (
     risk.router,
     mt5.router,
     broker.router,
+    brokers.router,
     local.router,
     logs.router,
     terminal.router,
