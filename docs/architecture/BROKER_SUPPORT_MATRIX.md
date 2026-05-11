@@ -7,7 +7,7 @@ the default adapter.
 | Adapter | Default? | Paper? | Read-only? | Execution enabled? | Live orders blocked? | Account snapshot | Positions | Real network required? | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `safe-disconnected` | Yes | N/A | Yes | No | Yes | Safe zero snapshot | Empty list | No | Safe disconnected default |
-| `ibkr-paper` | No | Yes | Yes | No | Yes | Safe zero by default; mocked read-only snapshot in tests | Empty list by default; mocked read-only positions in tests | No for current demo | Optional read-only paper adapter |
+| `ibkr-paper` | No | Yes | Yes | No | Yes | Safe zero by default; mocked or local read-only snapshot when enabled | Empty list by default; mocked or local read-only positions when enabled | Optional localhost Paper socket only when env-enabled | Optional read-only paper adapter |
 
 ## Registry Notes
 

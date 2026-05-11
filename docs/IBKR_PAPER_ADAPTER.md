@@ -25,6 +25,32 @@ Current registry behavior:
 * No credentials are stored in the repo, and no account IDs are exposed
   by the registry card.
 
+### Optional local TWS/Gateway paper read-only client
+
+The real local read-only client path is disabled by default. To opt in
+for a local paper-only status/account/positions read, start TWS or IB
+Gateway yourself, keep Read-Only API enabled, and set:
+
+```powershell
+$env:IBKR_PAPER_READONLY_ENABLED = "true"
+$env:IBKR_PAPER_HOST = "127.0.0.1"
+$env:IBKR_PAPER_PORT = "7497"      # TWS Paper; use 4002 for Gateway Paper
+$env:IBKR_PAPER_CLIENT_ID = "101"
+$env:IBKR_PAPER_TIMEOUT_S = "5"
+```
+
+Recommended local TWS/Gateway settings:
+
+* Enable ActiveX and Socket Clients.
+* Keep Read-Only API on.
+* Trust localhost only where the IBKR UI supports it.
+* Use TWS Paper port `7497` or Gateway Paper port `4002`.
+
+The client path never reads credentials, never stores account IDs, and
+never sends order, cancel, modify, buy, sell, or transmit calls. If the
+dependency, local socket, paper port, or read-only setup is unavailable,
+the adapter remains safely disconnected.
+
 See also:
 
 * `docs/demo/ibkr_paper_readonly_demo.md`

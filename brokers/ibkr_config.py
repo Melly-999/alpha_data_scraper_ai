@@ -37,6 +37,7 @@ class IBKRPaperConfig:
     client_id: int = 101
     account_filter: str | None = None
     timeout_s: float = 5.0
+    enabled: bool = False
     paper: bool = True
     read_only: bool = True
 

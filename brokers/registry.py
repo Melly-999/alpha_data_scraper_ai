@@ -29,6 +29,11 @@ from __future__ import annotations
 
 from typing import Iterable
 
+from .ibkr_readonly_client import (
+    IBKRPaperReadOnlyClient,
+    ibkr_paper_config_from_env,
+    ibkr_paper_readonly_enabled,
+)
 from .ibkr_paper_readonly import IBKRPaperReadOnlyAdapter
 from .protocol import BrokerAdapter
 from .safe_disconnected import SafeDisconnectedBrokerAdapter
@@ -105,6 +110,26 @@ class BrokerRegistry:
 # ---------------------------------------------------------------------------
 # Default factory
 # ---------------------------------------------------------------------------
+def _create_ibkr_paper_adapter() -> IBKRPaperReadOnlyAdapter:
+    """Create the optional IBKR Paper read-only adapter safely.
+
+    Real local TWS/Gateway reads are disabled unless
+    ``IBKR_PAPER_READONLY_ENABLED=true``. If env parsing or client
+    construction fails, the registry falls back to the no-client safe
+    disconnected adapter.
+    """
+    if not ibkr_paper_readonly_enabled():
+        return IBKRPaperReadOnlyAdapter()
+
+    try:
+        config = ibkr_paper_config_from_env()
+        client = IBKRPaperReadOnlyClient(config=config)
+    except Exception:
+        return IBKRPaperReadOnlyAdapter()
+
+    return IBKRPaperReadOnlyAdapter(config=config, readonly_client=client)
+
+
 def create_default_registry() -> BrokerRegistry:
     """Build a fresh registry containing read-only broker adapters.
 
@@ -113,7 +138,7 @@ def create_default_registry() -> BrokerRegistry:
     """
     registry = BrokerRegistry(default_adapter_id=DEFAULT_ADAPTER_ID)
     registry.register(SafeDisconnectedBrokerAdapter())
-    registry.register(IBKRPaperReadOnlyAdapter())
+    registry.register(_create_ibkr_paper_adapter())
     return registry
 
 
