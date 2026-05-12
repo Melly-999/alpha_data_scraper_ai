@@ -122,14 +122,33 @@ def test_scanner_preview_rejects_non_get_methods(client, method: str) -> None:
 def test_scanner_preview_openapi_is_get_only(client) -> None:
     path_item = _path_item(client)
     operation_keys = {
-        key for key in path_item if key in {"get", "put", "post", "patch", "delete", "head", "options", "trace"}
+        key
+        for key in path_item
+        if key
+        in {
+            "get",
+            "put",
+            "post",
+            "patch",
+            "delete",
+            "head",
+            "options",
+            "trace",
+        }
     }
     assert operation_keys == {"get"}
 
 
 def test_scanner_preview_openapi_path_is_safe(client) -> None:
     assert SCANNER_PATH == "/api/signals/scanner/preview"
-    for forbidden in ("order", "trade", "execute", "broker_execute", "autotrade", "live"):
+    for forbidden in (
+        "order",
+        "trade",
+        "execute",
+        "broker_execute",
+        "autotrade",
+        "live",
+    ):
         assert forbidden not in SCANNER_PATH
 
 
