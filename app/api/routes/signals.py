@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.api.deps import get_container
 from app.core.container import AppContainer
 from app.schemas.signal import SignalDetail, SignalReasoning, SignalSummary
+from app.schemas.signal_scanner import SignalScannerBatch
 from app.schemas.signal_decision import (
     DecisionDirection,
     DecisionType,
@@ -23,6 +24,46 @@ router = APIRouter(tags=["signals"])
 
 _decision_service = SignalDecisionHistoryService()
 _lifecycle_service = SignalLifecycleService(_decision_service)
+_scanner_default_symbols = ("AAPL", "NVDA", "MSFT", "TSLA", "EURUSD", "XAUUSD")
+_scanner_max_symbols = 25
+
+
+def _parse_scanner_symbols(raw_symbols: str | None) -> list[str]:
+    if raw_symbols is None or not raw_symbols.strip():
+        return list(_scanner_default_symbols)
+
+    cleaned: list[str] = []
+    for symbol in raw_symbols.split(","):
+        normalized = symbol.strip()
+        if not normalized:
+            continue
+        cleaned.append(normalized)
+        if len(cleaned) >= _scanner_max_symbols:
+            break
+    return cleaned or list(_scanner_default_symbols)
+
+
+@router.get(
+    "/signals/scanner/preview",
+    response_model=SignalScannerBatch,
+)
+def signal_scanner_preview(
+    symbols: str | None = Query(
+        default=None,
+        description=(
+            "Optional comma-separated preview symbols. Read-only scanner preview "
+            "only; no execution, broker call, or persistence."
+        ),
+    ),
+) -> SignalScannerBatch:
+    """Read-only scanner preview.
+
+    Advisory-only GET endpoint exposing the SIG-001 scanner foundation.
+    No execution, no broker call, no persistence, and no mutation.
+    """
+    from app.services.signal_scanner import scan_symbols
+
+    return scan_symbols(_parse_scanner_symbols(symbols))
 
 
 @router.get("/signals", response_model=list[SignalSummary])
