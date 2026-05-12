@@ -11,6 +11,7 @@ import type {
   TerminalEvent,
   TerminalSummary,
 } from "../../lib/terminalApi";
+import { AIWorkspacePanel } from "./AIWorkspacePanel";
 import { AISignalFeedPreview } from "./AISignalFeedPreview";
 import { AuditEventsPreview } from "./AuditEventsPreview";
 import { IBKRBrokerCard } from "./IBKRBrokerCard";
@@ -19,6 +20,7 @@ import { LoadingScreen } from "./LoadingScreen";
 import { MarketOverviewGrid } from "./MarketOverviewGrid";
 import { NewsRail } from "./NewsRail";
 import { RiskGuardrailsCard } from "./RiskGuardrailsCard";
+import { AgentStatusBar } from "./AgentStatusBar";
 import { TopTickerBar } from "./TopTickerBar";
 
 export type TerminalShellData = {
@@ -42,18 +44,6 @@ type TerminalShellProps = {
   pathname: string;
 };
 
-const agents = [
-  ["Risk Sentinel", "Monitors max risk <= 1% and blocked live orders."],
-  ["Signal Analyst", "Explains dry-run signal thesis and evidence."],
-  ["Market Regime", "Classifies trend, range, volatility, and session context."],
-  ["News Filter", "Summarizes read-only macro and flow headlines."],
-  ["Broker Watch", "Observes disconnected or paper read-only broker state."],
-  ["Audit Scribe", "Tracks safety events and degraded services."],
-  ["Portfolio Guard", "Reviews exposure without creating orders."],
-  ["Validation Runner", "Keeps local checks visible before PRs."],
-  ["Operator Copilot", "Produces no-trade and watch-only notes."],
-];
-
 function viewFromPath(pathname: string) {
   if (pathname.includes("markets")) return "markets";
   if (pathname.includes("watchlist")) return "watchlist";
@@ -65,45 +55,6 @@ function viewFromPath(pathname: string) {
   if (pathname.includes("audit") || pathname.includes("reports")) return "audit";
   if (pathname.includes("settings")) return "settings";
   return "dashboard";
-}
-
-function CommandCenter({
-  data,
-  openPositions,
-}: {
-  data: TerminalShellData;
-  openPositions: PositionItem[];
-}) {
-  return (
-    <section id="command" className="command-center">
-      <div>
-        <p className="terminal-eyebrow">Command center</p>
-        <h1>MellyTrade V1 Terminal</h1>
-        <p>
-          Premium read-only market workstation with degraded-first broker
-          adapters and blocked live orders.
-        </p>
-      </div>
-      <div className="command-metrics">
-        <div>
-          <span>Backend</span>
-          <strong>{data.summary.backend}</strong>
-        </div>
-        <div>
-          <span>MT5</span>
-          <strong>{data.mt5.connected ? "connected" : data.mt5.mode}</strong>
-        </div>
-        <div>
-          <span>Positions</span>
-          <strong>{openPositions.length}</strong>
-        </div>
-        <div>
-          <span>Backtest samples</span>
-          <strong>{data.backtest.sample_size}</strong>
-        </div>
-      </div>
-    </section>
-  );
 }
 
 function WatchlistPanel({ markets }: { markets: MarketItem[] }) {
@@ -130,26 +81,6 @@ function WatchlistPanel({ markets }: { markets: MarketItem[] }) {
             </span>
             <span>{market.signal} / {market.confidence}%</span>
           </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function AIWorkspacePanel() {
-  return (
-    <section className="terminal-panel">
-      <div className="panel-header">
-        <span>AI Workspace</span>
-        <span>9 read-only agents</span>
-      </div>
-      <div className="agent-grid">
-        {agents.map(([name, detail]) => (
-          <article key={name} className="agent-card">
-            <strong>{name}</strong>
-            <p>{detail}</p>
-            <span>NO EXECUTION TOOLS</span>
-          </article>
         ))}
       </div>
     </section>
@@ -235,9 +166,9 @@ function SettingsPanel() {
 }
 
 export function TerminalShell({ data, loading, pathname }: TerminalShellProps) {
-  const openPositions = data.positions.filter((position) => position.side !== "flat");
   const view = viewFromPath(pathname);
   const watchlist = data.watchlist.length > 0 ? data.watchlist : data.markets;
+  const healthyAgents = 9;
 
   return (
     <div className="terminal-root">
@@ -248,7 +179,7 @@ export function TerminalShell({ data, loading, pathname }: TerminalShellProps) {
           {loading ? <LoadingScreen /> : null}
           {view === "dashboard" ? (
             <>
-              <CommandCenter data={data} openPositions={openPositions} />
+              <AIWorkspacePanel data={data} />
               <MarketOverviewGrid markets={data.markets} />
               <section className="terminal-columns">
                 <RiskGuardrailsCard policy={data.riskPolicy} status={data.riskStatus} />
@@ -263,7 +194,7 @@ export function TerminalShell({ data, loading, pathname }: TerminalShellProps) {
 
           {view === "markets" ? <MarketOverviewGrid markets={data.markets} /> : null}
           {view === "watchlist" ? <WatchlistPanel markets={watchlist} /> : null}
-          {view === "workspace" ? <AIWorkspacePanel /> : null}
+          {view === "workspace" ? <AIWorkspacePanel data={data} /> : null}
           {view === "signals" ? (
             <>
               <SignalThesisPanel signals={data.signals} />
@@ -280,13 +211,12 @@ export function TerminalShell({ data, loading, pathname }: TerminalShellProps) {
         </main>
         <NewsRail news={data.news} />
       </div>
-      <footer className="terminal-statusbar">
-        <span>READ ONLY ENABLED</span>
-        <span>DRY RUN ACTIVE</span>
-        <span>AUTO TRADE OFF</span>
-        <span>LIVE ORDERS BLOCKED</span>
-        <span>IBKR PAPER READ-ONLY FIRST</span>
-      </footer>
+      <AgentStatusBar
+        summary={data.summary}
+        broker={data.broker}
+        agentCount={9}
+        healthyAgents={healthyAgents}
+      />
     </div>
   );
 }

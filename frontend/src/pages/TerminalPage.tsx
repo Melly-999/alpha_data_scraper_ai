@@ -16,6 +16,7 @@ import {
   getWatchlist,
 } from "../lib/terminalApi";
 import { TerminalShell, type TerminalShellData } from "../components/terminal";
+import { TerminalBootScreen } from "../components/terminal/TerminalBootScreen";
 import "../components/terminal/terminal.css";
 import { useLocation } from "react-router-dom";
 
@@ -72,9 +73,15 @@ export function TerminalPage() {
   const location = useLocation();
   const [data, setData] = useState<TerminalShellData>(initialData);
   const [loading, setLoading] = useState(true);
+  const [bootVisible, setBootVisible] = useState(true);
 
   useEffect(() => {
     let active = true;
+    const bootTimer = window.setTimeout(() => {
+      if (active) {
+        setBootVisible(false);
+      }
+    }, 1350);
 
     async function loadTerminal() {
       const [
@@ -134,8 +141,13 @@ export function TerminalPage() {
 
     return () => {
       active = false;
+      window.clearTimeout(bootTimer);
     };
   }, []);
+
+  if (bootVisible) {
+    return <TerminalBootScreen />;
+  }
 
   return (
     <TerminalShell
