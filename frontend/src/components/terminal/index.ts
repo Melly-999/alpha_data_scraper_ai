@@ -1,3 +1,6 @@
+export { AIWorkspacePanel } from "./AIWorkspacePanel";
+export { AgentStatusBar } from "./AgentStatusBar";
+export { TerminalBootScreen } from "./TerminalBootScreen";
 export { AISignalFeedPreview } from "./AISignalFeedPreview";
 export { AuditEventsPreview } from "./AuditEventsPreview";
 export { IBKRBrokerCard } from "./IBKRBrokerCard";
