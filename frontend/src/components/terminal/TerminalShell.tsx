@@ -175,7 +175,7 @@ export function TerminalShell({ data, loading, pathname }: TerminalShellProps) {
       <TopTickerBar markets={data.markets} />
       <div className="terminal-body">
         <LeftSidebar />
-        <main className="terminal-main">
+        <main className="terminal-main" aria-label={`Terminal view: ${view}`}>
           {loading ? <LoadingScreen /> : null}
           {view === "dashboard" ? (
             <>
