@@ -19,6 +19,7 @@
   color: var(--terminal-text);
   display: grid;
   grid-template-rows: auto 1fr auto;
+  overflow-x: clip;
   background:
     linear-gradient(180deg, rgba(214, 164, 76, 0.06), transparent 230px),
     var(--terminal-bg);
@@ -34,6 +35,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--terminal-border);
   background: rgba(10, 13, 17, 0.96);
   min-height: 52px;
@@ -44,10 +46,34 @@
   border-top: 1px solid var(--terminal-border);
   border-bottom: 0;
   min-height: 34px;
-  justify-content: space-between;
+  justify-content: flex-start;
   color: var(--terminal-amber);
   font: 11px var(--terminal-mono);
   letter-spacing: 0.04em;
+}
+
+.terminal-root :is(button, a, textarea, input, select):focus {
+  outline: none;
+}
+
+.terminal-root :is(button, a, textarea, input, select):focus-visible {
+  outline: 2px solid var(--terminal-amber);
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px rgba(7, 9, 12, 0.9),
+    0 0 0 4px rgba(214, 164, 76, 0.24);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .ticker-brand {
@@ -228,7 +254,7 @@
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 18px;
+  padding: 14px;
   background:
     radial-gradient(circle at top, rgba(214, 164, 76, 0.14), transparent 32%),
     linear-gradient(180deg, rgba(8, 10, 13, 0.98), rgba(9, 12, 16, 0.98));
@@ -236,6 +262,8 @@
 
 .terminal-boot-panel {
   width: min(1120px, 100%);
+  max-height: calc(100vh - 28px);
+  overflow: auto;
   border: 1px solid var(--terminal-border-soft);
   background:
     radial-gradient(circle at top right, rgba(214, 164, 76, 0.08), transparent 24%),
@@ -243,7 +271,7 @@
   box-shadow:
     0 0 0 1px rgba(214, 164, 76, 0.08),
     0 40px 100px rgba(0, 0, 0, 0.55);
-  padding: 24px;
+  padding: 20px;
   display: grid;
   gap: 22px;
 }
@@ -264,7 +292,7 @@
 
 .boot-body {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
   gap: 18px;
 }
 
@@ -281,6 +309,7 @@
   color: var(--terminal-muted);
   font: 700 12px var(--terminal-mono);
   letter-spacing: 0.08em;
+  overflow-wrap: anywhere;
 }
 
 .boot-line.active {
@@ -604,6 +633,8 @@
   border: 1px solid var(--terminal-border);
   background: rgba(16, 20, 26, 0.72);
   padding: 10px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .workspace-summary span,
@@ -619,7 +650,7 @@
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 230px minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(200px, 230px) minmax(0, 1fr) minmax(240px, 280px);
   gap: 14px;
   min-width: 0;
 }
@@ -629,6 +660,7 @@
   display: grid;
   gap: 10px;
   align-content: start;
+  min-width: 0;
 }
 
 .workspace-section-head {
@@ -639,6 +671,8 @@
   font: 700 11px var(--terminal-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .roster-item {
@@ -652,11 +686,13 @@
   text-align: left;
   padding: 10px;
   cursor: pointer;
+  min-width: 0;
 }
 
 .roster-item.selected {
-  border-color: var(--terminal-border-soft);
-  background: rgba(214, 164, 76, 0.08);
+  border-color: rgba(214, 164, 76, 0.5);
+  background: rgba(214, 164, 76, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(214, 164, 76, 0.08);
 }
 
 .roster-item strong,
@@ -672,6 +708,7 @@
   color: var(--terminal-muted);
   font-size: 12px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .roster-item small {
@@ -768,11 +805,15 @@
   padding: 12px;
   display: grid;
   gap: 10px;
+  min-width: 0;
 }
 
 .workspace-task-card.selected {
-  border-color: var(--terminal-border-soft);
-  box-shadow: 0 0 0 1px rgba(214, 164, 76, 0.08);
+  border-color: rgba(214, 164, 76, 0.5);
+  background: rgba(214, 164, 76, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(214, 164, 76, 0.14),
+    inset 0 0 0 1px rgba(214, 164, 76, 0.06);
 }
 
 .workspace-task-top {
@@ -790,6 +831,12 @@
   border: 1px solid var(--terminal-border);
   color: var(--terminal-text);
   font: 700 10px var(--terminal-mono);
+}
+
+.workspace-task-card.selected .workspace-task-glyph {
+  border-color: rgba(214, 164, 76, 0.5);
+  background: rgba(214, 164, 76, 0.12);
+  color: var(--terminal-amber);
 }
 
 .workspace-task-card strong {
@@ -811,28 +858,51 @@
   text-transform: uppercase;
 }
 
+.workspace-task-select[aria-pressed="true"] {
+  border-color: rgba(214, 164, 76, 0.6);
+  background: rgba(214, 164, 76, 0.18);
+  color: var(--terminal-amber);
+}
+
 .workspace-selected-task,
 .workspace-prompt-shell,
 .workspace-rail-section {
   border: 1px solid var(--terminal-border);
   background: rgba(16, 20, 26, 0.72);
   padding: 12px;
+  min-width: 0;
+}
+
+.workspace-prompt-shell {
+  display: grid;
+  gap: 8px;
+}
+
+.workspace-prompt-label {
+  color: var(--terminal-text);
+  font: 700 12px var(--terminal-mono);
+  letter-spacing: 0.04em;
+}
+
+.workspace-prompt-copy,
+.workspace-prompt-help {
+  margin: 0;
+  color: var(--terminal-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .workspace-prompt {
   width: 100%;
-  min-height: 92px;
+  min-height: 108px;
   border: 1px solid var(--terminal-border);
   background: rgba(8, 10, 13, 0.94);
   color: var(--terminal-text);
-  margin-top: 10px;
   padding: 12px;
   font: 12px var(--terminal-mono);
   resize: vertical;
-}
-
-.workspace-prompt:focus {
-  outline: 1px solid var(--terminal-border-soft);
+  min-width: 0;
 }
 
 .rail-metric + .rail-metric {
@@ -852,6 +922,8 @@
   background: rgba(8, 10, 13, 0.78);
   padding: 8px 10px;
   font: 12px var(--terminal-mono);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .queue-row strong {
@@ -859,8 +931,13 @@
 }
 
 .agent-statusbar {
-  justify-content: space-between;
+  justify-content: flex-start;
   flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.agent-status-item {
+  white-space: nowrap;
 }
 
 .agent-card,
@@ -904,6 +981,7 @@
   border: 1px solid var(--terminal-border);
   background: rgba(214, 164, 76, 0.08);
   padding: 10px;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 1180px) {
@@ -928,11 +1006,13 @@
   .workspace-topline {
     grid-template-columns: 1fr;
   }
+
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 760px) {
-  .top-ticker-bar,
-  .terminal-statusbar,
   .loading-screen,
   .command-center,
   .terminal-body,
@@ -968,5 +1048,36 @@
 
   .boot-status-stack {
     grid-template-columns: 1fr;
+  }
+
+  .workspace-summary,
+  .workspace-task-grid,
+  .thesis-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1366px) {
+  .terminal-boot-panel {
+    width: min(1024px, 100%);
+  }
+
+  .workspace-grid {
+    gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .boot-progress-track span {
+    transition: none;
   }
 }

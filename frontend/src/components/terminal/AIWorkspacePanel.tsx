@@ -95,6 +95,7 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
   const [draft, setDraft] = useState(
     'compare NVDA vs AVGO into earnings, risk-adjusted',
   );
+  const promptId = "workspace-prompt-draft";
 
   const activeAgents = useMemo(
     () => agents.filter((agent) => agent.health !== "idle").length,
@@ -138,7 +139,7 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
         </div>
 
         <div className="workspace-grid">
-          <aside className="workspace-roster">
+          <aside className="workspace-roster" aria-label="AI agent roster">
             <div className="workspace-section-head">
               <span>Agent roster</span>
               <span>9/9 healthy</span>
@@ -148,6 +149,8 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                 key={agent.name}
                 type="button"
                 className={`roster-item ${selectedAgent.name === agent.name ? "selected" : ""}`}
+                aria-pressed={selectedAgent.name === agent.name}
+                aria-label={`Select ${agent.name}, ${agent.role}, ${agent.taskCount} open tasks`}
                 onClick={() => setSelectedAgent(agent)}
               >
                 <span className={`health-dot ${agent.health}`} />
@@ -160,13 +163,15 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
             ))}
           </aside>
 
-          <div className="workspace-main">
+          <div className="workspace-main" aria-label="AI workspace tasks and prompt">
             <div className="workspace-title-row">
               <div>
                 <span className="workspace-active-badge">ACTIVE</span>
                 <span className="workspace-model-badge">MT-STRATEGIST-V3</span>
               </div>
-              <div className="workspace-mini-pill">Selected: {selectedAgent.name}</div>
+              <div className="workspace-mini-pill" aria-live="polite">
+                Selected: {selectedAgent.name}
+              </div>
             </div>
 
             <div className="workspace-chip-row">
@@ -187,6 +192,7 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                 <article
                   key={task.title}
                   className={`workspace-task-card ${selectedTask.title === task.title ? "selected" : ""}`}
+                  aria-label={`${task.title} advisory task`}
                 >
                   <div className="workspace-task-top">
                     <span className="workspace-task-glyph">{task.glyph}</span>
@@ -195,7 +201,13 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                   <strong>{task.title}</strong>
                   <p>{task.description}</p>
                   <span className="workspace-task-label">ADVISORY ONLY · NO EXECUTION</span>
-                  <button type="button" className="workspace-task-select" onClick={() => setSelectedTask(task)}>
+                  <button
+                    type="button"
+                    className="workspace-task-select"
+                    aria-pressed={selectedTask.title === task.title}
+                    aria-label={`Select ${task.title} advisory task`}
+                    onClick={() => setSelectedTask(task)}
+                  >
                     Select
                   </button>
                 </article>
@@ -216,17 +228,29 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                 <span>Prompt</span>
                 <span>visual only</span>
               </div>
+              <label className="workspace-prompt-label" htmlFor={promptId}>
+                Advisory prompt draft
+              </label>
+              <p className="workspace-prompt-copy">
+                Local draft only. No backend mutation, no order routing, and no
+                LLM/API call is sent from this panel yet.
+              </p>
               <textarea
                 className="workspace-prompt"
-                aria-label="Agent prompt preview"
+                id={promptId}
+                aria-label="Advisory prompt draft"
+                aria-describedby={`${promptId}-help`}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 spellCheck={false}
               />
+              <p id={`${promptId}-help`} className="workspace-prompt-help">
+                Advisory prompt preview. No execution surface is loaded.
+              </p>
             </div>
           </div>
 
-          <aside className="workspace-right-rail">
+          <aside className="workspace-right-rail" aria-label="AI workspace read-only rail">
             <section className="workspace-rail-section">
               <div className="workspace-section-head">
                 <span>Backtest Equity Preview</span>

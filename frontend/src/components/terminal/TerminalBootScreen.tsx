@@ -43,7 +43,11 @@ export function TerminalBootScreen() {
   }, [progress]);
 
   return (
-    <section className="terminal-boot-screen" aria-label="Terminal boot screen">
+    <section
+      className="terminal-boot-screen"
+      aria-label="Terminal boot screen"
+      aria-busy="true"
+    >
       <div className="terminal-boot-panel">
         <div className="boot-hero">
           <p className="terminal-eyebrow">MellyTrade V1 Terminal</p>
@@ -55,7 +59,7 @@ export function TerminalBootScreen() {
         </div>
 
         <div className="boot-body">
-          <div className="boot-lines">
+          <div className="boot-lines" aria-label="Boot sequence">
             {bootLines.map((line, index) => (
               <div
                 key={line}
@@ -78,6 +82,9 @@ export function TerminalBootScreen() {
               <span>Boot progress</span>
               <strong>{progress}%</strong>
             </div>
+            <p className="sr-only" aria-live="polite" role="status">
+              Boot progress {progress} percent
+            </p>
             <div className="boot-progress-track" aria-hidden="true">
               <span style={{ width: `${progress}%` }} />
             </div>
