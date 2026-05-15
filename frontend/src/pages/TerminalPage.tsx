@@ -11,10 +11,11 @@ import {
   getRiskPolicy,
   getRiskStatus,
   getSignalFeed,
-  getTerminalEvents,
   getTerminalSummary,
   getWatchlist,
+  type TerminalEvent,
 } from "../lib/terminalApi";
+import { useTerminalEvents } from "../hooks/useTerminalEvents";
 import {
   DEFAULT_SCANNER_PREVIEW_SYMBOLS,
   createScannerPreviewFallback,
@@ -81,6 +82,32 @@ export function TerminalPage() {
   const [loading, setLoading] = useState(true);
   const [bootVisible, setBootVisible] = useState(true);
 
+  // Polling hook — replaces the stale one-shot getTerminalEvents() call.
+  // Fires immediately on mount and refreshes every 30 s (hook default).
+  // GET-only, no writes, no mutations.
+  const { data: liveEventsData } = useTerminalEvents(12);
+
+  // Sync polled audit events into terminal state whenever the hook fires.
+  // Maps AuditEvent (types/api.ts) → TerminalEvent (terminalApi.ts).
+  useEffect(() => {
+    if (!liveEventsData) return;
+    const mapped: TerminalEvent[] = liveEventsData.events.map((e) => ({
+      id: e.id,
+      event: e.type,
+      severity: (
+        e.severity === "error" || e.severity === "safety" ? "warning" : e.severity
+      ) as "info" | "warning" | "success",
+      time: new Date(e.timestamp).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      message: e.message ?? "",
+      source: e.source ?? "",
+      safety_note: e.safety_note ?? null,
+    }));
+    setData((prev) => ({ ...prev, events: mapped }));
+  }, [liveEventsData]);
+
   useEffect(() => {
     let active = true;
     const bootTimer = window.setTimeout(() => {
@@ -115,7 +142,7 @@ export function TerminalPage() {
         getNewsSentiment(),
         getPositions(),
         getMT5Status(),
-        getTerminalEvents(),
+        Promise.resolve([] as TerminalEvent[]),
         getIBKRBrokerStatus(),
         getScannerPreview(DEFAULT_SCANNER_PREVIEW_SYMBOLS),
       ]);
@@ -124,7 +151,10 @@ export function TerminalPage() {
         return;
       }
 
-      setData({
+      // Use functional update so the polling hook's events are not
+      // overwritten by the one-shot load. The events field is exclusively
+      // managed by the useTerminalEvents polling effect above.
+      setData((prev) => ({
         summary,
         markets: markets.length > 0 ? markets : watchlist,
         watchlist,
@@ -135,10 +165,11 @@ export function TerminalPage() {
         news,
         positions,
         mt5,
-        events,
+        events: prev.events,
         broker,
         scannerPreview,
-      });
+      }));
+      void events; // consumed by polling hook — suppress unused-variable lint
       window.setTimeout(() => {
         if (active) {
           setLoading(false);
