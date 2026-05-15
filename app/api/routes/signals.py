@@ -33,10 +33,15 @@ def _parse_scanner_symbols(raw_symbols: str | None) -> list[str]:
         return list(_scanner_default_symbols)
 
     cleaned: list[str] = []
+    seen: set[str] = set()
     for symbol in raw_symbols.split(","):
         normalized = symbol.strip()
         if not normalized:
             continue
+        normalized_key = normalized.upper()
+        if normalized_key in seen:
+            continue
+        seen.add(normalized_key)
         cleaned.append(normalized)
         if len(cleaned) >= _scanner_max_symbols:
             break

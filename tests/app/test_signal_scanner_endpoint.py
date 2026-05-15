@@ -7,7 +7,6 @@ import pytest
 from app.api.routes import signals as signals_module
 from app.schemas.signal_scanner import SignalScannerBatch
 
-
 SCANNER_PATH = "/api/signals/scanner/preview"
 FORBIDDEN_RESPONSE_KEYS = {
     "order_id",
@@ -102,6 +101,17 @@ def test_scanner_preview_ignores_blank_symbols(client) -> None:
     assert [result.symbol for result in batch.results] == ["AAPL"]
 
 
+def test_scanner_preview_deduplicates_symbols_case_insensitively(client) -> None:
+    response = client.get(
+        SCANNER_PATH,
+        params={"symbols": "AAPL, aapl , NVDA, nvda, AAPL"},
+    )
+    assert response.status_code == 200
+
+    batch = SignalScannerBatch.model_validate(response.json())
+    assert [result.symbol for result in batch.results] == ["AAPL", "NVDA"]
+
+
 def test_scanner_preview_caps_large_symbol_lists(client) -> None:
     symbols = ",".join(f"SYM{i}" for i in range(30))
     response = client.get(SCANNER_PATH, params={"symbols": symbols})
@@ -169,7 +179,6 @@ def test_scanner_preview_module_has_no_execution_libraries() -> None:
 
 def test_scanner_preview_module_has_no_execution_function_names() -> None:
     function_names = {
-        name
-        for name, obj in inspect.getmembers(signals_module, inspect.isfunction)
+        name for name, obj in inspect.getmembers(signals_module, inspect.isfunction)
     }
     assert not (function_names & FORBIDDEN_FUNCTION_NAMES)
