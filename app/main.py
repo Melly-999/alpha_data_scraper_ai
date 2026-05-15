@@ -23,6 +23,7 @@ from app.api.routes import (
     risk,
     safety,
     signals,
+    supabase,
     terminal,
 )
 from app.core.container import build_container
@@ -119,6 +120,7 @@ for router in (
     logs.router,
     terminal.router,
     safety.router,
+    supabase.router,
 ):
     app.include_router(router, prefix="/api")
 
