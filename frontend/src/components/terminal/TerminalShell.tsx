@@ -21,6 +21,7 @@ import { LoadingScreen } from "./LoadingScreen";
 import { MarketOverviewGrid } from "./MarketOverviewGrid";
 import { NewsRail } from "./NewsRail";
 import { RiskGuardrailsCard } from "./RiskGuardrailsCard";
+import { SupabaseStatusCard } from "./SupabaseStatusCard";
 import { AgentStatusBar } from "./AgentStatusBar";
 import { TopTickerBar } from "./TopTickerBar";
 
@@ -186,6 +187,7 @@ export function TerminalShell({ data, loading, pathname }: TerminalShellProps) {
               <section className="terminal-columns">
                 <RiskGuardrailsCard policy={data.riskPolicy} status={data.riskStatus} />
                 <IBKRBrokerCard broker={data.broker} />
+                <SupabaseStatusCard />
               </section>
               <section className="terminal-columns">
                 <AISignalFeedPreview signals={data.signals} />
