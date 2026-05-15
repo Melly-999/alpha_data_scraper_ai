@@ -11,6 +11,7 @@ import type {
   TerminalEvent,
   TerminalSummary,
 } from "../../lib/terminalApi";
+import type { SignalScannerBatch } from "../../lib/scannerPreviewApi";
 import { AIWorkspacePanel } from "./AIWorkspacePanel";
 import { AISignalFeedPreview } from "./AISignalFeedPreview";
 import { AuditEventsPreview } from "./AuditEventsPreview";
@@ -28,6 +29,7 @@ export type TerminalShellData = {
   markets: MarketItem[];
   watchlist: MarketItem[];
   signals: SignalItem[];
+  scannerPreview: SignalScannerBatch;
   riskStatus: RiskStatus;
   riskPolicy: RiskPolicy;
   backtest: BacktestSummary;
