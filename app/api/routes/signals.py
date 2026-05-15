@@ -104,14 +104,32 @@ def signal_decisions(
     Returns a log of dry-run signal decisions showing what happened to each
     signal: blocked, watch-only, or dry-run-allowed. GET-only. No mutation,
     no order placement, no broker connection.
+    SUPA-010: audit event is emitted after the response is assembled;
+    audit persistence failure never blocks the decisions response.
     """
-    return _decision_service.list_decisions(
+    from app.services.signal_decision_audit import emit_signal_decision_event
+    from app.services.supabase_client import get_safe_supabase_client
+
+    response = _decision_service.list_decisions(
         limit=limit,
         symbol=symbol,
         decision=decision,
         risk_status=risk_status,
         direction=direction,
     )
+
+    # SUPA-010: fire-and-forget audit event — degrades gracefully.
+    # The decisions response is never blocked by audit persistence failure.
+    try:
+        emit_signal_decision_event(
+            len(response.decisions),
+            symbol,
+            client=get_safe_supabase_client(),
+        )
+    except Exception:  # noqa: BLE001
+        pass
+
+    return response
 
 
 @router.get("/signals/lifecycle", response_model=SignalLifecycleResponse)
