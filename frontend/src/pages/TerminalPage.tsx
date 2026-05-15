@@ -15,6 +15,11 @@ import {
   getTerminalSummary,
   getWatchlist,
 } from "../lib/terminalApi";
+import {
+  DEFAULT_SCANNER_PREVIEW_SYMBOLS,
+  createScannerPreviewFallback,
+  getScannerPreview,
+} from "../lib/scannerPreviewApi";
 import { TerminalShell, type TerminalShellData } from "../components/terminal";
 import { TerminalBootScreen } from "../components/terminal/TerminalBootScreen";
 import "../components/terminal/terminal.css";
@@ -37,6 +42,7 @@ const initialData: TerminalShellData = {
   markets: [],
   watchlist: [],
   signals: [],
+  scannerPreview: createScannerPreviewFallback(),
   riskStatus: {
     max_risk_per_trade_pct: 1,
     dry_run: true,
@@ -97,6 +103,7 @@ export function TerminalPage() {
         mt5,
         events,
         broker,
+        scannerPreview,
       ] = await Promise.all([
         getTerminalSummary(),
         getMarketOverview(),
@@ -110,6 +117,7 @@ export function TerminalPage() {
         getMT5Status(),
         getTerminalEvents(),
         getIBKRBrokerStatus(),
+        getScannerPreview(DEFAULT_SCANNER_PREVIEW_SYMBOLS),
       ]);
 
       if (!active) {
@@ -129,6 +137,7 @@ export function TerminalPage() {
         mt5,
         events,
         broker,
+        scannerPreview,
       });
       window.setTimeout(() => {
         if (active) {

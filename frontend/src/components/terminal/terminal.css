@@ -878,6 +878,105 @@
   gap: 8px;
 }
 
+.workspace-scanner-preview {
+  display: grid;
+  gap: 10px;
+}
+
+.workspace-scanner-copy {
+  margin: 0;
+  color: var(--terminal-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.scanner-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scanner-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.scanner-preview-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--terminal-border);
+  background: rgba(8, 10, 13, 0.82);
+  padding: 12px;
+  min-width: 0;
+}
+
+.scanner-preview-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
+}
+
+.scanner-preview-topline strong {
+  display: block;
+  margin-top: 4px;
+  font: 700 14px var(--terminal-mono);
+}
+
+.scanner-preview-action,
+.scanner-preview-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(214, 164, 76, 0.28);
+  background: rgba(214, 164, 76, 0.1);
+  color: var(--terminal-amber);
+  padding: 5px 8px;
+  font: 700 10px var(--terminal-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.scanner-preview-metrics {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid var(--terminal-border);
+  padding-top: 10px;
+  font: 12px var(--terminal-mono);
+}
+
+.scanner-preview-metrics span {
+  color: var(--terminal-muted);
+}
+
+.scanner-preview-reason {
+  margin: 0;
+  color: var(--terminal-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.scanner-preview-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.scanner-preview-empty {
+  border: 1px dashed var(--terminal-border-soft);
+  background: rgba(214, 164, 76, 0.04);
+  color: var(--terminal-muted);
+  padding: 12px;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .workspace-prompt-label {
   color: var(--terminal-text);
   font: 700 12px var(--terminal-mono);

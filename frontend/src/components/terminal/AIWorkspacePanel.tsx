@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 
+import type { SignalScannerAction } from "../../lib/scannerPreviewApi";
 import type { TerminalShellData } from "./TerminalShell";
 
 type Agent = {
@@ -15,6 +16,14 @@ type TaskCard = {
   description: string;
   glyph: string;
 };
+
+function formatScannerAction(action: SignalScannerAction): string {
+  return action.replace(/_/g, " ");
+}
+
+function formatScannerConfidence(confidence: number): string {
+  return `${Math.round(confidence)}%`;
+}
 
 const agents: Agent[] = [
   { name: "PlannerAgent", role: "Session strategist", health: "healthy", taskCount: 4 },
@@ -213,6 +222,58 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                 </article>
               ))}
             </div>
+
+            <section className="workspace-rail-section workspace-scanner-preview">
+              <div className="workspace-section-head">
+                <span>Scanner Preview</span>
+                <span>GET-only · advisory only</span>
+              </div>
+              <p className="workspace-scanner-copy">
+                Dry-run only. Human review required. No order routing.
+              </p>
+              <div className="scanner-badge-row" aria-label="Scanner preview safety notes">
+                <span className="workspace-chip">DRY RUN</span>
+                <span className="workspace-chip">HUMAN REVIEW</span>
+                <span className="workspace-chip">NO ORDER ROUTING</span>
+              </div>
+              {data.scannerPreview.results.length > 0 ? (
+                <div className="scanner-preview-grid" aria-label="Scanner preview results">
+                  {data.scannerPreview.results.map((result) => (
+                    <article
+                      key={`${result.symbol}-${result.timestamp}`}
+                      className="scanner-preview-card"
+                      aria-label={`${result.symbol} advisory setup`}
+                    >
+                      <div className="scanner-preview-topline">
+                        <div>
+                          <p className="terminal-eyebrow">Advisory scanner output</p>
+                          <strong>{result.symbol}</strong>
+                        </div>
+                        <span className="scanner-preview-action">
+                          {formatScannerAction(result.action)}
+                        </span>
+                      </div>
+                      <div className="scanner-preview-metrics">
+                        <span>Confidence</span>
+                        <strong>{formatScannerConfidence(result.confidence)}</strong>
+                      </div>
+                      <p className="scanner-preview-reason">{result.reason}</p>
+                      <div className="scanner-preview-badges">
+                        <span className="scanner-preview-badge">DRY RUN</span>
+                        <span className="scanner-preview-badge">HUMAN REVIEW</span>
+                        <span className="scanner-preview-badge">
+                          {result.risk_allowed ? "RISK ALLOWED" : "RISK BLOCKED"}
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="scanner-preview-empty" aria-live="polite">
+                  Scanner preview unavailable or empty. Advisory mode remains active.
+                </div>
+              )}
+            </section>
 
             <div className="workspace-selected-task">
               <div className="workspace-section-head">
