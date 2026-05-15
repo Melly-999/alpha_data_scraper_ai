@@ -87,6 +87,12 @@ export type TerminalEvent = {
   event: string;
   severity: "info" | "warning" | "success";
   time: string;
+  // Enriched fields forwarded from the backend AuditEvent schema (SUPA-006).
+  // All three were already returned by GET /terminal/events but were dropped
+  // by the previous mapper. Now forwarded for operator visibility.
+  message: string;
+  source: string;
+  safety_note: string | null;
 };
 
 export type IBKRStatus = {
@@ -368,6 +374,9 @@ export function getTerminalEvents(): Promise<TerminalEvent[]> {
       type: string;
       severity: "info" | "warning" | "success" | "error" | "safety";
       timestamp: string;
+      message: string;
+      source: string;
+      safety_note?: string | null;
     }>;
   } | null>("/terminal/events?limit=12", null).then((feed) => {
     if (feed?.events) {
@@ -382,34 +391,94 @@ export function getTerminalEvents(): Promise<TerminalEvent[]> {
           hour: "2-digit",
           minute: "2-digit",
         }),
+        message: event.message ?? "",
+        source: event.source ?? "",
+        safety_note: event.safety_note ?? null,
       }));
     }
 
     return [
-      { id: "backend_started", event: "backend_started", severity: "success", time: "boot" },
-      { id: "dry_run_active", event: "dry_run_active", severity: "success", time: "boot" },
+      {
+        id: "backend_started",
+        event: "backend_started",
+        severity: "success",
+        time: "boot",
+        message: "MellyTrade Phase 1 backend started successfully.",
+        source: "fastapi",
+        safety_note: "Backend boot completed without execution paths enabled.",
+      },
+      {
+        id: "dry_run_active",
+        event: "dry_run_active",
+        severity: "success",
+        time: "boot",
+        message: "dry_run=true. All execution paths are blocked. No real orders will be placed.",
+        source: "risk",
+        safety_note: "No live orders can leave the system while dry_run is true.",
+      },
       {
         id: "read_only_mode_confirmed",
         event: "read_only_mode_confirmed",
         severity: "success",
         time: "boot",
+        message: "System is operating in read-only observability mode. No order controls are exposed.",
+        source: "config",
+        safety_note: "UI exposes only GET endpoints; mutating routes are not registered.",
       },
-      { id: "autotrade_disabled", event: "autotrade_disabled", severity: "success", time: "boot" },
-      { id: "live_orders_blocked", event: "live_orders_blocked", severity: "success", time: "boot" },
-      { id: "broker_disconnected", event: "broker_disconnected", severity: "warning", time: "boot" },
+      {
+        id: "autotrade_disabled",
+        event: "autotrade_disabled",
+        severity: "success",
+        time: "boot",
+        message: "autotrade.enabled=false. Automated trade execution is disabled.",
+        source: "risk",
+        safety_note: "The bot will not auto-execute signals while autotrade is disabled.",
+      },
+      {
+        id: "live_orders_blocked",
+        event: "live_orders_blocked",
+        severity: "success",
+        time: "boot",
+        message: "supports_live_orders=false. Live order placement is blocked at adapter level.",
+        source: "broker",
+        safety_note: "Broker adapter rejects live order placement at the API boundary.",
+      },
+      {
+        id: "broker_disconnected",
+        event: "broker_disconnected",
+        severity: "warning",
+        time: "boot",
+        message: "IBKR Paper adapter is not connected. No orders can be placed.",
+        source: "ibkr_paper",
+        safety_note: null,
+      },
       {
         id: "ibkr_paper_disconnected",
         event: "ibkr_paper_disconnected",
         severity: "warning",
         time: "boot",
+        message: "ib_insync is not connected or not installed. No account data available.",
+        source: "ibkr_paper",
+        safety_note: null,
       },
       {
         id: "fallback_data_active",
         event: "fallback_data_active",
         severity: "warning",
         time: "boot",
+        message: "System is operating on fixture/demo data. No live market data is connected.",
+        source: "data",
+        safety_note: "Demo data is clearly labeled; no real broker quotes are being used.",
       },
-      { id: "smoke_passed", event: "smoke_passed", severity: "success", time: "boot" },
+      {
+        id: "smoke_passed",
+        event: "smoke_passed",
+        severity: "success",
+        time: "boot",
+        message: "Smoke test passed for this session.",
+        source: "smoke",
+        safety_note: "Read-only smoke checks completed; no mutations were executed.",
+      },
     ];
   });
 }
