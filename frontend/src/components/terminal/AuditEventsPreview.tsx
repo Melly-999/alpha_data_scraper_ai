@@ -20,7 +20,7 @@ export function AuditEventsPreview({
   events,
   lastUpdatedAt = null,
 }: AuditEventsPreviewProps) {
-  const staleStatus = useStaleDetector(lastUpdatedAt);
+  const staleStatus = useStaleDetector(lastUpdatedAt ?? null);
 
   // Build the freshness label text.
   let freshnessLabel: string;
