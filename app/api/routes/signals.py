@@ -64,11 +64,24 @@ def signal_scanner_preview(
     """Read-only scanner preview.
 
     Advisory-only GET endpoint exposing the SIG-001 scanner foundation.
-    No execution, no broker call, no persistence, and no mutation.
+    No execution, no broker call, no mutation.
+    SUPA-008: audit event is emitted after the batch is assembled;
+    audit persistence failure never blocks the preview response.
     """
+    from app.services.scanner_audit import emit_scanner_preview_event
     from app.services.signal_scanner import scan_symbols
+    from app.services.supabase_client import get_safe_supabase_client
 
-    return scan_symbols(_parse_scanner_symbols(symbols))
+    batch = scan_symbols(_parse_scanner_symbols(symbols))
+
+    # SUPA-008: fire-and-forget audit event — degrades gracefully.
+    # The preview response is never blocked by audit persistence failure.
+    try:
+        emit_scanner_preview_event(batch, client=get_safe_supabase_client())
+    except Exception:  # noqa: BLE001
+        pass
+
+    return batch
 
 
 @router.get("/signals", response_model=list[SignalSummary])
