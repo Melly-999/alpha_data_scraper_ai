@@ -4,7 +4,10 @@
 // no toggles, no execution controls, no broker controls.
 // Key values are never rendered — only boolean flags and human-readable
 // mode/reason text received from useSupabaseStatus().
+//
+// SUPA-009: stale indicator added to the "updated HH:MM:SS" timestamp line.
 
+import { useStaleDetector } from "../../hooks/useStaleDetector";
 import { useSupabaseStatus } from "../../hooks/useSupabaseStatus";
 
 const MODE_LABEL: Record<string, string> = {
@@ -21,6 +24,9 @@ const MODE_STATUS_CLASS: Record<string, string> = {
 
 export function SupabaseStatusCard() {
   const { data, loading, error, lastUpdatedAt } = useSupabaseStatus();
+
+  // SUPA-009: classify timestamp age for stale indicator — display-only.
+  const staleStatus = useStaleDetector(lastUpdatedAt);
 
   const modeLabel = data ? (MODE_LABEL[data.mode] ?? data.mode) : "—";
   const modeClass = data ? (MODE_STATUS_CLASS[data.mode] ?? "status-muted") : "status-muted";
@@ -74,13 +80,16 @@ export function SupabaseStatusCard() {
           ) : null}
 
           {lastUpdatedAt ? (
-            <p className="panel-note">
+            <p
+              className={`panel-note${staleStatus === "stale" ? " data-stale" : ""}`}
+            >
               updated{" "}
               {lastUpdatedAt.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
                 second: "2-digit",
               })}
+              {staleStatus === "stale" ? " · stale" : ""}
             </p>
           ) : null}
         </>
