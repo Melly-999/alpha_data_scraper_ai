@@ -45,6 +45,8 @@ type TerminalShellProps = {
   data: TerminalShellData;
   loading: boolean;
   pathname: string;
+  /** SUPA-009: timestamp of most recent successful audit events poll. */
+  eventsLastUpdatedAt?: Date | null;
 };
 
 function viewFromPath(pathname: string) {
@@ -168,7 +170,12 @@ function SettingsPanel() {
   );
 }
 
-export function TerminalShell({ data, loading, pathname }: TerminalShellProps) {
+export function TerminalShell({
+  data,
+  loading,
+  pathname,
+  eventsLastUpdatedAt = null,
+}: TerminalShellProps) {
   const view = viewFromPath(pathname);
   const watchlist = data.watchlist.length > 0 ? data.watchlist : data.markets;
   const healthyAgents = 9;
@@ -191,7 +198,10 @@ export function TerminalShell({ data, loading, pathname }: TerminalShellProps) {
               </section>
               <section className="terminal-columns">
                 <AISignalFeedPreview signals={data.signals} />
-                <AuditEventsPreview events={data.events} />
+                <AuditEventsPreview
+                  events={data.events}
+                  lastUpdatedAt={eventsLastUpdatedAt}
+                />
               </section>
             </>
           ) : null}
@@ -210,7 +220,12 @@ export function TerminalShell({ data, loading, pathname }: TerminalShellProps) {
           ) : null}
           {view === "brokers" ? <IBKRBrokerCard broker={data.broker} /> : null}
           {view === "portfolio" ? <PortfolioPanel positions={data.positions} /> : null}
-          {view === "audit" ? <AuditEventsPreview events={data.events} /> : null}
+          {view === "audit" ? (
+            <AuditEventsPreview
+              events={data.events}
+              lastUpdatedAt={eventsLastUpdatedAt}
+            />
+          ) : null}
           {view === "settings" ? <SettingsPanel /> : null}
         </main>
         <NewsRail news={data.news} />

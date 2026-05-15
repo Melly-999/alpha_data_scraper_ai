@@ -1180,3 +1180,15 @@
     transition: none;
   }
 }
+
+/* SUPA-009: stale data freshness indicators — display-only, no execution semantics */
+.data-freshness-label {
+  font: 11px var(--terminal-mono);
+  color: var(--terminal-muted);
+  margin: 4px 12px 0;
+  letter-spacing: 0.02em;
+}
+
+.data-stale {
+  color: var(--terminal-amber);
+}

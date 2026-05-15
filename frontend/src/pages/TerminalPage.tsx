@@ -85,7 +85,9 @@ export function TerminalPage() {
   // Polling hook — replaces the stale one-shot getTerminalEvents() call.
   // Fires immediately on mount and refreshes every 30 s (hook default).
   // GET-only, no writes, no mutations.
-  const { data: liveEventsData } = useTerminalEvents(12);
+  // SUPA-009: destructure lastUpdatedAt for stale-indicator prop threading.
+  const { data: liveEventsData, lastUpdatedAt: eventsLastUpdatedAt } =
+    useTerminalEvents(12);
 
   // Sync polled audit events into terminal state whenever the hook fires.
   // Maps AuditEvent (types/api.ts) → TerminalEvent (terminalApi.ts).
@@ -194,6 +196,7 @@ export function TerminalPage() {
       data={data}
       loading={loading}
       pathname={location.pathname}
+      eventsLastUpdatedAt={eventsLastUpdatedAt}
     />
   );
 }
