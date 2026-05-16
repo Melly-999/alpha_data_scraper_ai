@@ -1136,6 +1136,51 @@
   overflow-wrap: anywhere;
 }
 
+/* ── Degraded Services Status Banner ─────────────────────────────────────── */
+
+.degraded-services-banner {
+  border: 1px solid rgba(214, 164, 76, 0.38);
+  border-left: 3px solid var(--terminal-amber);
+  background: rgba(214, 164, 76, 0.07);
+  padding: 10px 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.degraded-banner-message {
+  margin: 0;
+  color: var(--terminal-amber);
+  font: 11px var(--terminal-mono);
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+}
+
+.degraded-banner-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.service-pill {
+  padding: 4px 8px;
+  font: 700 10px var(--terminal-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.service-pill--degraded {
+  border: 1px solid rgba(214, 164, 76, 0.42);
+  background: rgba(214, 164, 76, 0.12);
+  color: var(--terminal-amber);
+}
+
+.service-pill--safe {
+  border: 1px solid rgba(83, 214, 129, 0.32);
+  background: rgba(83, 214, 129, 0.07);
+  color: var(--terminal-green);
+}
+
 @media (max-width: 1180px) {
   .terminal-body {
     grid-template-columns: 150px minmax(0, 1fr);
