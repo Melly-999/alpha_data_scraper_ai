@@ -158,6 +158,81 @@ Tests that enforce this:
 
 ---
 
+## Screenshot Capture Flow
+
+Use this section when taking the DEMO-002 screenshot pack. It maps each
+required screenshot to the exact demo step where that state is natural.
+Full per-screenshot requirements live in
+[`demo_screenshot_checklist.md`](demo_screenshot_checklist.md).
+
+### Recommended capture sequence
+
+| Order | Filename | Demo step | Setup |
+|---|---|---|---|
+| 1 | `07-demo-overview.png` | Before step 2 | `/signals`, ALL range, no drawer, all three cards visible |
+| 2 | `01-terminal-ai-workspace.png` | Step 1 (Dashboard) | `/dashboard`, safety banner visible, activity feed loaded |
+| 3 | `02-signal-decision-history-filters.png` | Step 2.2 (1H chip) | `/signals`, click 1H chip, wait for freshness label |
+| 4 | `05-supabase-status-and-stale-indicators.png` | Step 2.2 (badges) | `/signals`, Decision History badges: `read-only` + `live data`/`seed data` |
+| 5 | `03-signal-reasoning-panel.png` | Step 2.4 (drawer) | Open drawer on a ≥80% confidence signal, expand AI Reasoning panel |
+| 6 | `04-audit-feed-safety-events.png` | Step 3 (Audit Trail) | `/audit`, scroll to show `stale_data_warning` + `scanner_evaluated` + `risk_blocked` |
+| 7 | `06-broker-readonly-guardrails.png` | Step 5 (Safety recap) | `/risk` or `/dashboard`, safety flag values visible |
+
+### Navigation flow for capture
+
+1. Open `/dashboard`. Confirm safety banner. **Capture 01-terminal-ai-workspace.png**.
+2. Switch to `/signals`. Set Decision History to **ALL**. Scroll to show all
+   three cards. **Capture 07-demo-overview.png**.
+3. Still on `/signals`. Click **1H** chip. Wait for freshness label.
+   **Capture 02-signal-decision-history-filters.png**.
+4. Still on `/signals`. Frame the Decision History badges.
+   **Capture 05-supabase-status-and-stale-indicators.png**.
+5. Click a signal row with confidence ≥ 80% in the Signal Review card.
+   Drawer opens. Scroll to AI Reasoning panel. Expand if collapsed.
+   **Capture 03-signal-reasoning-panel.png**.
+6. Switch to `/audit`. Scroll to show `stale_data_warning`,
+   `scanner_evaluated`, `risk_blocked` rows together.
+   **Capture 04-audit-feed-safety-events.png**.
+7. Switch to `/risk`. Frame the safety flag summary.
+   **Capture 06-broker-readonly-guardrails.png**.
+
+### How to explain read-only safety posture during a live demo
+
+When a reviewer asks "is this doing real trading?":
+
+1. Point at the safety banner: "This is not decorative — it reflects live
+   FastAPI state pulled from `/api/risk/config` and cannot be turned off
+   from the UI."
+2. Show the Decision History panel: "Every row is labelled `dry_run_allowed`,
+   `blocked`, or `watch_only` — there is no `executed` state."
+3. Open a signal drawer: "The AI Reasoning panel has four safety badges.
+   `DRY RUN ONLY` and `READ ONLY` are always present regardless of the
+   signal outcome."
+4. Cite the test suite: "1059 tests run green. Thirty-nine of them are
+   dedicated safety-invariant assertions that fail the build if any route,
+   schema, or config drifts toward execution."
+
+### How to explain Supabase observability
+
+- "Signal decisions are persisted to `signal_decisions` in Supabase with
+  RLS deny-all by default — the frontend cannot read them directly."
+- "FastAPI reads via `service_role` server-side. The key never reaches
+  the browser. The frontend only sees the shaped JSON response."
+- "When Supabase is offline, the service degrades to seed fixtures and
+  surfaces an amber `seed data` badge — no errors, no broken UI."
+
+### How to explain fallback and degraded states
+
+- **`seed data` badge (amber)**: Supabase returned no rows or is
+  unreachable. The in-memory seed fixture is serving requests.
+  This is the expected state without a Supabase connection.
+- **`degraded` badge (amber)**: At least one record in the current view
+  has `risk_status = blocked` or `warn`. This is normal — it means the
+  risk gates are working.
+- **Freshness label `· stale`**: Last successful poll was >90 seconds ago.
+  Display-only warning; no execution semantics.
+
+---
+
 ## Common questions to be ready for
 
 | Q | A |
