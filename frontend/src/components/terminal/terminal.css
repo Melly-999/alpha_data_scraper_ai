@@ -1,17 +1,94 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   MellyTrade Terminal — Design Tokens
+   Amber default · [data-theme="navy"] optional · [data-severity="crimson"] risk-only
+   Source: docs/design/claude_design_theme_handoff.md
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Amber default (root) ───────────────────────────────────────────────────── */
+:root {
+  /* Base surfaces */
+  --terminal-bg:             #07090c;
+  --terminal-surface:        #10141a;
+  --terminal-surface-2:      #151a21;
+  --terminal-surface-dim:    rgba(16, 20, 26, 0.72);   /* common panel bg */
+  --terminal-chrome-bg:      rgba(10, 13, 17, 0.96);   /* topbar / statusbar */
+  --terminal-sidebar-bg:     rgba(13, 16, 21, 0.92);   /* sidebar / rail */
+
+  /* Borders */
+  --terminal-border:         #2a3038;
+  --terminal-border-soft:    rgba(207, 158, 74, 0.24); /* amber-tinted border */
+
+  /* Text */
+  --terminal-text:           #eef2f6;
+  --terminal-muted:          #88919d;
+
+  /* Accent — institutional gold (Amber default) */
+  --terminal-amber:          #d6a44c;
+  --terminal-accent-bg:      rgba(214, 164, 76, 0.08); /* amber wash / hover */
+  --terminal-accent-bg-md:   rgba(214, 164, 76, 0.12); /* amber selected bg */
+  --terminal-accent-border:  rgba(214, 164, 76, 0.28); /* amber chip border */
+
+  /* Semantic severity ramp
+     green = safe / posture-ok
+     blue  = info / routine
+     amber = warning / degraded (reuses --terminal-amber above)
+     red   = critical / blocked / NO_TRADE                        */
+  --terminal-green:          #53d681;
+  --terminal-blue:           #76a9ff;
+  --terminal-red:            #ff6b6b;
+
+  /* Paired severity backgrounds */
+  --terminal-safe-bg:        rgba(83, 214, 129, 0.08);
+  --terminal-safe-border:    rgba(83, 214, 129, 0.34);
+  --terminal-danger-bg:      rgba(255, 107, 107, 0.10);
+  --terminal-danger-border:  rgba(255, 107, 107, 0.30);
+
+  /* Type */
+  --terminal-mono: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+}
+
+/* ── Navy — optional palette (data-theme="navy" on <html>) ─────────────────────
+   Swaps surfaces and accent only. Severity ramp (green/blue/amber/red) unchanged.
+   No theme switcher — devtools-only for now. Do NOT apply in TSX.             */
+[data-theme="navy"] {
+  /* Cooler navy-black surfaces */
+  --terminal-bg:             #060912;
+  --terminal-surface:        #0f1626;
+  --terminal-surface-2:      #141d31;
+  --terminal-surface-dim:    rgba(20, 29, 49, 0.72);
+  --terminal-chrome-bg:      rgba(6, 9, 18, 0.96);
+  --terminal-sidebar-bg:     rgba(10, 15, 28, 0.92);
+
+  --terminal-border:         #1b2543;
+  --terminal-border-soft:    rgba(74, 144, 217, 0.28);
+
+  --terminal-text:           #e6ecf5;
+  --terminal-muted:          #5f6e8e;
+
+  /* Accent — institutional blue (replaces gold in Navy) */
+  --terminal-amber:          #4a90d9;
+  --terminal-accent-bg:      rgba(74, 144, 217, 0.08);
+  --terminal-accent-bg-md:   rgba(74, 144, 217, 0.12);
+  --terminal-accent-border:  rgba(74, 144, 217, 0.28);
+}
+
+/* ── Crimson — severity/risk-only override (data-severity="crimson" on <html>) ─
+   NOT a full theme. Only the danger color changes.
+   green / blue / amber severity remain unchanged.
+   Do NOT make the whole app red. Do NOT apply as default.                     */
+[data-severity="crimson"] {
+  --terminal-red:            #dc2626;
+  --terminal-danger-bg:      rgba(220, 38, 38, 0.10);
+  --terminal-danger-border:  rgba(220, 38, 38, 0.34);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Component styles
+   ══════════════════════════════════════════════════════════════════════════════ */
+
 .terminal-root {
   color-scheme: dark;
-  --terminal-bg: #07090c;
-  --terminal-surface: #10141a;
-  --terminal-surface-2: #151a21;
-  --terminal-border: #2a3038;
-  --terminal-border-soft: rgba(207, 158, 74, 0.24);
-  --terminal-text: #eef2f6;
-  --terminal-muted: #88919d;
-  --terminal-amber: #d6a44c;
-  --terminal-green: #53d681;
-  --terminal-red: #ff6b6b;
-  --terminal-blue: #76a9ff;
-  --terminal-mono: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+  /* tokens inherited from :root — see token block above */
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -37,7 +114,7 @@
   gap: 16px;
   flex-wrap: wrap;
   border-bottom: 1px solid var(--terminal-border);
-  background: rgba(10, 13, 17, 0.96);
+  background: var(--terminal-chrome-bg);
   min-height: 52px;
   padding: 8px 16px;
 }
@@ -130,7 +207,7 @@
 .safety-badge {
   border: 1px solid rgba(83, 214, 129, 0.38);
   color: var(--terminal-green);
-  background: rgba(83, 214, 129, 0.08);
+  background: var(--terminal-safe-bg);
   padding: 5px 8px;
   font: 700 10px var(--terminal-mono);
   letter-spacing: 0.08em;
@@ -145,7 +222,7 @@
 .terminal-sidebar,
 .news-rail {
   border-right: 1px solid var(--terminal-border);
-  background: rgba(13, 16, 21, 0.92);
+  background: var(--terminal-sidebar-bg);
   padding: 16px;
 }
 
@@ -184,7 +261,7 @@
 .terminal-nav a.active {
   border-color: var(--terminal-border-soft);
   color: var(--terminal-text);
-  background: rgba(214, 164, 76, 0.08);
+  background: var(--terminal-accent-bg);
 }
 
 .nav-icon {
@@ -266,10 +343,10 @@
   overflow: auto;
   border: 1px solid var(--terminal-border-soft);
   background:
-    radial-gradient(circle at top right, rgba(214, 164, 76, 0.08), transparent 24%),
+    radial-gradient(circle at top right, var(--terminal-accent-bg), transparent 24%),
     linear-gradient(180deg, rgba(20, 24, 31, 0.98), rgba(11, 14, 18, 0.98));
   box-shadow:
-    0 0 0 1px rgba(214, 164, 76, 0.08),
+    0 0 0 1px var(--terminal-accent-bg),
     0 40px 100px rgba(0, 0, 0, 0.55);
   padding: 20px;
   display: grid;
@@ -366,7 +443,7 @@
 
 .boot-status-stack span {
   border: 1px solid rgba(214, 164, 76, 0.24);
-  background: rgba(214, 164, 76, 0.08);
+  background: var(--terminal-accent-bg);
   color: var(--terminal-amber);
   padding: 8px 10px;
   font: 700 10px var(--terminal-mono);
@@ -529,7 +606,7 @@
   justify-content: space-between;
   gap: 12px;
   border: 1px solid var(--terminal-border);
-  background: rgba(16, 20, 26, 0.72);
+  background: var(--terminal-surface-dim);
   padding: 8px 10px;
 }
 
@@ -561,7 +638,7 @@
 .event-entry {
   border: 1px solid var(--terminal-border);
   border-left: 3px solid var(--terminal-border);
-  background: rgba(16, 20, 26, 0.72);
+  background: var(--terminal-surface-dim);
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
@@ -684,7 +761,7 @@
   display: grid;
   gap: 4px;
   border: 1px solid var(--terminal-border);
-  background: rgba(16, 20, 26, 0.72);
+  background: var(--terminal-surface-dim);
   padding: 10px;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -734,7 +811,7 @@
   gap: 10px;
   align-items: center;
   border: 1px solid var(--terminal-border);
-  background: rgba(16, 20, 26, 0.72);
+  background: var(--terminal-surface-dim);
   color: inherit;
   text-align: left;
   padding: 10px;
@@ -744,8 +821,8 @@
 
 .roster-item.selected {
   border-color: rgba(214, 164, 76, 0.5);
-  background: rgba(214, 164, 76, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(214, 164, 76, 0.08);
+  background: var(--terminal-accent-bg-md);
+  box-shadow: inset 0 0 0 1px var(--terminal-accent-bg);
 }
 
 .roster-item strong,
@@ -817,7 +894,7 @@
   align-items: center;
   gap: 6px;
   border: 1px solid var(--terminal-border-soft);
-  background: rgba(214, 164, 76, 0.08);
+  background: var(--terminal-accent-bg);
   color: var(--terminal-amber);
   padding: 6px 8px;
   font: 700 10px var(--terminal-mono);
@@ -838,7 +915,7 @@
 
 .workspace-safety-banner {
   border: 1px solid rgba(83, 214, 129, 0.34);
-  background: rgba(83, 214, 129, 0.08);
+  background: var(--terminal-safe-bg);
   color: var(--terminal-green);
   padding: 10px 12px;
   font: 700 11px var(--terminal-mono);
@@ -888,7 +965,7 @@
 
 .workspace-task-card.selected .workspace-task-glyph {
   border-color: rgba(214, 164, 76, 0.5);
-  background: rgba(214, 164, 76, 0.12);
+  background: var(--terminal-accent-bg-md);
   color: var(--terminal-amber);
 }
 
@@ -903,7 +980,7 @@
 .workspace-task-select {
   justify-self: start;
   border: 1px solid var(--terminal-border-soft);
-  background: rgba(214, 164, 76, 0.12);
+  background: var(--terminal-accent-bg-md);
   color: var(--terminal-text);
   padding: 8px 10px;
   font: 700 10px var(--terminal-mono);
@@ -921,7 +998,7 @@
 .workspace-prompt-shell,
 .workspace-rail-section {
   border: 1px solid var(--terminal-border);
-  background: rgba(16, 20, 26, 0.72);
+  background: var(--terminal-surface-dim);
   padding: 12px;
   min-width: 0;
 }
@@ -1095,7 +1172,7 @@
 .agent-card,
 .thesis-grid > div {
   border: 1px solid var(--terminal-border);
-  background: rgba(16, 20, 26, 0.72);
+  background: var(--terminal-surface-dim);
   padding: 12px;
 }
 
@@ -1131,7 +1208,7 @@
 
 .evidence-stack span {
   border: 1px solid var(--terminal-border);
-  background: rgba(214, 164, 76, 0.08);
+  background: var(--terminal-accent-bg);
   padding: 10px;
   overflow-wrap: anywhere;
 }
@@ -1171,7 +1248,7 @@
 
 .service-pill--degraded {
   border: 1px solid rgba(214, 164, 76, 0.42);
-  background: rgba(214, 164, 76, 0.12);
+  background: var(--terminal-accent-bg-md);
   color: var(--terminal-amber);
 }
 
