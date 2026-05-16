@@ -128,10 +128,14 @@ class SignalLifecycleService:
         decision: LifecycleDecision | None = None,
         risk_status: LifecycleRiskStatus | None = None,
     ) -> SignalLifecycleResponse:
-        decisions = self._decision_service.list_decisions(
+        # Preserve the full response so fallback can be propagated accurately.
+        # SUPA-012: fallback=True was previously hardcoded; now reflects whether
+        # the history service served real Supabase data or the seed fixture.
+        decisions_response = self._decision_service.list_decisions(
             limit=_LIMIT_MAX,
             symbol=symbol,
-        ).decisions
+        )
+        decisions = decisions_response.decisions
         if decision is not None:
             decisions = [record for record in decisions if record.decision == decision]
         if risk_status is not None:
@@ -175,5 +179,5 @@ class SignalLifecycleService:
             lifecycle=records,
             generated_at=datetime.now(timezone.utc),
             degraded=any(record.decision != "dry_run_allowed" for record in records),
-            fallback=True,
+            fallback=decisions_response.fallback,
         )
