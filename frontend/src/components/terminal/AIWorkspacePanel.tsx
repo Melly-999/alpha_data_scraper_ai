@@ -25,6 +25,15 @@ function formatScannerConfidence(confidence: number): string {
   return `${Math.round(confidence)}%`;
 }
 
+/** Returns the CSS modifier class that color-codes the action chip. */
+const SCANNER_ACTION_CLASS: Record<SignalScannerAction, string> = {
+  WATCH:       "scanner-action--watch",
+  HOLD:        "scanner-action--hold",
+  LONG_SETUP:  "scanner-action--long-setup",
+  SHORT_SETUP: "scanner-action--short-setup",
+  NO_TRADE:    "scanner-action--no-trade",
+} as const;
+
 const agents: Agent[] = [
   { name: "PlannerAgent", role: "Session strategist", health: "healthy", taskCount: 4 },
   { name: "MomentumAgent", role: "Trend and impulse review", health: "healthy", taskCount: 3 },
@@ -241,15 +250,17 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                   {data.scannerPreview.results.map((result) => (
                     <article
                       key={`${result.symbol}-${result.timestamp}`}
-                      className="scanner-preview-card"
-                      aria-label={`${result.symbol} advisory setup`}
+                      className={`scanner-preview-card${result.action === "NO_TRADE" ? " scanner-preview-card--no-trade" : ""}`}
+                      aria-label={`${result.symbol} advisory setup — ${formatScannerAction(result.action)}`}
                     >
                       <div className="scanner-preview-topline">
                         <div>
                           <p className="terminal-eyebrow">Advisory scanner output</p>
                           <strong>{result.symbol}</strong>
                         </div>
-                        <span className="scanner-preview-action">
+                        <span
+                          className={`scanner-preview-action ${SCANNER_ACTION_CLASS[result.action]}`}
+                        >
                           {formatScannerAction(result.action)}
                         </span>
                       </div>
@@ -257,13 +268,21 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                         <span>Confidence</span>
                         <strong>{formatScannerConfidence(result.confidence)}</strong>
                       </div>
+                      <div
+                        className="scanner-conf-bar"
+                        role="meter"
+                        aria-valuenow={result.confidence}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`Confidence ${result.confidence}%`}
+                      >
+                        <span style={{ width: `${result.confidence}%` }} />
+                      </div>
                       <p className="scanner-preview-reason">{result.reason}</p>
                       <div className="scanner-preview-badges">
                         <span className="scanner-preview-badge">DRY RUN</span>
                         <span className="scanner-preview-badge">HUMAN REVIEW</span>
-                        <span className="scanner-preview-badge">
-                          {result.risk_allowed ? "RISK ALLOWED" : "RISK BLOCKED"}
-                        </span>
+                        <span className="scanner-preview-badge">POLICY GATE</span>
                       </div>
                     </article>
                   ))}
