@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.api.deps import get_container
@@ -143,6 +145,20 @@ def signal_decisions(
     decision: DecisionType | None = Query(default=None),
     risk_status: RiskStatus | None = Query(default=None),
     direction: DecisionDirection | None = Query(default=None),
+    from_date: datetime | None = Query(
+        default=None,
+        description=(
+            "Optional inclusive lower bound for created_at (ISO 8601 / UTC). "
+            "Read-only filter; no mutation or execution semantics."
+        ),
+    ),
+    to_date: datetime | None = Query(
+        default=None,
+        description=(
+            "Optional inclusive upper bound for created_at (ISO 8601 / UTC). "
+            "Read-only filter; no mutation or execution semantics."
+        ),
+    ),
 ) -> SignalDecisionHistoryResponse:
     """Read-only signal decision history.
 
@@ -151,6 +167,7 @@ def signal_decisions(
     no order placement, no broker connection.
     SUPA-010: audit event is emitted after the response is assembled;
     audit persistence failure never blocks the decisions response.
+    SUPA-014: optional ``from_date`` / ``to_date`` bound created_at server-side.
     """
     from app.services.signal_decision_audit import emit_signal_decision_event
     from app.services.supabase_client import get_safe_supabase_client
@@ -161,6 +178,8 @@ def signal_decisions(
         decision=decision,
         risk_status=risk_status,
         direction=direction,
+        from_date=from_date,
+        to_date=to_date,
     )
 
     # SUPA-010: fire-and-forget audit event — degrades gracefully.

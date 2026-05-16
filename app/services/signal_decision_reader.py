@@ -1,4 +1,4 @@
-"""Signal decision reader — SUPA-011.
+"""Signal decision reader — SUPA-011 / SUPA-014.
 
 Reads SignalDecisionRecord rows from mellytrade.signal_decisions in Supabase.
 Falls back gracefully (returns []) when the client is unavailable or the query
@@ -15,8 +15,16 @@ Design constraints:
 
 Public API:
   read_signal_decisions(
-      *, symbol=None, limit=100, client=None, _select_fn=None
+      *, symbol=None, limit=100, from_date=None, to_date=None,
+      client=None, _select_fn=None
   ) -> list[SignalDecisionRecord]
+
+SUPA-014 additions:
+  - Optional ``from_date`` / ``to_date`` filters applied server-side
+    against ``created_at`` via Supabase ``.gte()`` / ``.lte()``.
+  - Both filters are optional and fully backwards-compatible.
+  - Invalid date ranges (from_date > to_date) are tolerated; query may
+    return an empty list — never raises.
 """
 
 from __future__ import annotations
@@ -106,12 +114,30 @@ def _row_to_record(row: dict[str, Any]) -> SignalDecisionRecord | None:
         return None
 
 
+def _to_iso(value: datetime | None) -> str | None:
+    """Serialize a datetime to ISO 8601 UTC for Supabase filter calls.
+
+    Returns None when value is None.  Naive datetimes are treated as UTC.
+    Read-only formatting helper — never raises.
+    """
+    if value is None:
+        return None
+    try:
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc).isoformat()
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def read_signal_decisions(
     *,
     symbol: str | None = None,
     limit: int = _LIMIT_DEFAULT,
+    from_date: datetime | None = None,
+    to_date: datetime | None = None,
     client: Any | None = None,
-    _select_fn: Callable[[str, str | None, int], Any] | None = None,
+    _select_fn: Callable[..., Any] | None = None,
 ) -> list[SignalDecisionRecord]:
     """Read signal decisions from Supabase, ordered by recency.
 
@@ -125,13 +151,21 @@ def read_signal_decisions(
     limit:
         Maximum number of records to return.  Clamped to [1, 500].
         Default: 100.
+    from_date:
+        Optional inclusive lower bound for ``created_at`` (UTC).
+        Applied server-side via ``.gte()``.  Pass None to skip the filter.
+    to_date:
+        Optional inclusive upper bound for ``created_at`` (UTC).
+        Applied server-side via ``.lte()``.  Pass None to skip the filter.
     client:
         Supabase client from get_safe_supabase_client().
         Pass None to trigger the degraded path (returns []).
     _select_fn:
-        Injectable callable ``(table: str, symbol: str | None, limit: int) ->
-        response`` used by tests to avoid real network calls.
-        Response must expose a ``data`` attribute (list[dict] or None).
+        Injectable callable used by tests to avoid real network calls.
+        Signature: ``(table: str, symbol: str | None, limit: int, **kwargs)
+        -> response``.  ``from_date`` and ``to_date`` are passed as keyword
+        arguments (ISO 8601 strings or None).  Response must expose a
+        ``data`` attribute (list[dict] or None).
         Pass None (default) to use the real client path.
 
     Returns
@@ -146,9 +180,18 @@ def read_signal_decisions(
         logger.debug("signal_decision_reader: no client — returning empty list (degraded)")
         return []
 
+    from_iso = _to_iso(from_date)
+    to_iso = _to_iso(to_date)
+
     try:
         if _select_fn is not None:
-            response = _select_fn(_DECISIONS_TABLE, symbol, bounded)
+            response = _select_fn(
+                _DECISIONS_TABLE,
+                symbol,
+                bounded,
+                from_date=from_iso,
+                to_date=to_iso,
+            )
         else:
             query = (
                 client.table(_DECISIONS_TABLE)
@@ -157,6 +200,10 @@ def read_signal_decisions(
             )
             if symbol is not None:
                 query = query.eq("symbol", symbol.upper())
+            if from_iso is not None:
+                query = query.gte("created_at", from_iso)
+            if to_iso is not None:
+                query = query.lte("created_at", to_iso)
             response = query.limit(bounded).execute()
 
         rows: list[dict[str, Any]] = []

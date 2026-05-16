@@ -274,7 +274,7 @@ def test_signal_decisions_existing_signals_unaffected(client) -> None:
 # No network calls are made — read_signal_decisions is monkeypatched.
 # ---------------------------------------------------------------------------
 
-from datetime import datetime, timezone  # noqa: E402 (appended to module)
+from datetime import datetime, timedelta, timezone  # noqa: E402 (appended to module)
 
 
 def _make_real_record(
@@ -515,3 +515,223 @@ class TestSupa011FallbackBehaviour:
             assert rec.auto_trade is False
             assert rec.read_only is True
             assert rec.max_risk_per_trade <= 0.01
+
+
+# ---------------------------------------------------------------------------
+# SUPA-014: from_date / to_date date filters
+# ---------------------------------------------------------------------------
+#
+# Verifies the history service forwards from_date/to_date to the reader and
+# also applies them to the seed-fallback path. GET-only behavior preserved.
+
+
+def _seed_record(*, record_id: str, symbol: str, minutes_ago: int):
+    """Build a seed-style record at a specific age. Used to drive date filters."""
+    from app.schemas.signal_decision import SignalDecisionRecord
+
+    return SignalDecisionRecord(
+        id=record_id,
+        timestamp=datetime.now(timezone.utc) - timedelta(minutes=minutes_ago),
+        symbol=symbol,
+        direction="BUY",  # type: ignore[arg-type]
+        confidence=0.75,
+        source="scanner",
+        strategy="mtf_confluence",
+        risk_status="pass",  # type: ignore[arg-type]
+        decision="dry_run_allowed",  # type: ignore[arg-type]
+        blocked_reason=None,
+        dry_run=True,
+        auto_trade=False,
+        read_only=True,
+        stop_loss_required=True,
+        take_profit_required=True,
+        max_risk_per_trade=0.01,
+    )
+
+
+class TestSupa014DateFiltersServiceLevel:
+    """Service-level coverage for from_date/to_date propagation."""
+
+    def test_kwargs_forwarded_to_reader(self, monkeypatch) -> None:
+        """from_date/to_date passed by the service reach the reader."""
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
+
+        captured: dict = {}
+
+        def _capture(**kwargs):
+            captured.update(kwargs)
+            return []
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", _capture)
+
+        svc = SignalDecisionHistoryService()
+        from_d = datetime(2026, 5, 16, 0, 0, 0, tzinfo=timezone.utc)
+        to_d = datetime(2026, 5, 17, 0, 0, 0, tzinfo=timezone.utc)
+        svc.list_decisions(from_date=from_d, to_date=to_d)
+
+        assert captured.get("from_date") == from_d
+        assert captured.get("to_date") == to_d
+
+    def test_seed_path_applies_from_date(self, monkeypatch) -> None:
+        """When reader returns [], the seed path still respects from_date."""
+        from app.services import signal_decision_history_service as svc_mod
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
+
+        # Force fallback path
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: [])
+
+        # Inject controlled seed data
+        custom_seed = [
+            _seed_record(record_id="a", symbol="AAPL", minutes_ago=1),
+            _seed_record(record_id="b", symbol="MSFT", minutes_ago=120),
+            _seed_record(record_id="c", symbol="NVDA", minutes_ago=10_000),
+        ]
+        monkeypatch.setattr(svc_mod, "_SEED_DECISIONS", custom_seed)
+
+        svc = SignalDecisionHistoryService()
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=60)
+        response = svc.list_decisions(from_date=cutoff)
+        ids = {d.id for d in response.decisions}
+        assert "a" in ids
+        assert "b" not in ids
+        assert "c" not in ids
+
+    def test_seed_path_applies_to_date(self, monkeypatch) -> None:
+        """When reader returns [], the seed path still respects to_date."""
+        from app.services import signal_decision_history_service as svc_mod
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: [])
+
+        custom_seed = [
+            _seed_record(record_id="a", symbol="AAPL", minutes_ago=1),
+            _seed_record(record_id="b", symbol="MSFT", minutes_ago=120),
+            _seed_record(record_id="c", symbol="NVDA", minutes_ago=10_000),
+        ]
+        monkeypatch.setattr(svc_mod, "_SEED_DECISIONS", custom_seed)
+
+        svc = SignalDecisionHistoryService()
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=60)
+        response = svc.list_decisions(to_date=cutoff)
+        ids = {d.id for d in response.decisions}
+        assert "a" not in ids
+        assert "b" in ids
+        assert "c" in ids
+
+    def test_seed_path_inverted_range_empty(self, monkeypatch) -> None:
+        """Inverted from_date>to_date returns empty without raising on seed path."""
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: [])
+
+        svc = SignalDecisionHistoryService()
+        now = datetime.now(timezone.utc)
+        response = svc.list_decisions(
+            from_date=now + timedelta(hours=1),
+            to_date=now - timedelta(hours=1),
+        )
+        assert response.total == 0
+        # Safety flags preserved
+        assert response.dry_run is True
+        assert response.auto_trade is False
+        assert response.read_only is True
+
+    def test_dates_optional_backwards_compatible(self) -> None:
+        """Service still works with no date filters at all (existing call shape)."""
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions()
+        # Schema preserved
+        assert response.dry_run is True
+        assert response.auto_trade is False
+        assert response.read_only is True
+
+
+class TestSupa014DateFiltersRouteLevel:
+    """HTTP-level coverage for GET /api/signals/decisions date filters."""
+
+    def test_from_date_only_returns_200(self, client) -> None:
+        response = client.get(
+            "/api/signals/decisions?from_date=2020-01-01T00:00:00Z"
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["dry_run"] is True
+        assert payload["auto_trade"] is False
+        assert payload["read_only"] is True
+
+    def test_to_date_only_returns_200(self, client) -> None:
+        response = client.get(
+            "/api/signals/decisions?to_date=2099-01-01T00:00:00Z"
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["dry_run"] is True
+
+    def test_both_dates_returns_200(self, client) -> None:
+        response = client.get(
+            "/api/signals/decisions"
+            "?from_date=2020-01-01T00:00:00Z"
+            "&to_date=2099-01-01T00:00:00Z"
+        )
+        assert response.status_code == 200
+
+    def test_invalid_date_string_rejected_with_422(self, client) -> None:
+        response = client.get("/api/signals/decisions?from_date=not-a-date")
+        assert response.status_code == 422
+
+    def test_future_to_date_with_past_from_date_safe_empty(self, client) -> None:
+        # Future-only window: no past records should match.
+        response = client.get(
+            "/api/signals/decisions"
+            "?from_date=2099-01-01T00:00:00Z"
+            "&to_date=2099-12-31T00:00:00Z"
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["total"] == 0
+        assert payload["decisions"] == []
+        # Safety invariants always hold on empty result
+        assert payload["dry_run"] is True
+        assert payload["auto_trade"] is False
+        assert payload["read_only"] is True
+
+    def test_get_only_unchanged(self, client) -> None:
+        """Date filters do not introduce non-GET methods on this route."""
+        for route in client.app.routes:
+            if getattr(route, "path", None) == "/api/signals/decisions":
+                assert getattr(route, "methods", set()) == {"GET"}
+
+    def test_no_secrets_in_filtered_response(self, client) -> None:
+        response = client.get(
+            "/api/signals/decisions?from_date=2020-01-01T00:00:00Z"
+        )
+        raw = response.text
+        for pattern in SECRET_PATTERNS:
+            assert pattern not in raw
+
+    def test_existing_limit_still_clamped(self, client) -> None:
+        response = client.get(
+            "/api/signals/decisions"
+            "?from_date=2020-01-01T00:00:00Z&limit=500"
+        )
+        assert response.status_code == 422  # limit ge=1 le=200 unchanged

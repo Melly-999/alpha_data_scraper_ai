@@ -175,7 +175,17 @@ class SignalDecisionHistoryService:
         decision: DecisionType | None = None,
         risk_status: RiskStatus | None = None,
         direction: DecisionDirection | None = None,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
     ) -> SignalDecisionHistoryResponse:
+        """Return read-only signal decision history.
+
+        SUPA-014: ``from_date`` / ``to_date`` are inclusive bounds applied to
+        each record's ``timestamp``. Both are optional and tolerated even when
+        ``from_date > to_date`` (returns an empty list rather than raising).
+        Applied server-side via the reader on the real path, and post-filtered
+        on the seed fallback path. No write semantics, no execution.
+        """
         bounded = max(_LIMIT_MIN, min(limit, _LIMIT_MAX))
 
         # SUPA-011: attempt real Supabase read first; degrade to seed on failure.
@@ -191,6 +201,8 @@ class SignalDecisionHistoryService:
             real_records = read_signal_decisions(
                 symbol=symbol,
                 limit=_LIMIT_MAX,
+                from_date=from_date,
+                to_date=to_date,
                 client=get_safe_supabase_client(),
             )
             if real_records:
@@ -205,6 +217,12 @@ class SignalDecisionHistoryService:
             if symbol is not None:
                 upper = symbol.upper()
                 records = [r for r in records if r.symbol.upper() == upper]
+            # SUPA-014: apply date filters to seed data (reader applies them
+            # server-side for real data; seed path applies them here).
+            if from_date is not None:
+                records = [r for r in records if r.timestamp >= from_date]
+            if to_date is not None:
+                records = [r for r in records if r.timestamp <= to_date]
 
         # Apply remaining filters (decision, risk_status, direction) to both
         # real and seed data paths.
