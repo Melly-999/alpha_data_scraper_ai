@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
+from app.schemas.signal_decision import SignalDecisionHistoryResponse
+from app.services.signal_lifecycle_service import SignalLifecycleService
+
 SECRET_PATTERNS = [
     "API_KEY",
     "TOKEN",
@@ -201,3 +206,102 @@ def test_no_unsafe_signal_lifecycle_execution_routes(client) -> None:
         assert not matching, f"Unsafe route segment '{segment}' found: {matching}"
     for exact in UNSAFE_EXACT_PATHS:
         assert exact not in routes, f"Unsafe exact route '{exact}' is registered"
+
+
+# ---------------------------------------------------------------------------
+# SUPA-012: lifecycle fallback accuracy — unit tests
+# ---------------------------------------------------------------------------
+#
+# Verifies that SignalLifecycleService.list_lifecycle() propagates the
+# fallback field from SignalDecisionHistoryService.list_decisions() rather
+# than hardcoding True.
+#
+# No network calls, no Supabase client, no HTTP client fixture.
+# The mock decision service returns a controlled SignalDecisionHistoryResponse.
+# ---------------------------------------------------------------------------
+
+
+def _make_mock_history_response(*, fallback: bool) -> SignalDecisionHistoryResponse:
+    """Return a minimal SignalDecisionHistoryResponse with the given fallback flag."""
+    return SignalDecisionHistoryResponse(
+        dry_run=True,
+        auto_trade=False,
+        read_only=True,
+        total=0,
+        decisions=[],
+        generated_at=datetime.now(timezone.utc),
+        degraded=False,
+        fallback=fallback,
+    )
+
+
+class _MockDecisionService:
+    """Minimal stub for SignalDecisionHistoryService that returns a controlled response."""
+
+    def __init__(self, *, fallback: bool) -> None:
+        self._fallback = fallback
+
+    def list_decisions(self, **kwargs: object) -> SignalDecisionHistoryResponse:
+        return _make_mock_history_response(fallback=self._fallback)
+
+
+class TestLifecycleFallbackPropagation:
+    """SUPA-012: lifecycle response.fallback propagates from history service."""
+
+    def test_fallback_true_when_history_uses_seed(self) -> None:
+        """lifecycle.fallback must be True when history service returns fallback=True.
+
+        This covers the degraded path: Supabase unavailable or returned no rows,
+        so the seed fixture was served.
+        """
+        svc = SignalLifecycleService(
+            decision_service=_MockDecisionService(fallback=True)
+        )
+        response = svc.list_lifecycle()
+        assert response.fallback is True
+
+    def test_fallback_false_when_history_uses_real_data(self) -> None:
+        """lifecycle.fallback must be False when history service returns fallback=False.
+
+        This covers the live path: real rows were read from Supabase and served.
+        The previous hardcoded fallback=True would have wrongly reported True here.
+        """
+        svc = SignalLifecycleService(
+            decision_service=_MockDecisionService(fallback=False)
+        )
+        response = svc.list_lifecycle()
+        assert response.fallback is False
+
+    def test_fallback_does_not_affect_safety_flags(self) -> None:
+        """fallback propagation must never alter the safety invariants."""
+        for fb in (True, False):
+            svc = SignalLifecycleService(
+                decision_service=_MockDecisionService(fallback=fb)
+            )
+            response = svc.list_lifecycle()
+            assert response.dry_run is True
+            assert response.auto_trade is False
+            assert response.read_only is True
+            assert response.supports_live_orders is False
+
+    def test_fallback_true_empty_lifecycle_is_safe(self) -> None:
+        """Empty lifecycle (no decisions) with fallback=True remains safe."""
+        svc = SignalLifecycleService(
+            decision_service=_MockDecisionService(fallback=True)
+        )
+        response = svc.list_lifecycle()
+        assert response.total == 0
+        assert response.lifecycle == []
+        assert response.fallback is True
+        assert response.dry_run is True
+
+    def test_fallback_false_empty_lifecycle_is_safe(self) -> None:
+        """Empty lifecycle (no decisions) with fallback=False remains safe."""
+        svc = SignalLifecycleService(
+            decision_service=_MockDecisionService(fallback=False)
+        )
+        response = svc.list_lifecycle()
+        assert response.total == 0
+        assert response.lifecycle == []
+        assert response.fallback is False
+        assert response.dry_run is True

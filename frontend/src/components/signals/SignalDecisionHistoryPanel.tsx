@@ -72,14 +72,32 @@ function summarizeDecisions(records: SignalDecisionRecord[]) {
   };
 }
 
+function formatTimestamp(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
 export function SignalDecisionHistoryPanel({
   records,
   hasActiveFilters = false,
+  fallback = false,
+  degraded = false,
   generatedAt,
   filters,
 }: {
   records: SignalDecisionRecord[];
   hasActiveFilters?: boolean;
+  /** True when seed fixture data is being shown instead of real Supabase rows. */
+  fallback?: boolean;
+  /** True when any record has a blocked or warn risk status. */
+  degraded?: boolean;
   generatedAt: string;
   filters: SignalDecisionExportFilters;
 }) {
@@ -126,7 +144,15 @@ export function SignalDecisionHistoryPanel({
             <p>Dry-run decision history only. No order was placed.</p>
             <p>Live orders remain blocked.</p>
           </div>
-          <Badge tone="green">read-only</Badge>
+          <div className="signal-lifecycle-badges">
+            <Badge tone="green">read-only</Badge>
+            {fallback ? (
+              <Badge tone="amber">seed data</Badge>
+            ) : (
+              <Badge tone="green">live data</Badge>
+            )}
+            {degraded ? <Badge tone="amber">degraded</Badge> : null}
+          </div>
         </div>
         <div className="lifecycle-summary-grid">
           <div className="lifecycle-summary-card">
@@ -176,6 +202,13 @@ export function SignalDecisionHistoryPanel({
       ) : (
         <Table
           columns={[
+            {
+              key: "timestamp",
+              label: "Time",
+              render: (row) => (
+                <span className="dashboard-muted">{formatTimestamp(row.timestamp)}</span>
+              ),
+            },
             { key: "symbol", label: "Symbol", render: (row) => row.symbol },
             {
               key: "direction",

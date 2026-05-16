@@ -390,6 +390,8 @@ export interface SignalDecisionRecord {
   risk_status: DecisionRiskStatus;
   decision: DecisionType;
   blocked_reason?: string | null;
+  /** Optional audit event correlation ID. Added SUPA-011; optional for backwards compat. */
+  audit_event_id?: string | null;
   dry_run: boolean;
   auto_trade: boolean;
   read_only: boolean;
