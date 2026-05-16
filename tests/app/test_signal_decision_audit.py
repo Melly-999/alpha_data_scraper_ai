@@ -628,3 +628,67 @@ class TestSymbolFilterThreading:
         emit_signal_decision_event(3, "EURUSD", _insert_fn=fn)
         msg = calls[0][1].get("message", "")
         assert "EURUSD" in msg
+
+
+# ---------------------------------------------------------------------------
+# 15. Write client usage — signal_decisions route (SUPA-003B)
+# ---------------------------------------------------------------------------
+
+
+class TestSignalDecisionsWriteClient:
+    """The GET /signals/decisions audit emit must use the backend write client.
+
+    Backend writes require SUPABASE_SERVICE_ROLE_KEY to bypass RLS deny-all.
+    The anon client (get_safe_supabase_client) cannot INSERT; using it silently
+    degrades every audit write.  These tests confirm the route imports and calls
+    get_safe_supabase_write_client for the emit_signal_decision_event path.
+    """
+
+    def test_signal_decisions_route_calls_write_client(
+        self, client, monkeypatch
+    ) -> None:
+        """Write client must be invoked at least once per /signals/decisions call."""
+        write_client_calls: list[int] = []
+
+        def _fake_write_client() -> None:
+            write_client_calls.append(1)
+            return None  # None → degraded path; no real Supabase needed.
+
+        monkeypatch.setattr(
+            "app.services.supabase_client.get_safe_supabase_write_client",
+            _fake_write_client,
+        )
+
+        response = client.get("/api/signals/decisions")
+        assert response.status_code == 200
+        assert len(write_client_calls) >= 1, (
+            "get_safe_supabase_write_client must be called for the audit emit path"
+        )
+
+    def test_signal_decisions_route_response_unaffected_by_write_client_none(
+        self, client, monkeypatch
+    ) -> None:
+        """Response shape must be unchanged when write client returns None."""
+        monkeypatch.setattr(
+            "app.services.supabase_client.get_safe_supabase_write_client",
+            lambda: None,
+        )
+
+        response = client.get("/api/signals/decisions")
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data.get("decisions"), list)
+
+    def test_signal_decisions_safety_flags_preserved_with_write_client(
+        self, client, monkeypatch
+    ) -> None:
+        """Safety flags must remain intact regardless of write client behaviour."""
+        monkeypatch.setattr(
+            "app.services.supabase_client.get_safe_supabase_write_client",
+            lambda: None,
+        )
+
+        data = client.get("/api/signals/decisions").json()
+        assert data["dry_run"] is True
+        assert data["auto_trade"] is False
+        assert data["read_only"] is True
