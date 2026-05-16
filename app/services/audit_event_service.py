@@ -28,6 +28,10 @@ KNOWN_EVENT_TYPES: tuple[str, ...] = (
     "smoke_pending",
     "smoke_passed",
     "fallback_data_active",
+    # DATA-001: read-only operational telemetry events
+    "stale_data_warning",
+    "risk_blocked",
+    "scanner_evaluated",
 )
 
 
@@ -263,6 +267,73 @@ class AuditEventService:
             ),
         ]
 
+    def build_operational_events(self) -> list[AuditEvent]:
+        """DATA-001: read-only operational telemetry rows.
+
+        Adds three event types — stale_data_warning, risk_blocked, and
+        scanner_evaluated — so the audit feed reads like a working
+        institutional desk rather than a bare boot log. Static, in-memory,
+        no network or broker calls. Every row remains read_only=True.
+        """
+        return [
+            _event(
+                "evt-ops-stale-001",
+                "stale_data_warning",
+                "warning",
+                "polling",
+                "Quote feed last updated 87s ago; advisory only. "
+                "Decisions continue using cached observation; no live orders affected.",
+                metadata={
+                    "feed": "quotes",
+                    "last_seen_seconds_ago": 87,
+                    "threshold_seconds": 90,
+                },
+                safety_note=(
+                    "Stale-data warnings are advisory; no order placement "
+                    "is gated on this signal in read-only mode."
+                ),
+            ),
+            _event(
+                "evt-ops-risk-001",
+                "risk_blocked",
+                "warning",
+                "risk",
+                "Signal blocked by risk gate: max_open_positions reached. "
+                "Recorded as dry-run-blocked decision; no order was placed.",
+                metadata={
+                    "gate": "max_open_positions",
+                    "open_positions": 3,
+                    "limit": 3,
+                    "dry_run": True,
+                    "order_placed": False,
+                },
+                safety_note=(
+                    "Risk gates apply to dry-run decision records only; "
+                    "they cannot cause an execution because none are wired up."
+                ),
+            ),
+            _event(
+                "evt-ops-scanner-001",
+                "scanner_evaluated",
+                "info",
+                "scanner",
+                "Scanner evaluated 6 watchlist symbols (AAPL, NVDA, MSFT, "
+                "TSLA, EURUSD, XAUUSD). 2 watch-only, 1 dry-run-allowed, "
+                "3 below review threshold. No orders placed.",
+                metadata={
+                    "symbols_evaluated": 6,
+                    "watch_only": 2,
+                    "dry_run_allowed": 1,
+                    "below_threshold": 3,
+                    "order_placed": False,
+                },
+                safety_note=(
+                    "Scanner is advisory-only — its evaluations populate the "
+                    "decision log; they never call the broker."
+                ),
+            ),
+        ]
+
     def list_events(
         self,
         risk_config: RiskConfig,
@@ -279,6 +350,7 @@ class AuditEventService:
         events.extend(self.build_broker_events())
         events.extend(self.build_mt5_events())
         events.extend(self.build_smoke_events(passed=smoke_passed))
+        events.extend(self.build_operational_events())
 
         degraded = any(e.severity in {"warning", "error"} for e in events)
         fallback = any(e.type == "fallback_data_active" for e in events)

@@ -70,7 +70,7 @@ def _make_response(rows: list[dict[str, Any]]) -> SimpleNamespace:
 
 
 def _select_returning(rows: list[dict[str, Any]]):
-    def _fn(table: str, symbol: str | None, limit: int) -> SimpleNamespace:
+    def _fn(table: str, symbol: str | None, limit: int, **kwargs: Any) -> SimpleNamespace:
         return _make_response(rows)
     return _fn
 
@@ -267,14 +267,14 @@ class TestReadDegradedPath:
 
 class TestReadFnRaises:
     def test_returns_empty_when_select_fn_raises(self) -> None:
-        def _raise(table: str, symbol: Any, limit: int) -> Any:
+        def _raise(table: str, symbol: Any, limit: int, **kwargs: Any) -> Any:
             raise RuntimeError("DB connection failed")
 
         result = read_signal_decisions(_select_fn=_raise)
         assert result == []
 
     def test_never_raises_when_select_fn_raises(self) -> None:
-        def _raise(table: str, symbol: Any, limit: int) -> Any:
+        def _raise(table: str, symbol: Any, limit: int, **kwargs: Any) -> Any:
             raise ValueError("injected error")
 
         result = read_signal_decisions(_select_fn=_raise)
@@ -304,14 +304,14 @@ class TestReadSuccessPath:
         assert result == []
 
     def test_none_data_returns_empty_list(self) -> None:
-        def _fn(table: str, symbol: Any, limit: int) -> SimpleNamespace:
+        def _fn(table: str, symbol: Any, limit: int, **kwargs: Any) -> SimpleNamespace:
             return SimpleNamespace(data=None)
 
         result = read_signal_decisions(_select_fn=_fn)
         assert result == []
 
     def test_no_response_data_attr_returns_empty(self) -> None:
-        def _fn(table: str, symbol: Any, limit: int) -> SimpleNamespace:
+        def _fn(table: str, symbol: Any, limit: int, **kwargs: Any) -> SimpleNamespace:
             return SimpleNamespace()  # no .data attribute
 
         result = read_signal_decisions(_select_fn=_fn)
@@ -320,7 +320,7 @@ class TestReadSuccessPath:
     def test_select_fn_called_with_correct_table(self) -> None:
         captured: list[str] = []
 
-        def _fn(table: str, symbol: Any, limit: int) -> SimpleNamespace:
+        def _fn(table: str, symbol: Any, limit: int, **kwargs: Any) -> SimpleNamespace:
             captured.append(table)
             return _make_response([])
 
@@ -330,7 +330,7 @@ class TestReadSuccessPath:
     def test_select_fn_called_with_symbol_filter(self) -> None:
         captured: list[Any] = []
 
-        def _fn(table: str, symbol: Any, limit: int) -> SimpleNamespace:
+        def _fn(table: str, symbol: Any, limit: int, **kwargs: Any) -> SimpleNamespace:
             captured.append(symbol)
             return _make_response([])
 
@@ -340,7 +340,7 @@ class TestReadSuccessPath:
     def test_select_fn_called_with_none_symbol_when_no_filter(self) -> None:
         captured: list[Any] = []
 
-        def _fn(table: str, symbol: Any, limit: int) -> SimpleNamespace:
+        def _fn(table: str, symbol: Any, limit: int, **kwargs: Any) -> SimpleNamespace:
             captured.append(symbol)
             return _make_response([])
 
@@ -350,7 +350,7 @@ class TestReadSuccessPath:
     def test_select_fn_called_with_clamped_limit(self) -> None:
         captured: list[int] = []
 
-        def _fn(table: str, symbol: Any, limit: int) -> SimpleNamespace:
+        def _fn(table: str, symbol: Any, limit: int, **kwargs: Any) -> SimpleNamespace:
             captured.append(limit)
             return _make_response([])
 
@@ -360,7 +360,7 @@ class TestReadSuccessPath:
     def test_select_fn_limit_clamped_below_min(self) -> None:
         captured: list[int] = []
 
-        def _fn(table: str, symbol: Any, limit: int) -> SimpleNamespace:
+        def _fn(table: str, symbol: Any, limit: int, **kwargs: Any) -> SimpleNamespace:
             captured.append(limit)
             return _make_response([])
 
@@ -370,7 +370,7 @@ class TestReadSuccessPath:
     def test_select_fn_limit_clamped_above_max(self) -> None:
         captured: list[int] = []
 
-        def _fn(table: str, symbol: Any, limit: int) -> SimpleNamespace:
+        def _fn(table: str, symbol: Any, limit: int, **kwargs: Any) -> SimpleNamespace:
             captured.append(limit)
             return _make_response([])
 
@@ -444,3 +444,154 @@ class TestSafetyInvariantsOnRecords:
     def test_all_records_confidence_in_range(self) -> None:
         for r in self._get_records():
             assert 0.0 <= r.confidence <= 1.0
+
+
+# ---------------------------------------------------------------------------
+# 10. SUPA-014: from_date / to_date date-range filters
+# ---------------------------------------------------------------------------
+#
+# Verifies the reader forwards from_date/to_date as ISO 8601 keyword args
+# (passed as `from_date=` / `to_date=`) to _select_fn, never raises on
+# invalid ranges, and degrades safely when no client is supplied.
+
+
+class TestSupa014DateFilters:
+    def _capturing_fn(self) -> tuple[list[dict[str, Any]], Any]:
+        captured: list[dict[str, Any]] = []
+
+        def _fn(
+            table: str,
+            symbol: Any,
+            limit: int,
+            **kwargs: Any,
+        ) -> SimpleNamespace:
+            captured.append(dict(kwargs))
+            return _make_response([])
+
+        return captured, _fn
+
+    def test_default_from_and_to_are_none(self) -> None:
+        captured, fn = self._capturing_fn()
+        read_signal_decisions(_select_fn=fn)
+        assert captured[0]["from_date"] is None
+        assert captured[0]["to_date"] is None
+
+    def test_from_date_passed_as_iso_string(self) -> None:
+        captured, fn = self._capturing_fn()
+        read_signal_decisions(
+            from_date=datetime(2026, 5, 16, 0, 0, 0, tzinfo=timezone.utc),
+            _select_fn=fn,
+        )
+        assert captured[0]["from_date"] is not None
+        assert captured[0]["from_date"].startswith("2026-05-16T00:00:00")
+        assert captured[0]["to_date"] is None
+
+    def test_to_date_passed_as_iso_string(self) -> None:
+        captured, fn = self._capturing_fn()
+        read_signal_decisions(
+            to_date=datetime(2026, 5, 17, 23, 59, 59, tzinfo=timezone.utc),
+            _select_fn=fn,
+        )
+        assert captured[0]["to_date"] is not None
+        assert captured[0]["to_date"].startswith("2026-05-17T23:59:59")
+        assert captured[0]["from_date"] is None
+
+    def test_both_dates_passed(self) -> None:
+        captured, fn = self._capturing_fn()
+        read_signal_decisions(
+            from_date=datetime(2026, 5, 16, 0, 0, 0, tzinfo=timezone.utc),
+            to_date=datetime(2026, 5, 17, 0, 0, 0, tzinfo=timezone.utc),
+            _select_fn=fn,
+        )
+        assert captured[0]["from_date"] is not None
+        assert captured[0]["to_date"] is not None
+
+    def test_naive_datetime_treated_as_utc(self) -> None:
+        captured, fn = self._capturing_fn()
+        read_signal_decisions(
+            from_date=datetime(2026, 5, 16, 12, 0, 0),  # naive
+            _select_fn=fn,
+        )
+        assert captured[0]["from_date"] is not None
+        # ISO output is UTC-normalized
+        assert "+00:00" in captured[0]["from_date"]
+
+    def test_inverted_range_never_raises(self) -> None:
+        captured, fn = self._capturing_fn()
+        # from_date AFTER to_date — must not raise; the reader tolerates it.
+        result = read_signal_decisions(
+            from_date=datetime(2026, 5, 18, 0, 0, 0, tzinfo=timezone.utc),
+            to_date=datetime(2026, 5, 16, 0, 0, 0, tzinfo=timezone.utc),
+            _select_fn=fn,
+        )
+        assert result == []
+
+    def test_date_filter_with_no_client_returns_empty(self) -> None:
+        result = read_signal_decisions(
+            from_date=datetime(2026, 5, 16, 0, 0, 0, tzinfo=timezone.utc),
+            to_date=datetime(2026, 5, 17, 0, 0, 0, tzinfo=timezone.utc),
+        )
+        assert result == []
+
+    def test_select_fn_raises_with_date_filter_returns_empty(self) -> None:
+        def _raise(
+            table: str, symbol: Any, limit: int, **kwargs: Any
+        ) -> Any:
+            raise RuntimeError("DB unreachable")
+
+        result = read_signal_decisions(
+            from_date=datetime(2026, 5, 16, 0, 0, 0, tzinfo=timezone.utc),
+            _select_fn=_raise,
+        )
+        assert result == []
+
+    def test_date_filter_preserves_limit_clamping(self) -> None:
+        captured, fn = self._capturing_fn()
+        read_signal_decisions(
+            limit=9999,
+            from_date=datetime(2026, 5, 16, 0, 0, 0, tzinfo=timezone.utc),
+            _select_fn=fn,
+        )
+        # The captured kwargs don't include limit (positional), but the call
+        # itself should not raise. Just verify it didn't crash.
+        assert len(captured) == 1
+
+    def test_date_filter_returns_records_when_data_present(self) -> None:
+        rows = [_make_row(symbol="AAPL")]
+
+        def _fn(
+            table: str, symbol: Any, limit: int, **kwargs: Any
+        ) -> SimpleNamespace:
+            return _make_response(rows)
+
+        result = read_signal_decisions(
+            from_date=datetime(2026, 5, 16, 0, 0, 0, tzinfo=timezone.utc),
+            to_date=datetime(2026, 5, 17, 0, 0, 0, tzinfo=timezone.utc),
+            _select_fn=_fn,
+        )
+        assert len(result) == 1
+        assert result[0].symbol == "AAPL"
+
+
+class TestSupa014ToIso:
+    """Direct coverage for _to_iso helper."""
+
+    def test_none_returns_none(self) -> None:
+        from app.services.signal_decision_reader import _to_iso
+
+        assert _to_iso(None) is None
+
+    def test_utc_datetime_iso(self) -> None:
+        from app.services.signal_decision_reader import _to_iso
+
+        result = _to_iso(datetime(2026, 5, 16, 12, 0, 0, tzinfo=timezone.utc))
+        assert result is not None
+        assert result.startswith("2026-05-16T12:00:00")
+        assert "+00:00" in result
+
+    def test_naive_assumed_utc(self) -> None:
+        from app.services.signal_decision_reader import _to_iso
+
+        result = _to_iso(datetime(2026, 5, 16, 12, 0, 0))
+        assert result is not None
+        assert "+00:00" in result

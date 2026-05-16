@@ -6,6 +6,7 @@ import { Drawer } from "../components/shared/Drawer";
 import { Table } from "../components/shared/Table";
 import { SignalDecisionHistoryPanel } from "../components/signals/SignalDecisionHistoryPanel";
 import { SignalLifecyclePanel } from "../components/signals/SignalLifecyclePanel";
+import { SignalReasoningPanel } from "../components/signals/SignalReasoningPanel";
 import { useMellySignals } from "../hooks/useMellySignals";
 import { useSignalDecisions } from "../hooks/useSignalDecisions";
 import { useSignalLifecycle } from "../hooks/useSignalLifecycle";
@@ -56,6 +57,71 @@ type DecisionHistoryDirectionFilter = DecisionDirection | "";
 type LifecycleDecisionFilter = DecisionType | "";
 type LifecycleRiskStatusFilter = DecisionRiskStatus | "";
 
+// SUPA-015: read-only date-range UI for decision history.
+// Quick-ranges are computed at render time only (no persistence, no submit).
+type DecisionDateQuickRange = "ALL" | "1H" | "4H" | "24H" | "7D";
+
+const DECISION_DATE_QUICK_RANGES: Array<{
+  key: DecisionDateQuickRange;
+  label: string;
+}> = [
+  { key: "1H", label: "1H" },
+  { key: "4H", label: "4H" },
+  { key: "24H", label: "24H" },
+  { key: "7D", label: "7D" },
+  { key: "ALL", label: "ALL" },
+];
+
+function quickRangeMinutes(range: DecisionDateQuickRange): number | null {
+  if (range === "1H") return 60;
+  if (range === "4H") return 60 * 4;
+  if (range === "24H") return 60 * 24;
+  if (range === "7D") return 60 * 24 * 7;
+  return null;
+}
+
+function quickRangeFromIso(range: DecisionDateQuickRange): string | null {
+  const minutes = quickRangeMinutes(range);
+  if (minutes === null) return null;
+  return new Date(Date.now() - minutes * 60_000).toISOString();
+}
+
+/**
+ * Convert a <input type="datetime-local"> value (e.g. "2026-05-16T10:00")
+ * to an ISO 8601 UTC string. Returns null when the value is empty or invalid.
+ * Read-only — no storage, no submit semantics.
+ */
+function localInputToIso(value: string): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
+}
+
+function formatDateRangeLabel(
+  quickRange: DecisionDateQuickRange,
+  customFromIso: string | null,
+  customToIso: string | null,
+): string {
+  if (customFromIso || customToIso) {
+    const left = customFromIso
+      ? new Date(customFromIso).toLocaleString([], {
+          dateStyle: "short",
+          timeStyle: "short",
+        })
+      : "—";
+    const right = customToIso
+      ? new Date(customToIso).toLocaleString([], {
+          dateStyle: "short",
+          timeStyle: "short",
+        })
+      : "—";
+    return `custom ${left} → ${right}`;
+  }
+  if (quickRange === "ALL") return "all time";
+  return `last ${quickRange.toLowerCase()}`;
+}
+
 function formatDecisionHistoryFilterSummary(
   symbol: string,
   decision: DecisionHistoryDecisionFilter,
@@ -95,6 +161,32 @@ export function SignalsPage() {
     useState<DecisionHistoryDirectionFilter>("");
   const [decisionBlockedOnly, setDecisionBlockedOnly] = useState(false);
   const effectiveDecisionFilter = decisionBlockedOnly ? "blocked" : decisionFilter;
+  // SUPA-015: date-range filter state. Quick-range and custom dates are
+  // mutually exclusive — picking a custom date clears the quick-range, and
+  // picking a quick-range clears the custom dates. Read-only filtering only;
+  // no persistence, no localStorage, no submit handlers.
+  const [decisionQuickRange, setDecisionQuickRange] =
+    useState<DecisionDateQuickRange>("ALL");
+  const [decisionFromInput, setDecisionFromInput] = useState<string>("");
+  const [decisionToInput, setDecisionToInput] = useState<string>("");
+  const customFromIso = useMemo(
+    () => localInputToIso(decisionFromInput),
+    [decisionFromInput],
+  );
+  const customToIso = useMemo(
+    () => localInputToIso(decisionToInput),
+    [decisionToInput],
+  );
+  const hasCustomRange = customFromIso !== null || customToIso !== null;
+  const effectiveFromDate: string | null = hasCustomRange
+    ? customFromIso
+    : quickRangeFromIso(decisionQuickRange);
+  const effectiveToDate: string | null = hasCustomRange ? customToIso : null;
+  const dateRangeLabel = formatDateRangeLabel(
+    decisionQuickRange,
+    customFromIso,
+    customToIso,
+  );
   const {
     data: decisionsData,
     loading: decisionsLoading,
@@ -106,6 +198,8 @@ export function SignalsPage() {
     decision: effectiveDecisionFilter,
     riskStatus: decisionRiskStatus,
     direction: decisionDirection,
+    fromDate: effectiveFromDate,
+    toDate: effectiveToDate,
   });
   // SUPA-013: stale indicator for Decision History card.
   // Uses the same useStaleDetector / data-freshness-label pattern as
@@ -345,6 +439,67 @@ export function SignalsPage() {
               <span>Show blocked only</span>
             </label>
           </div>
+          {/* SUPA-015: read-only date range controls.
+              Quick ranges and custom pickers are mutually exclusive: any
+              custom date overrides the quick range. Selecting a quick range
+              clears any custom pickers. No forms, no submit, no storage. */}
+          <div
+            className="signal-lifecycle-controls signal-date-range-controls"
+            role="group"
+            aria-label="Decision history date range (read-only filter)"
+          >
+            <div className="signal-date-range-quicks" role="radiogroup">
+              {DECISION_DATE_QUICK_RANGES.map((range) => {
+                const active =
+                  !hasCustomRange && decisionQuickRange === range.key;
+                return (
+                  <button
+                    key={range.key}
+                    type="button"
+                    className={`signal-date-range-chip${active ? " active" : ""}`}
+                    aria-pressed={active}
+                    onClick={() => {
+                      setDecisionQuickRange(range.key);
+                      setDecisionFromInput("");
+                      setDecisionToInput("");
+                    }}
+                  >
+                    {range.label}
+                  </button>
+                );
+              })}
+            </div>
+            <label>
+              <span>From</span>
+              <input
+                type="datetime-local"
+                value={decisionFromInput}
+                onChange={(event) => setDecisionFromInput(event.target.value)}
+                aria-label="Decision history from date (read-only filter)"
+              />
+            </label>
+            <label>
+              <span>To</span>
+              <input
+                type="datetime-local"
+                value={decisionToInput}
+                onChange={(event) => setDecisionToInput(event.target.value)}
+                aria-label="Decision history to date (read-only filter)"
+              />
+            </label>
+            {hasCustomRange ? (
+              <button
+                type="button"
+                className="signal-date-range-clear"
+                onClick={() => {
+                  setDecisionFromInput("");
+                  setDecisionToInput("");
+                }}
+              >
+                Clear dates
+              </button>
+            ) : null}
+          </div>
           <div className="signal-lifecycle-summary">
             {formatDecisionHistoryFilterSummary(
               decisionSymbol,
@@ -352,6 +507,7 @@ export function SignalsPage() {
               decisionRiskStatus,
               decisionDirection,
             )}
+            <span className="dashboard-muted"> · range: {dateRangeLabel}</span>
           </div>
           {decisionsLoading && !decisionsData ? (
             <div className="state">Loading decision history...</div>
@@ -376,7 +532,9 @@ export function SignalsPage() {
                 decisionSymbol.trim() !== "" ||
                 effectiveDecisionFilter !== "" ||
                 decisionRiskStatus !== "" ||
-                decisionDirection !== ""
+                decisionDirection !== "" ||
+                hasCustomRange ||
+                decisionQuickRange !== "ALL"
               }
             />
           ) : null}
@@ -625,21 +783,11 @@ export function SignalsPage() {
               </div>
             </div>
 
-            <div className="detail-row">
-              <span>Reasoning</span>
-              <p>{detail.reasoning}</p>
-            </div>
-
-            <div className="detail-row">
-              <span>Risk Gates</span>
-              <ul className="compact-list">
-                {reasoning?.risk_gate_results.map((item) => (
-                  <li key={item.gate}>
-                    {item.gate}: {item.passed ? "PASS" : "BLOCK"}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* DATA-002: explainable AI reasoning panel.
+                Replaces the previous inline reasoning + risk-gate rows
+                with a structured, collapsible, safety-badged surface.
+                Display-only — no execution controls. */}
+            <SignalReasoningPanel detail={detail} reasoning={reasoning} />
           </div>
         ) : null}
       </Drawer>

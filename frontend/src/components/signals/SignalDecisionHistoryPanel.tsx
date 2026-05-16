@@ -196,7 +196,7 @@ export function SignalDecisionHistoryPanel({
       {records.length === 0 ? (
         <div className="state">
           {hasActiveFilters
-            ? "No dry-run decision records match the selected filters."
+            ? "No decisions in the selected range. Try widening the date range or clearing filters."
             : "No dry-run decision records available."}
         </div>
       ) : (

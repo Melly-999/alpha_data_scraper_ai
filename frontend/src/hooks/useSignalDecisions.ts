@@ -15,6 +15,10 @@ interface SignalDecisionParams {
   decision?: DecisionType | "";
   riskStatus?: DecisionRiskStatus | "";
   direction?: DecisionDirection | "";
+  /** SUPA-015: optional inclusive lower bound (ISO 8601). Read-only filter. */
+  fromDate?: string | null;
+  /** SUPA-015: optional inclusive upper bound (ISO 8601). Read-only filter. */
+  toDate?: string | null;
 }
 
 function buildDecisionQuery({
@@ -23,6 +27,8 @@ function buildDecisionQuery({
   decision = "",
   riskStatus = "",
   direction = "",
+  fromDate = null,
+  toDate = null,
 }: SignalDecisionParams) {
   const query = new URLSearchParams();
   query.set("limit", String(limit));
@@ -39,6 +45,12 @@ function buildDecisionQuery({
   if (direction !== "") {
     query.set("direction", direction);
   }
+  if (fromDate) {
+    query.set("from_date", fromDate);
+  }
+  if (toDate) {
+    query.set("to_date", toDate);
+  }
   return query.toString();
 }
 
@@ -54,6 +66,8 @@ export function useSignalDecisions(params: SignalDecisionParams = {}) {
       params.decision,
       params.riskStatus,
       params.direction,
+      params.fromDate,
+      params.toDate,
     ],
   );
   return usePollingResource(loader, 30_000);
