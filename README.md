@@ -90,6 +90,88 @@ These tests are deliberately small and fast (the full
 treated as a regression net — if any of them fails, something
 safety-relevant has changed.
 
+## MERGE #100 — Read-Only AI Operations Layer
+
+The latest milestone (MERGE #100) layers an observability and
+explainability surface on top of the existing read-only terminal.
+Nothing in this milestone changes the safety posture — every
+new endpoint is `GET`, every new UI control is display-only.
+
+### Observability architecture
+
+```
+External signals → FastAPI (GET-only) ─┬─> Supabase (RLS deny-all, service_role only)
+                                       └─> In-memory seed fixtures (degraded fallback)
+                                       ↓
+                  React frontend (poll-only) — usePollingResource → apiGet
+                                       ↓
+                  Stale-data detector (90s threshold, 15s recheck, pure UI)
+```
+
+Full diagram + invariants:
+[docs/architecture/milestone_100_readonly_ai_ops.md](docs/architecture/milestone_100_readonly_ai_ops.md).
+
+### Read-only guarantees (re-affirmed by MERGE #100)
+
+- All new endpoints are `GET`. No `POST`/`PUT`/`PATCH`/`DELETE` was
+  added to the signal surfaces.
+- Date-range filters on `/api/signals/decisions` accept ISO 8601
+  bounds and are applied server-side via Supabase `.gte()`/`.lte()`;
+  the seed-fallback path applies the same window in Python so
+  behaviour is identical from the caller's perspective.
+- The Supabase service-role key is **never** exposed to the browser.
+  Every Supabase read goes `frontend → FastAPI → service_role → DB`.
+
+### AI reasoning layer
+
+The signal drawer now hosts a structured, collapsible
+`SignalReasoningPanel` (DATA-002) covering: *why this signal*,
+confidence breakdown vs the 70% review threshold, *why blocked*
+when applicable, the failed/passed risk gates, an explicit
+*human review required* framing, and an optional Claude
+validation block. Four safety badges (`DRY RUN ONLY`,
+`READ ONLY`, `HUMAN REVIEW REQUIRED`, `RISK BLOCKED`) render
+on every variant so a screenshot cannot be misread.
+
+### Supabase audit pipeline
+
+The `signal_decisions` table has RLS enabled with a deny-all
+default (`supabase/migrations/20260516_signal_decisions_rls.sql`).
+Frontend access is impossible without service_role; service_role is
+never exposed to the browser; the FastAPI layer re-enforces every
+safety field on read so a malicious or corrupted row cannot bypass
+the posture.
+
+### Safety model — verbatim contract
+
+```
+autotrade=false
+dry_run=true
+read_only=true
+live_orders_blocked=true
+max_risk_per_trade <= 0.01
+no POST/PUT/PATCH/DELETE on the signal surface
+no broker execution routes registered
+no MT5 execution paths invoked
+no service_role exposure to the browser
+no order placement code path
+no interactive trading controls
+```
+
+### Screenshots — MERGE #100
+
+> *Capture plan and per-screenshot requirements live in
+> [docs/demo/demo_screenshot_checklist.md](docs/demo/demo_screenshot_checklist.md).
+> Demo runbook: [docs/demo/professional_demo_walkthrough.md](docs/demo/professional_demo_walkthrough.md).*
+
+| # | Screenshot | What it shows |
+|---|---|---|
+| 1 | _add `docs/assets/screenshots/01_dashboard.png`_ | Dashboard with safety banner, system status, activity feed |
+| 2 | _add `docs/assets/screenshots/02_signals_overview.png`_ | Signal review + decision history + lifecycle stacked |
+| 3 | _add `docs/assets/screenshots/03_decision_history_1H.png`_ | Decision history with 1H quick-range chip active |
+| 4 | _add `docs/assets/screenshots/05_reasoning_panel.png`_ | AI reasoning panel with all four safety badges |
+| 5 | _add `docs/assets/screenshots/07_audit_trail.png`_ | Audit feed showing stale_data + scanner + risk_blocked events |
+
 ## Local Demo
 
 Full reviewer walkthrough lives in
