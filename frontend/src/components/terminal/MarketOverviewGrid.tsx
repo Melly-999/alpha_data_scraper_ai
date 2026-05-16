@@ -4,6 +4,15 @@ type MarketOverviewGridProps = {
   markets: MarketItem[];
 };
 
+/** Returns the CSS modifier for the signal chip color. */
+function signalChipClass(signal: string): string {
+  if (signal === "HOLD")  return "signal-chip--hold";
+  if (signal === "WATCH") return "signal-chip--watch";
+  if (signal === "BUY")   return "signal-chip--buy";
+  if (signal === "SELL")  return "signal-chip--sell";
+  return "";
+}
+
 export function MarketOverviewGrid({ markets }: MarketOverviewGridProps) {
   return (
     <section id="markets" className="terminal-panel">
@@ -16,7 +25,9 @@ export function MarketOverviewGrid({ markets }: MarketOverviewGridProps) {
           <article key={market.symbol} className="market-card">
             <div className="market-card-top">
               <strong>{market.symbol}</strong>
-              <span>{market.signal}</span>
+              <span className={`signal-chip ${signalChipClass(market.signal)}`}>
+                {market.signal}
+              </span>
             </div>
             <div className="market-price">
               {market.price.toFixed(market.price > 10 ? 2 : 4)}

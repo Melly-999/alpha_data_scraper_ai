@@ -1258,6 +1258,102 @@
   color: var(--terminal-green);
 }
 
+/* ── P2: Scanner action chip variants ──────────────────────────────────────
+   Color-codes the action badge by signal state.
+   Amber = Amber default (overridden per variant below).
+   Severity semantics preserved: green=long, blue=hold, amber=watch/short, red=no-trade */
+
+.scanner-action--watch {
+  border-color: rgba(214, 164, 76, 0.32);
+  background: rgba(214, 164, 76, 0.10);
+  color: var(--terminal-amber);
+}
+
+.scanner-action--hold {
+  border-color: rgba(118, 169, 255, 0.32);
+  background: rgba(118, 169, 255, 0.08);
+  color: var(--terminal-blue);
+}
+
+.scanner-action--long-setup {
+  border-color: rgba(83, 214, 129, 0.32);
+  background: rgba(83, 214, 129, 0.08);
+  color: var(--terminal-green);
+}
+
+.scanner-action--short-setup {
+  border-color: rgba(214, 164, 76, 0.32);
+  background: rgba(214, 164, 76, 0.10);
+  color: var(--terminal-amber);
+}
+
+.scanner-action--no-trade {
+  border-color: rgba(255, 107, 107, 0.32);
+  background: rgba(255, 107, 107, 0.08);
+  color: var(--terminal-red);
+}
+
+/* NO_TRADE card: left rail tint only — card surface stays near-neutral */
+
+.scanner-preview-card--no-trade {
+  border-color: rgba(255, 107, 107, 0.22);
+  border-left: 3px solid var(--terminal-red);
+}
+
+/* Confidence bar inside scanner card — reuses confidence-track pattern */
+
+.scanner-conf-bar {
+  height: 3px;
+  background: var(--terminal-surface-2);
+  overflow: hidden;
+}
+
+.scanner-conf-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--terminal-amber), var(--terminal-green));
+}
+
+/* ── P2: Watchlist / market signal chip ────────────────────────────────────
+   Replaces plain signal text with a colored inline chip.
+   Severity: green=BUY, blue=HOLD, amber=WATCH, red=SELL. */
+
+.signal-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--terminal-border);
+  padding: 3px 7px;
+  font: 700 10px var(--terminal-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--terminal-muted);
+}
+
+.signal-chip--hold {
+  border-color: rgba(118, 169, 255, 0.28);
+  background: rgba(118, 169, 255, 0.07);
+  color: var(--terminal-blue);
+}
+
+.signal-chip--watch {
+  border-color: rgba(214, 164, 76, 0.28);
+  background: rgba(214, 164, 76, 0.07);
+  color: var(--terminal-amber);
+}
+
+.signal-chip--buy {
+  border-color: rgba(83, 214, 129, 0.28);
+  background: rgba(83, 214, 129, 0.07);
+  color: var(--terminal-green);
+}
+
+.signal-chip--sell {
+  border-color: rgba(255, 107, 107, 0.28);
+  background: rgba(255, 107, 107, 0.07);
+  color: var(--terminal-red);
+}
+
 @media (max-width: 1180px) {
   .terminal-body {
     grid-template-columns: 150px minmax(0, 1fr);
