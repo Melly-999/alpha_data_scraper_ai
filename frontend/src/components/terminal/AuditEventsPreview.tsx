@@ -51,6 +51,9 @@ export function AuditEventsPreview({
       </p>
 
       <div className="event-list">
+        {events.length === 0 ? (
+          <p className="event-list-empty">No events recorded yet.</p>
+        ) : null}
         {events.map((event) => (
           <div key={event.id} className={`event-entry ${event.severity}`}>
             {/* Header row: severity class drives colour; event type + time */}
