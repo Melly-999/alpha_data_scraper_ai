@@ -147,3 +147,45 @@ def get_safe_supabase_client(
         return create_client(url, anon_key)
     except Exception:
         return None
+
+
+def get_safe_supabase_write_client(
+    *,
+    _factory: Callable[[str, str], Any] | None = None,
+) -> Any | None:
+    """Return a backend-only Supabase write client or None.
+
+    Uses SUPABASE_SERVICE_ROLE_KEY which bypasses RLS and allows backend
+    INSERT into audit and decision tables.  Returns None when:
+      - SUPABASE_URL is absent
+      - SUPABASE_SERVICE_ROLE_KEY is absent
+      - supabase package is unavailable or raises on creation
+
+    NEVER expose the returned client to the frontend.
+    The service role key value is never logged or included in any error output.
+
+    Parameters
+    ----------
+    _factory:
+        Injectable callable ``(url: str, service_key: str) -> client`` used
+        by tests to avoid real network calls.  Pass None (default) to use the
+        real supabase.create_client.
+    """
+    url = os.getenv(_ENV_URL, "")
+    service_key = os.getenv(_ENV_SERVICE_ROLE_KEY, "")
+
+    if not url or not service_key:
+        return None
+
+    if not _supabase_importable():
+        return None
+
+    if _factory is not None:
+        return _factory(url, service_key)
+
+    try:
+        from supabase import create_client  # type: ignore
+
+        return create_client(url, service_key)
+    except Exception:
+        return None

@@ -32,7 +32,7 @@ from app.schemas.common import LogCategory, Severity
 from app.schemas.log import LogEntry
 from app.services.fixture_data import prototype_logs
 from app.services.startup_audit import emit_startup_events
-from app.services.supabase_client import get_safe_supabase_client
+from app.services.supabase_client import get_safe_supabase_write_client
 from core.logger import get_logger, setup_logging
 
 setup_logging()
@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
     # SUPA-007: emit boot-time audit events.
     # Degrades gracefully when Supabase is unavailable — startup is never blocked.
     try:
-        emit_startup_events(client=get_safe_supabase_client())
+        emit_startup_events(client=get_safe_supabase_write_client())
     except Exception:  # noqa: BLE001
         pass  # Belt-and-suspenders: emit_startup_events() never raises itself.
 
