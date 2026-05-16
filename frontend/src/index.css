@@ -1092,6 +1092,64 @@ input {
   margin-bottom: 0.75rem;
 }
 
+/* SUPA-015 — read-only date range controls for decision history.
+   Display-only: no submit, no storage, no execution semantics. */
+.signal-date-range-controls {
+  margin-top: 0.3rem;
+}
+
+.signal-date-range-quicks {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  padding: 0.15rem 0.25rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.signal-date-range-chip {
+  appearance: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.signal-date-range-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.signal-date-range-chip.active {
+  background: var(--surface-3, var(--surface-2));
+  color: var(--text-primary);
+  border-color: var(--accent, var(--border));
+}
+
+.signal-date-range-clear {
+  appearance: none;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  align-self: end;
+}
+
+.signal-date-range-clear:hover {
+  color: var(--text-primary);
+}
+
 .lifecycle-summary {
   display: grid;
   gap: 0.8rem;
