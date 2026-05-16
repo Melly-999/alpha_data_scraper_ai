@@ -15,6 +15,7 @@ import type { SignalScannerBatch } from "../../lib/scannerPreviewApi";
 import { AIWorkspacePanel } from "./AIWorkspacePanel";
 import { AISignalFeedPreview } from "./AISignalFeedPreview";
 import { AuditEventsPreview } from "./AuditEventsPreview";
+import { DegradedServicesBanner } from "./DegradedServicesBanner";
 import { IBKRBrokerCard } from "./IBKRBrokerCard";
 import { LeftSidebar } from "./LeftSidebar";
 import { LoadingScreen } from "./LoadingScreen";
@@ -186,6 +187,11 @@ export function TerminalShell({
       <div className="terminal-body">
         <LeftSidebar />
         <main className="terminal-main" aria-label={`Terminal view: ${view}`}>
+          <DegradedServicesBanner
+            summary={data.summary}
+            mt5={data.mt5}
+            broker={data.broker}
+          />
           {loading ? <LoadingScreen /> : null}
           {view === "dashboard" ? (
             <>
