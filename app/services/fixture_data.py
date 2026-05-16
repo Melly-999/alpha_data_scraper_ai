@@ -385,30 +385,73 @@ def prototype_watchlist() -> list[dict[str, object]]:
 
 
 def prototype_activity_feed() -> list[dict[str, str]]:
+    """DATA-001: institutional-feeling activity feed.
+
+    All rows are display-only and prefixed [DRY-RUN] when they reference
+    advisory order shapes. No row constitutes or implies a real order
+    placement. dry_run=True, order_placed=False is the only state the
+    system can produce.
+    """
     return [
         {
             "time": "14:32:09",
-            "type": "TRADE",
-            "msg": "[DRY] BUY EURUSD 0.10 @ 1.08120",
+            "type": "DRY-RUN",
+            "msg": "[DRY-RUN] BUY NVDA 0.10 @ 920.40 — review only; no order placed",
             "color": "green",
         },
         {
+            "time": "14:30:51",
+            "type": "SCAN",
+            "msg": "Scanner evaluated 6 watchlist symbols — 1 dry-run-allowed, 2 watch-only",
+            "color": "muted",
+        },
+        {
             "time": "14:28:43",
-            "type": "TRADE",
-            "msg": "[DRY] SELL XAUUSD 0.05 @ 2321.00",
+            "type": "DRY-RUN",
+            "msg": "[DRY-RUN] BUY XAUUSD 0.05 @ 2321.00 — review only; no order placed",
             "color": "green",
+        },
+        {
+            "time": "14:27:12",
+            "type": "AUDIT",
+            "msg": "Decision audit row persisted (sdh-007 SPY BUY dry-run-allowed)",
+            "color": "muted",
         },
         {
             "time": "14:25:19",
             "type": "BLOCK",
-            "msg": "GBPUSD HOLD blocked — low confidence",
+            "msg": "GBPUSD HOLD blocked — confidence below 70% review threshold",
+            "color": "amber",
+        },
+        {
+            "time": "14:23:04",
+            "type": "STALE",
+            "msg": "Quote feed last update 87s ago — advisory only; cached data used",
             "color": "amber",
         },
         {
             "time": "14:19:56",
             "type": "BLOCK",
-            "msg": "USDJPY BUY blocked — cooldown",
+            "msg": "USDJPY BUY blocked — cooldown 7m remaining",
             "color": "amber",
+        },
+        {
+            "time": "14:16:33",
+            "type": "RISK",
+            "msg": "Max open positions reached (3/3) — AMZN BUY deferred",
+            "color": "amber",
+        },
+        {
+            "time": "14:12:50",
+            "type": "AUDIT",
+            "msg": "Read-only mode confirmed; live_orders_blocked=true",
+            "color": "green",
+        },
+        {
+            "time": "14:08:21",
+            "type": "DRY-RUN",
+            "msg": "[DRY-RUN] BUY QQQ 0.03 @ 462.18 — review only; no order placed",
+            "color": "green",
         },
     ]
 
