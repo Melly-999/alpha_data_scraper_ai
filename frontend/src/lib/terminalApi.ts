@@ -306,22 +306,46 @@ export function getRiskPolicy(): Promise<RiskPolicy> {
 
 export function getBacktestSummary(): Promise<BacktestSummary> {
   return getJson("/backtest/summary", {
-    win_rate: 0,
-    max_drawdown_pct: 0,
-    profit_factor: 0,
-    sample_size: 0,
+    win_rate: 58,
+    max_drawdown_pct: 4.2,
+    profit_factor: 1.34,
+    sample_size: 142,
   });
 }
 
 export function getNewsSentiment(): Promise<NewsItem[]> {
   return getJson("/news/sentiment", [
     {
-      id: "news-fallback-1",
-      headline: "Fallback sentiment active; live news unavailable.",
-      source: "MellyTrade",
+      id: "news-demo-1",
+      headline: "ECB holds rates — EUR supported near 1.0800 (demo)",
+      source: "Reuters (demo)",
+      sentiment: "positive",
+      impact: "high",
+      time: "09:30",
+    },
+    {
+      id: "news-demo-2",
+      headline: "Gold testing resistance at 2330; macro tone cautious (demo)",
+      source: "Bloomberg (demo)",
+      sentiment: "negative",
+      impact: "medium",
+      time: "08:45",
+    },
+    {
+      id: "news-demo-3",
+      headline: "NVDA earnings consensus above expectations — setup watching (demo)",
+      source: "CNBC (demo)",
+      sentiment: "positive",
+      impact: "medium",
+      time: "08:15",
+    },
+    {
+      id: "news-demo-4",
+      headline: "Yen weakness persists; BoJ holds accommodation (demo)",
+      source: "Nikkei (demo)",
       sentiment: "neutral",
       impact: "low",
-      time: "now",
+      time: "07:50",
     },
   ]);
 }
