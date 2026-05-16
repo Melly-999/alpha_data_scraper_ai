@@ -408,3 +408,79 @@ def test_write_audit_event_safe_metadata_keys_accepted() -> None:
     record = write_audit_event(event, _insert_fn=_fake_insert_fn())
     assert record.persisted is True
     assert record.metadata["symbol"] == "EURUSD"
+
+
+# ---------------------------------------------------------------------------
+# 16. AuditEventRecord — safety invariants enforced at schema level (Scope A)
+# ---------------------------------------------------------------------------
+
+def test_audit_event_record_rejects_read_only_false() -> None:
+    with pytest.raises(ValidationError, match="read_only must always be True"):
+        AuditEventRecord(
+            event_type="test",
+            severity="info",
+            source="system",
+            message="m",
+            read_only=False,
+        )
+
+
+def test_audit_event_record_rejects_dry_run_false() -> None:
+    with pytest.raises(ValidationError, match="dry_run must always be True"):
+        AuditEventRecord(
+            event_type="test",
+            severity="info",
+            source="system",
+            message="m",
+            dry_run=False,
+        )
+
+
+# ---------------------------------------------------------------------------
+# 17. write_audit_event — real client path (MagicMock, no _insert_fn)
+# ---------------------------------------------------------------------------
+
+def test_write_audit_event_real_client_path_calls_table_insert_execute() -> None:
+    from unittest.mock import MagicMock
+
+    event = _make_event()
+    mock_client = MagicMock()
+    mock_client.table.return_value.insert.return_value.execute.return_value.data = [
+        {"id": "real-uuid"}
+    ]
+
+    record = write_audit_event(event, client=mock_client)
+
+    mock_client.table.assert_called_once()
+    mock_client.table.return_value.insert.assert_called_once()
+    mock_client.table.return_value.insert.return_value.execute.assert_called_once()
+    assert record.persisted is True
+    assert record.id == "real-uuid"
+
+
+def test_write_audit_event_real_client_path_table_name_is_audit_events() -> None:
+    from unittest.mock import MagicMock
+
+    event = _make_event()
+    mock_client = MagicMock()
+    mock_client.table.return_value.insert.return_value.execute.return_value.data = [
+        {"id": "x"}
+    ]
+
+    write_audit_event(event, client=mock_client)
+
+    mock_client.table.assert_called_once_with("audit_events")
+
+
+# ---------------------------------------------------------------------------
+# 18. AuditEventCreate — empty field boundary tests
+# ---------------------------------------------------------------------------
+
+def test_audit_event_create_empty_event_type_rejected() -> None:
+    with pytest.raises(ValidationError):
+        AuditEventCreate(event_type="", message="some message")
+
+
+def test_audit_event_create_empty_message_rejected() -> None:
+    with pytest.raises(ValidationError):
+        AuditEventCreate(event_type="test_event", message="")

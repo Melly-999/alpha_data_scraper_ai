@@ -133,6 +133,10 @@ class AuditEventRecord(BaseModel):
 
     When persisted=False the id and created_at fields may be None/synthetic.
     degraded=True signals the writer fell back gracefully (no exception raised).
+
+    Safety invariants (enforced by model_validator):
+      - read_only is always True
+      - dry_run is always True
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -162,3 +166,11 @@ class AuditEventRecord(BaseModel):
         default=None,
         description="Human-readable explanation when degraded=True.",
     )
+
+    @model_validator(mode="after")
+    def _enforce_safety_invariants(self) -> "AuditEventRecord":
+        if self.read_only is not True:
+            raise ValueError("read_only must always be True for AuditEventRecord")
+        if self.dry_run is not True:
+            raise ValueError("dry_run must always be True for AuditEventRecord")
+        return self

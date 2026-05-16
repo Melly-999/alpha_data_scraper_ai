@@ -89,7 +89,7 @@ def signal_scanner_preview(
     from app.services.scanner_audit import emit_scanner_preview_event
     from app.services.signal_decision_persistence import write_signal_decision
     from app.services.signal_scanner import scan_symbols
-    from app.services.supabase_client import get_safe_supabase_client
+    from app.services.supabase_client import get_safe_supabase_write_client
 
     batch = scan_symbols(_parse_scanner_symbols(symbols))
 
@@ -117,14 +117,14 @@ def signal_scanner_preview(
                 take_profit_required=True,
                 max_risk_per_trade=0.01,
             )
-            write_signal_decision(decision_record, client=get_safe_supabase_client())
+            write_signal_decision(decision_record, client=get_safe_supabase_write_client())
         except Exception:  # noqa: BLE001
             pass
 
     # SUPA-008: fire-and-forget audit event — degrades gracefully.
     # The preview response is never blocked by audit persistence failure.
     try:
-        emit_scanner_preview_event(batch, client=get_safe_supabase_client())
+        emit_scanner_preview_event(batch, client=get_safe_supabase_write_client())
     except Exception:  # noqa: BLE001
         pass
 

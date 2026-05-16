@@ -648,3 +648,66 @@ def test_safety_flags_always_true_across_modes(
     assert status.frontend_service_key_exposed is False, (
         "frontend_service_key_exposed must always be False"
     )
+
+
+# ---------------------------------------------------------------------------
+# 11. get_safe_supabase_write_client — backend-only write client (Scope B)
+# ---------------------------------------------------------------------------
+
+
+def test_get_safe_supabase_write_client_returns_none_when_service_key_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.services.supabase_client import get_safe_supabase_write_client
+
+    _clear_supabase_env(monkeypatch)
+    monkeypatch.setenv(_ENV_URL, "https://example.supabase.co")
+    # SUPABASE_SERVICE_ROLE_KEY deliberately absent
+    _patch_importable(monkeypatch, available=True)
+
+    assert get_safe_supabase_write_client() is None
+
+
+def test_get_safe_supabase_write_client_returns_client_when_fully_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.services.supabase_client import get_safe_supabase_write_client
+
+    _clear_supabase_env(monkeypatch)
+    monkeypatch.setenv(_ENV_URL, "https://example.supabase.co")
+    monkeypatch.setenv(_ENV_SVC_KEY, "service-role-key-placeholder")
+    _patch_importable(monkeypatch, available=True)
+
+    calls: list[tuple[str, str]] = []
+
+    def _fake_write_factory(url: str, key: str) -> dict[str, str]:
+        calls.append((url, key))
+        return {"url": url, "mode": "write-fake"}
+
+    client = get_safe_supabase_write_client(_factory=_fake_write_factory)
+
+    assert client is not None
+    assert client["mode"] == "write-fake"
+    assert len(calls) == 1
+    assert calls[0][0] == "https://example.supabase.co"
+
+
+def test_get_safe_supabase_write_client_does_not_expose_service_key_in_failure_output(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Service role key value must never appear in logs when client is unavailable."""
+    import logging
+
+    from app.services.supabase_client import get_safe_supabase_write_client
+
+    _clear_supabase_env(monkeypatch)
+    monkeypatch.setenv(_ENV_URL, "https://example.supabase.co")
+    monkeypatch.setenv(_ENV_SVC_KEY, "super-secret-svc-key-xyz-abc")
+    _patch_importable(monkeypatch, available=False)  # package unavailable → returns None
+
+    with caplog.at_level(logging.DEBUG):
+        result = get_safe_supabase_write_client()
+
+    assert result is None
+    assert "super-secret-svc-key-xyz-abc" not in caplog.text
