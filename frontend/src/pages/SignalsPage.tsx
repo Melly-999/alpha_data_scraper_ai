@@ -10,6 +10,7 @@ import { useMellySignals } from "../hooks/useMellySignals";
 import { useSignalDecisions } from "../hooks/useSignalDecisions";
 import { useSignalLifecycle } from "../hooks/useSignalLifecycle";
 import { useSignals } from "../hooks/useSignals";
+import { useStaleDetector } from "../hooks/useStaleDetector";
 import { apiGet } from "../lib/api";
 import { useUiStore } from "../stores/useUiStore";
 import type {
@@ -98,6 +99,7 @@ export function SignalsPage() {
     data: decisionsData,
     loading: decisionsLoading,
     error: decisionsError,
+    lastUpdatedAt: decisionsLastUpdatedAt,
   } = useSignalDecisions({
     limit: 50,
     symbol: decisionSymbol,
@@ -105,6 +107,24 @@ export function SignalsPage() {
     riskStatus: decisionRiskStatus,
     direction: decisionDirection,
   });
+  // SUPA-013: stale indicator for Decision History card.
+  // Uses the same useStaleDetector / data-freshness-label pattern as
+  // AuditEventsPreview (SUPA-009). Display-only — no execution semantics.
+  const decisionsFreshness = useStaleDetector(decisionsLastUpdatedAt ?? null);
+  let decisionsFreshnessLabel: string;
+  if (decisionsFreshness === "initializing") {
+    decisionsFreshnessLabel = "polling…";
+  } else {
+    const timeStr = (decisionsLastUpdatedAt as Date).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    decisionsFreshnessLabel =
+      decisionsFreshness === "stale"
+        ? `updated ${timeStr} · stale`
+        : `updated ${timeStr}`;
+  }
   const [lifecycleSymbol, setLifecycleSymbol] = useState("");
   const [lifecycleDecision, setLifecycleDecision] =
     useState<LifecycleDecisionFilter>("");
@@ -237,9 +257,17 @@ export function SignalsPage() {
         <Card
           title="Decision History"
           right={
-            <Badge tone="muted">
-              {decisionsData ? `${decisionsData.total} records` : "—"} · dry-run
-            </Badge>
+            <>
+              <Badge tone="muted">
+                {decisionsData ? `${decisionsData.total} records` : "—"} · dry-run
+              </Badge>
+              {/* SUPA-013: data-freshness label — display-only, no execution semantics */}
+              <span
+                className={`data-freshness-label${decisionsFreshness === "stale" ? " data-stale" : ""}`}
+              >
+                {decisionsFreshnessLabel}
+              </span>
+            </>
           }
         >
           <div className="dashboard-muted" style={{ marginBottom: "0.5rem" }}>
@@ -335,6 +363,8 @@ export function SignalsPage() {
             <SignalDecisionHistoryPanel
               records={decisionsData.decisions}
               generatedAt={decisionsData.generated_at}
+              fallback={decisionsData.fallback}
+              degraded={decisionsData.degraded}
               filters={{
                 symbol: decisionSymbol,
                 decision: effectiveDecisionFilter,
