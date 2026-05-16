@@ -262,3 +262,256 @@ def test_signal_decisions_total_matches_decisions(client) -> None:
 def test_signal_decisions_existing_signals_unaffected(client) -> None:
     response = client.get("/api/signals")
     assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# SUPA-011: fallback behaviour tests
+#
+# These tests verify that the history service correctly transitions between
+# real Supabase data (fallback=False) and the seed fixture (fallback=True)
+# depending on what read_signal_decisions() returns.
+#
+# No network calls are made — read_signal_decisions is monkeypatched.
+# ---------------------------------------------------------------------------
+
+from datetime import datetime, timezone  # noqa: E402 (appended to module)
+
+
+def _make_real_record(
+    *,
+    record_id: str = "real-001",
+    symbol: str = "TSLA",
+    direction: str = "BUY",
+    confidence: float = 0.80,
+    risk_status: str = "pass",
+    decision: str = "dry_run_allowed",
+) -> "SignalDecisionRecord":  # type: ignore[name-defined]
+    from app.schemas.signal_decision import SignalDecisionRecord
+
+    return SignalDecisionRecord(
+        id=record_id,
+        timestamp=datetime.now(timezone.utc),
+        symbol=symbol,
+        direction=direction,  # type: ignore[arg-type]
+        confidence=confidence,
+        source="scanner",
+        strategy="mtf_confluence",
+        risk_status=risk_status,  # type: ignore[arg-type]
+        decision=decision,  # type: ignore[arg-type]
+        blocked_reason=None,
+        dry_run=True,
+        auto_trade=False,
+        read_only=True,
+        stop_loss_required=True,
+        take_profit_required=True,
+        max_risk_per_trade=0.01,
+    )
+
+
+class TestSupa011FallbackBehaviour:
+    """Test SUPA-011 fallback logic in SignalDecisionHistoryService.list_decisions()."""
+
+    def test_fallback_true_when_reader_returns_empty(self, monkeypatch) -> None:
+        """When read_signal_decisions returns [], fallback must be True."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: [])
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions()
+        assert response.fallback is True
+
+    def test_fallback_false_when_reader_returns_records(self, monkeypatch) -> None:
+        """When read_signal_decisions returns real rows, fallback must be False."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        real_records = [_make_real_record(record_id="real-001")]
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: real_records)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions()
+        assert response.fallback is False
+
+    def test_real_records_appear_in_response(self, monkeypatch) -> None:
+        """Real records returned by reader should appear in the response."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        real_records = [_make_real_record(symbol="TSLA", decision="dry_run_allowed")]
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: real_records)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions()
+        symbols = [d.symbol for d in response.decisions]
+        assert "TSLA" in symbols
+
+    def test_fallback_true_when_reader_raises(self, monkeypatch) -> None:
+        """When read_signal_decisions raises, fallback must be True."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        import app.services.signal_decision_reader as rdr
+
+        def _raising(**kwargs):
+            raise RuntimeError("reader failed")
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", _raising)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions()
+        assert response.fallback is True
+
+    def test_seed_data_used_when_reader_returns_empty(self, monkeypatch) -> None:
+        """When reader returns [], seed decisions are served."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService, _SEED_DECISIONS
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: [])
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions()
+        assert response.total > 0  # seed decisions are non-empty
+        assert response.total == len(response.decisions)
+
+    def test_existing_api_shape_preserved_with_real_records(self, monkeypatch) -> None:
+        """Response schema is unchanged when real records are served."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        real_records = [_make_real_record()]
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: real_records)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions()
+        # Shape checks
+        assert hasattr(response, "dry_run")
+        assert hasattr(response, "auto_trade")
+        assert hasattr(response, "read_only")
+        assert hasattr(response, "total")
+        assert hasattr(response, "decisions")
+        assert hasattr(response, "generated_at")
+        assert hasattr(response, "degraded")
+        assert hasattr(response, "fallback")
+
+    def test_safety_flags_preserved_with_real_records(self, monkeypatch) -> None:
+        """dry_run/auto_trade/read_only always True/False/True with real records."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        real_records = [_make_real_record()]
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: real_records)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions()
+        assert response.dry_run is True
+        assert response.auto_trade is False
+        assert response.read_only is True
+
+    def test_decision_filter_applied_to_real_records(self, monkeypatch) -> None:
+        """decision filter works correctly when real records are returned."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        real_records = [
+            _make_real_record(record_id="r1", decision="dry_run_allowed"),
+            _make_real_record(record_id="r2", decision="blocked"),
+        ]
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: real_records)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions(decision="blocked")
+        assert all(d.decision == "blocked" for d in response.decisions)
+
+    def test_risk_status_filter_applied_to_real_records(self, monkeypatch) -> None:
+        """risk_status filter works correctly when real records are returned."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        real_records = [
+            _make_real_record(record_id="r1", risk_status="pass"),
+            _make_real_record(record_id="r2", risk_status="blocked"),
+        ]
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: real_records)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions(risk_status="pass")
+        assert all(d.risk_status == "pass" for d in response.decisions)
+
+    def test_direction_filter_applied_to_real_records(self, monkeypatch) -> None:
+        """direction filter works correctly when real records are returned."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        real_records = [
+            _make_real_record(record_id="r1", direction="BUY"),
+            _make_real_record(record_id="r2", direction="SELL"),
+        ]
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: real_records)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions(direction="BUY")
+        assert all(d.direction == "BUY" for d in response.decisions)
+
+    def test_limit_respected_with_real_records(self, monkeypatch) -> None:
+        """limit is applied correctly when real records are returned."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        real_records = [
+            _make_real_record(record_id=f"r{i}") for i in range(10)
+        ]
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: real_records)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions(limit=3)
+        assert len(response.decisions) <= 3
+
+    def test_total_matches_decisions_with_real_records(self, monkeypatch) -> None:
+        """total always equals len(decisions)."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        real_records = [_make_real_record(record_id=f"r{i}") for i in range(5)]
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: real_records)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions()
+        assert response.total == len(response.decisions)
+
+    def test_all_real_records_have_safety_invariants(self, monkeypatch) -> None:
+        """Every record returned has dry_run=True, auto_trade=False, read_only=True."""
+        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+
+        real_records = [_make_real_record(record_id=f"r{i}") for i in range(4)]
+
+        import app.services.signal_decision_reader as rdr
+
+        monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: real_records)
+
+        svc = SignalDecisionHistoryService()
+        response = svc.list_decisions()
+        for rec in response.decisions:
+            assert rec.dry_run is True
+            assert rec.auto_trade is False
+            assert rec.read_only is True
+            assert rec.max_risk_per_trade <= 0.01

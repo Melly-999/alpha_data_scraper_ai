@@ -48,6 +48,19 @@ def _parse_scanner_symbols(raw_symbols: str | None) -> list[str]:
     return cleaned or list(_scanner_default_symbols)
 
 
+def _action_to_direction(action: str) -> str:
+    """Map a SignalAction string to a DecisionDirection string.
+
+    LONG_SETUP → BUY, SHORT_SETUP → SELL, all others → HOLD.
+    Read-only mapping — no execution semantics.
+    """
+    if action == "LONG_SETUP":
+        return "BUY"
+    if action == "SHORT_SETUP":
+        return "SELL"
+    return "HOLD"
+
+
 @router.get(
     "/signals/scanner/preview",
     response_model=SignalScannerBatch,
@@ -67,12 +80,44 @@ def signal_scanner_preview(
     No execution, no broker call, no mutation.
     SUPA-008: audit event is emitted after the batch is assembled;
     audit persistence failure never blocks the preview response.
+    SUPA-011: each scanner result is persisted as a dry-run decision record;
+    persistence failure never blocks the preview response.
     """
+    from app.schemas.signal_decision import SignalDecisionRecord
     from app.services.scanner_audit import emit_scanner_preview_event
+    from app.services.signal_decision_persistence import write_signal_decision
     from app.services.signal_scanner import scan_symbols
     from app.services.supabase_client import get_safe_supabase_client
 
     batch = scan_symbols(_parse_scanner_symbols(symbols))
+
+    # SUPA-011: fire-and-forget persist each scanner result as a decision record.
+    # The preview response is never blocked by persistence failure.
+    # Only safe bounded fields are persisted (no prices, IDs, secrets, or
+    # execution semantics).  decision=watch_only; order_placed=False always.
+    for result in batch.results:
+        try:
+            decision_record = SignalDecisionRecord(
+                id=f"scan-{result.symbol}-{result.timestamp.strftime('%Y%m%dT%H%M%S%f')}",
+                timestamp=result.timestamp,
+                symbol=result.symbol,
+                direction=_action_to_direction(result.action.value),  # type: ignore[arg-type]
+                confidence=result.confidence / 100.0,
+                source="scanner",
+                strategy="scanner",
+                risk_status="blocked",  # risk_allowed=False always for scanner
+                decision="watch_only",  # scanner is advisory only; never executes
+                blocked_reason=None,
+                dry_run=True,
+                auto_trade=False,
+                read_only=True,
+                stop_loss_required=True,
+                take_profit_required=True,
+                max_risk_per_trade=0.01,
+            )
+            write_signal_decision(decision_record, client=get_safe_supabase_client())
+        except Exception:  # noqa: BLE001
+            pass
 
     # SUPA-008: fire-and-forget audit event — degrades gracefully.
     # The preview response is never blocked by audit persistence failure.

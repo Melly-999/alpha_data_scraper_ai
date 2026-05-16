@@ -157,9 +157,13 @@ _SEED_DECISIONS: list[SignalDecisionRecord] = [
 
 
 class SignalDecisionHistoryService:
-    """Returns a read-only in-memory signal decision history.
+    """Returns a read-only signal decision history.
 
-    No DB, no network calls, no broker calls, no order execution, no secrets.
+    SUPA-011: Attempts to read real persisted rows from Supabase first.
+    Falls back to the in-memory _SEED_DECISIONS fixture when Supabase is
+    unavailable or returns no rows.
+
+    No broker calls, no order execution, no secrets.
     Every record has dry_run=True, auto_trade=False, read_only=True.
     """
 
@@ -173,11 +177,37 @@ class SignalDecisionHistoryService:
         direction: DecisionDirection | None = None,
     ) -> SignalDecisionHistoryResponse:
         bounded = max(_LIMIT_MIN, min(limit, _LIMIT_MAX))
-        records = list(_SEED_DECISIONS)
 
-        if symbol is not None:
-            upper = symbol.upper()
-            records = [r for r in records if r.symbol.upper() == upper]
+        # SUPA-011: attempt real Supabase read first; degrade to seed on failure.
+        # Local imports keep the lazy-loading pattern consistent and avoid any
+        # circular import risk.
+        is_fallback = True
+        records: list[SignalDecisionRecord] = []
+
+        try:
+            from app.services.signal_decision_reader import read_signal_decisions
+            from app.services.supabase_client import get_safe_supabase_client
+
+            real_records = read_signal_decisions(
+                symbol=symbol,
+                limit=_LIMIT_MAX,
+                client=get_safe_supabase_client(),
+            )
+            if real_records:
+                records = real_records
+                is_fallback = False
+        except Exception:  # noqa: BLE001
+            pass
+
+        if is_fallback:
+            records = list(_SEED_DECISIONS)
+            # Apply symbol filter to seed data (reader handles it for real data).
+            if symbol is not None:
+                upper = symbol.upper()
+                records = [r for r in records if r.symbol.upper() == upper]
+
+        # Apply remaining filters (decision, risk_status, direction) to both
+        # real and seed data paths.
         if decision is not None:
             records = [r for r in records if r.decision == decision]
         if risk_status is not None:
@@ -195,5 +225,5 @@ class SignalDecisionHistoryService:
             decisions=paged,
             generated_at=datetime.now(timezone.utc),
             degraded=any(r.risk_status in {"blocked", "warn"} for r in paged),
-            fallback=True,
+            fallback=is_fallback,
         )

@@ -23,6 +23,7 @@ class SignalDecisionRecord(BaseModel):
     risk_status: RiskStatus
     decision: DecisionType
     blocked_reason: str | None = None
+    audit_event_id: str | None = None
     dry_run: bool = True
     auto_trade: bool = False
     read_only: bool = True
