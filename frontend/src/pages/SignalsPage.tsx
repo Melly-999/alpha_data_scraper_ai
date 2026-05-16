@@ -6,6 +6,7 @@ import { Drawer } from "../components/shared/Drawer";
 import { Table } from "../components/shared/Table";
 import { SignalDecisionHistoryPanel } from "../components/signals/SignalDecisionHistoryPanel";
 import { SignalLifecyclePanel } from "../components/signals/SignalLifecyclePanel";
+import { SignalReasoningPanel } from "../components/signals/SignalReasoningPanel";
 import { useMellySignals } from "../hooks/useMellySignals";
 import { useSignalDecisions } from "../hooks/useSignalDecisions";
 import { useSignalLifecycle } from "../hooks/useSignalLifecycle";
@@ -782,21 +783,11 @@ export function SignalsPage() {
               </div>
             </div>
 
-            <div className="detail-row">
-              <span>Reasoning</span>
-              <p>{detail.reasoning}</p>
-            </div>
-
-            <div className="detail-row">
-              <span>Risk Gates</span>
-              <ul className="compact-list">
-                {reasoning?.risk_gate_results.map((item) => (
-                  <li key={item.gate}>
-                    {item.gate}: {item.passed ? "PASS" : "BLOCK"}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* DATA-002: explainable AI reasoning panel.
+                Replaces the previous inline reasoning + risk-gate rows
+                with a structured, collapsible, safety-badged surface.
+                Display-only — no execution controls. */}
+            <SignalReasoningPanel detail={detail} reasoning={reasoning} />
           </div>
         ) : null}
       </Drawer>

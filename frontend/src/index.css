@@ -1150,6 +1150,149 @@ input {
   color: var(--text-primary);
 }
 
+/* DATA-002 — Explainable AI reasoning panel.
+   Display-only surface inside the signal drawer. No buttons execute
+   trades; the only interactive element is a non-mutating collapse toggle. */
+.signal-reasoning-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.signal-reasoning-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.signal-reasoning-header strong {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.signal-reasoning-header p {
+  margin: 0.25rem 0 0;
+  font-size: 0.72rem;
+}
+
+.signal-reasoning-toggle {
+  appearance: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+}
+
+.signal-reasoning-toggle:hover {
+  color: var(--text-primary);
+}
+
+.signal-reasoning-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.signal-reasoning-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.signal-reasoning-section h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.signal-reasoning-section p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.signal-reasoning-section code {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  background: var(--surface-3, var(--surface-1));
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+}
+
+.signal-reasoning-list {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.76rem;
+}
+
+.signal-reasoning-confidence {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.signal-reasoning-confidence-value {
+  font-family: var(--mono);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.signal-reasoning-gates {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.signal-reasoning-gate-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.76rem;
+}
+
+.signal-reasoning-gate-name {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+}
+
+.signal-reasoning-gate-detail {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.signal-reasoning-passed {
+  margin-top: 0.3rem;
+}
+
+.signal-reasoning-passed summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0;
+}
+
 .lifecycle-summary {
   display: grid;
   gap: 0.8rem;
