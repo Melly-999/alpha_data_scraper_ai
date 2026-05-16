@@ -170,7 +170,7 @@ def signal_decisions(
     SUPA-014: optional ``from_date`` / ``to_date`` bound created_at server-side.
     """
     from app.services.signal_decision_audit import emit_signal_decision_event
-    from app.services.supabase_client import get_safe_supabase_client
+    from app.services.supabase_client import get_safe_supabase_write_client
 
     response = _decision_service.list_decisions(
         limit=limit,
@@ -188,7 +188,7 @@ def signal_decisions(
         emit_signal_decision_event(
             len(response.decisions),
             symbol,
-            client=get_safe_supabase_client(),
+            client=get_safe_supabase_write_client(),
         )
     except Exception:  # noqa: BLE001
         pass
