@@ -158,19 +158,26 @@ no order placement code path
 no interactive trading controls
 ```
 
-### Screenshots — MERGE #100
+### Screenshots / Demo Walkthrough — MERGE #100
 
-> *Capture plan and per-screenshot requirements live in
-> [docs/demo/demo_screenshot_checklist.md](docs/demo/demo_screenshot_checklist.md).
-> Demo runbook: [docs/demo/professional_demo_walkthrough.md](docs/demo/professional_demo_walkthrough.md).*
+Screenshot evidence pack created in DEMO-002. Images are planned; the
+capture runbook, checklist, and portfolio captions are ready.
 
-| # | Screenshot | What it shows |
-|---|---|---|
-| 1 | _add `docs/assets/screenshots/01_dashboard.png`_ | Dashboard with safety banner, system status, activity feed |
-| 2 | _add `docs/assets/screenshots/02_signals_overview.png`_ | Signal review + decision history + lifecycle stacked |
-| 3 | _add `docs/assets/screenshots/03_decision_history_1H.png`_ | Decision history with 1H quick-range chip active |
-| 4 | _add `docs/assets/screenshots/05_reasoning_panel.png`_ | AI reasoning panel with all four safety badges |
-| 5 | _add `docs/assets/screenshots/07_audit_trail.png`_ | Audit feed showing stale_data + scanner + risk_blocked events |
+| # | File | Purpose | Status |
+|---|---|---|---|
+| 01 | [`docs/assets/screenshots/01-terminal-ai-workspace.png`](docs/assets/screenshots/01-terminal-ai-workspace.png) | Full dashboard: safety banner, system status, equity curve, activity feed | planned |
+| 02 | [`docs/assets/screenshots/02-signal-decision-history-filters.png`](docs/assets/screenshots/02-signal-decision-history-filters.png) | Decision History with 1H chip active, freshness label, filter controls | planned |
+| 03 | [`docs/assets/screenshots/03-signal-reasoning-panel.png`](docs/assets/screenshots/03-signal-reasoning-panel.png) | AI Reasoning panel open — all four safety badges, confidence breakdown, risk gates | planned |
+| 04 | [`docs/assets/screenshots/04-audit-feed-safety-events.png`](docs/assets/screenshots/04-audit-feed-safety-events.png) | Audit feed: `stale_data_warning`, `scanner_evaluated`, `risk_blocked` rows | planned |
+| 05 | [`docs/assets/screenshots/05-supabase-status-and-stale-indicators.png`](docs/assets/screenshots/05-supabase-status-and-stale-indicators.png) | Decision History badges: `read-only`, `live data`/`seed data`, freshness label | planned |
+| 06 | [`docs/assets/screenshots/06-broker-readonly-guardrails.png`](docs/assets/screenshots/06-broker-readonly-guardrails.png) | Risk/broker card: `dry_run=true`, `auto_trade=false`, guardrail values | planned |
+| 07 | [`docs/assets/screenshots/07-demo-overview.png`](docs/assets/screenshots/07-demo-overview.png) | Full Signals page: Signal Review + Decision History + Lifecycle stacked | planned |
+
+**Capture docs:**
+- [Screenshot checklist](docs/demo/demo_screenshot_checklist.md) — per-screenshot requirements, viewport settings, redaction checklist
+- [Capture runbook](docs/demo/demo_002_capture_runbook.md) — step-by-step capture guide with validation and safety notes
+- [Demo walkthrough](docs/demo/professional_demo_walkthrough.md) — 8-minute scripted demo with screenshot capture flow
+- [Architecture](docs/architecture/milestone_100_readonly_ai_ops.md) — component map, data flow, safety barriers
 
 ## Local Demo
 
