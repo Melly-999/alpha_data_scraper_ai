@@ -43,10 +43,47 @@ function joinUrl(path: string): string {
   return `${API_BASE}${suffix}`;
 }
 
-function createFallbackScannerBatch(): SignalScannerBatch {
+function demoRow(
+  symbol: string,
+  action: SignalScannerAction,
+  confidence: number,
+  reason: string,
+  now: string,
+): SignalScannerResult {
   return {
-    generated_at: new Date().toISOString(),
-    results: [],
+    symbol,
+    action,
+    confidence,
+    reason,
+    risk_allowed: false,
+    execution_mode: "dry_run_only",
+    requires_human_review: true,
+    source: "scanner",
+    timestamp: now,
+  };
+}
+
+function createFallbackScannerBatch(): SignalScannerBatch {
+  const now = new Date().toISOString();
+  return {
+    generated_at: now,
+    results: [
+      demoRow("AAPL", "WATCH", 62,
+        "Trend above EMA50 — monitoring for breakout above resistance. Below 70% floor. Advisory only.",
+        now),
+      demoRow("NVDA", "LONG_SETUP", 74,
+        "Bullish H1 momentum with RSI 58 and MACD cross. Dry-run-only — human review required.",
+        now),
+      demoRow("MSFT", "HOLD", 55,
+        "Mixed timeframe signals — H4 bearish, D1 neutral. No edge identified.",
+        now),
+      demoRow("EURUSD", "WATCH", 61,
+        "Ranging session; awaiting momentum confirmation. Below confidence floor.",
+        now),
+      demoRow("XAUUSD", "SHORT_SETUP", 71,
+        "Stalling at resistance with bearish MACD divergence. Dry-run-eligible — review only.",
+        now),
+    ],
     read_only: true,
     execution_mode: "dry_run_only",
   };
