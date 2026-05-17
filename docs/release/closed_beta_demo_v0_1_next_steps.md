@@ -146,6 +146,9 @@ and approval before merge.
 - `docs/beta/beta_tester_invite_instructions.md` — operator invite guide
 - `docs/beta/beta_tester_quick_start.md` — tester onboarding guide
 - `docs/beta/beta_tester_feedback_guide.md` — feedback submission guide
+- `docs/beta/first_tester_rollout_pack.md` — rollout plan and operator checklist
+- `docs/beta/first_tester_invite_messages.md` — ready-to-send invite messages
+- `docs/beta/first_tester_feedback_plan.md` — feedback collection and priority guide
 
 ---
 
