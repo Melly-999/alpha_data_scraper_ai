@@ -231,4 +231,45 @@ Endpoint checks (GET-only): `/health` HTTP 200, `/api/health` HTTP 200,
 
 ---
 
+---
+
+## DESKTOP-001D — Shortcut packaging status
+
+This step adds a local Windows shortcut helper and tester-facing run instructions.
+
+### This PR adds
+
+- `scripts/create_desktop_shortcut.ps1` — PowerShell shortcut creator (WScript.Shell, no admin)
+- `docs/qa/desktop_launcher_shortcut_smoke_checklist.md` — manual shortcut validation checklist
+- `docs/product/beta_tester_desktop_launcher_quick_start.md` — tester-facing quick start guide
+- `tests/app/test_desktop_launcher_shortcut_static.py` — static inspection tests
+
+### Status
+
+- [x] Local shortcut helper (`create_desktop_shortcut.ps1`)
+- [x] No admin required
+- [x] `-WhatIfOnly` mode — preview without creating `.lnk`
+- [x] `-NoBrowser` switch — creates shortcut with `--no-browser` argument
+- [x] Safety banner printed at shortcut creation time
+- [x] Tester-facing quick start doc
+- [x] Shortcut smoke checklist
+- [x] Static tests — read-only, no EXE/shortcut execution
+- [ ] No full installer yet
+- [ ] No code signing yet
+- [ ] No auto-update
+- [x] No secrets bundled
+- [x] No broker execution
+- [x] No live trading
+- [x] `.lnk` files are local-only and must not be committed
+
+### Remaining work (DESKTOP-001E onwards)
+
+- Installer / distribution plan
+- Optional: icon asset design
+- Optional: signed build plan
+- Optional: Start Menu integration
+- Optional: Tauri/Electron wrapper (Phase 2 — not planned for v0.2)
+
+---
+
 *MellyTrade DESKTOP-001 — Windows Local Launcher EXE Plan*
