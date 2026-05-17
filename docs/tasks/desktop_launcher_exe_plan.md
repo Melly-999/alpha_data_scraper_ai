@@ -154,4 +154,37 @@ or safety posture changed.
 
 ---
 
+---
+
+## DESKTOP-001B — PyInstaller build validation status
+
+This step validates the PyInstaller build path locally.
+
+It may generate:
+
+- `dist/MellyTradeLauncher.exe`
+- `build/`
+- `MellyTradeLauncher.spec`
+
+These artifacts are local-only and must not be committed.
+
+### Status
+
+- [x] PyInstaller build validation
+- [x] local-only
+- [ ] no installer yet
+- [ ] no code signing yet
+- [ ] no auto-update
+- [x] no secrets bundled
+- [x] no broker execution
+- [x] no live trading
+
+### Remaining work (DESKTOP-001C onwards)
+
+- Launcher runtime smoke test (`.\dist\MellyTradeLauncher.exe --no-browser`)
+- Optional: desktop shortcut / Start Menu integration
+- Optional: Tauri/Electron wrapper (Phase 2 — not planned for v0.2)
+
+---
+
 *MellyTrade DESKTOP-001 — Windows Local Launcher EXE Plan*
