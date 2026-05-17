@@ -83,6 +83,12 @@ MellyTrade should be positioned as:
 - `docs/beta/beta_tester_invite_instructions.md` — operator invite guide
 - `docs/beta/beta_tester_feedback_guide.md` — feedback submission guide
 
+## First tester rollout
+
+- `docs/beta/first_tester_rollout_pack.md` — rollout plan and operator checklist
+- `docs/beta/first_tester_invite_messages.md` — ready-to-send invite messages
+- `docs/beta/first_tester_feedback_plan.md` — feedback collection and priority guide
+
 ## Demo ready candidate
 
 - `docs/release/closed_beta_demo_v0_1_candidate.md`
