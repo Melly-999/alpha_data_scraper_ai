@@ -76,3 +76,9 @@ MellyTrade should be positioned as:
 - `docs/product/closed_beta_limitations.md`
 - `docs/product/closed_beta_bug_report_template.md`
 - `docs/qa/browser_ui_smoke_checklist.md`
+
+## Demo ready candidate
+
+- `docs/release/closed_beta_demo_v0_1_candidate.md`
+- `docs/demo/final_local_demo_smoke_report.md`
+- `docs/demo/readme_screenshot_pack.md`
