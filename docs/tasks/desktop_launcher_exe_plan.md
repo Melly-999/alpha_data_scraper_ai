@@ -118,4 +118,40 @@ in this PR. Implementation is tracked as DESKTOP-001 in
 
 ---
 
+---
+
+## DESKTOP-001A — Implementation status
+
+This section records what was added in the initial launcher foundation PR
+(`feature/desktop-local-launcher-v1`). Docs-only update — no runtime behavior
+or safety posture changed.
+
+### This PR adds
+
+- `scripts/desktop_launcher.py` — Python local launcher (stdlib only, Windows-first)
+- `scripts/build_desktop_launcher.ps1` — PyInstaller check/build wrapper
+- `docs/qa/desktop_launcher_smoke_checklist.md` — manual smoke validation checklist
+
+### Status
+
+- [x] Launcher foundation implemented
+- [x] Local-only — loopback only, no external network calls
+- [x] Browser-based UI — opens `/terminal` in default browser
+- [x] PyInstaller build path prepared (`-CheckOnly` / `-Build` modes)
+- [x] Safety posture banner printed at launch
+- [x] Ctrl+C clean shutdown — stops only processes it started
+- [ ] Full installer — not yet (Phase 2)
+- [x] No secrets bundled
+- [x] No broker execution
+- [x] No live trading
+
+### Remaining work (DESKTOP-001B onwards)
+
+- PyInstaller build validation and EXE smoke test
+- `.gitignore` audit for `dist/`, `build/`, `*.spec`
+- Optional: desktop shortcut / Start Menu integration
+- Optional: Tauri/Electron wrapper (Phase 2 — not planned for v0.2)
+
+---
+
 *MellyTrade DESKTOP-001 — Windows Local Launcher EXE Plan*
