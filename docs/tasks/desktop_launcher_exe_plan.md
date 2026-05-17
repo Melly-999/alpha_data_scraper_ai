@@ -187,4 +187,48 @@ These artifacts are local-only and must not be committed.
 
 ---
 
+---
+
+## DESKTOP-001C — Launcher runtime smoke status
+
+This step validates the locally built EXE against a runtime smoke test.
+
+Command tested:
+
+```powershell
+.\dist\MellyTradeLauncher.exe --no-browser
+```
+
+### Status
+
+- [x] local-only runtime smoke
+- [x] no browser mode
+- [x] safety banner verification — all 5 flags confirmed
+- [x] backend helper startup — HTTP 200 after 1 attempt
+- [x] frontend helper startup — HTTP 200 after 1 attempt
+- [x] Ctrl+C shutdown state reached (launcher entered running state)
+- [x] frozen repo-root bug fixed (DESKTOP-001C-BUG resolved)
+- [x] no secrets
+- [x] no broker execution
+- [x] no live trading
+
+### Result: PASS
+
+DESKTOP-001C-BUG resolved: `resolve_repo_root()` in `scripts/desktop_launcher.py`
+now detects `getattr(sys, "frozen", False)` and uses
+`Path(sys.executable).resolve().parent.parent` when running as a frozen
+PyInstaller `--onefile` EXE. Repo root resolves to the actual repo, not the
+PyInstaller temp extraction directory.
+
+Endpoint checks (GET-only): `/health` HTTP 200, `/api/health` HTTP 200,
+`/terminal` HTTP 200.
+
+### Remaining work (DESKTOP-001D onwards)
+
+- Optional: desktop shortcut / Start Menu integration
+- Optional: icon/shortcut packaging plan
+- Optional: Tauri/Electron wrapper (Phase 2 — not planned for v0.2)
+
+---
+
 *MellyTrade DESKTOP-001 — Windows Local Launcher EXE Plan*

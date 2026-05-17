@@ -99,8 +99,14 @@ def print_safety_banner() -> None:
 def resolve_repo_root(override: Optional[str] = None) -> Path:
     """Return the repo root directory.
 
-    If *override* is given, use it. Otherwise, infer from the script's own
-    location (scripts/ is one level below repo root).
+    Priority:
+    1. --repo-root CLI override (explicit path, validated).
+    2. PyInstaller frozen mode: sys.executable → dist/MellyTradeLauncher.exe
+       → parent is dist/ → parent is repo root.
+       (PyInstaller --onefile extracts __file__ to a temp directory, so
+       __file__-based resolution is incorrect when frozen.)
+    3. Source / dev mode: __file__ → scripts/desktop_launcher.py
+       → parent is scripts/ → parent is repo root.
     """
     if override:
         root = Path(override).resolve()
@@ -108,6 +114,14 @@ def resolve_repo_root(override: Optional[str] = None) -> Path:
             raise FileNotFoundError(f"--repo-root does not exist: {root}")
         return root
 
+    if getattr(sys, "frozen", False):
+        # Running as a PyInstaller --onefile executable.
+        # sys.executable = dist/MellyTradeLauncher.exe
+        # .parent        = dist/
+        # .parent.parent = repo root
+        return Path(sys.executable).resolve().parent.parent
+
+    # Source / dev mode:
     # __file__ → scripts/desktop_launcher.py → parent is scripts/ → parent is repo root
     return Path(__file__).resolve().parent.parent
 
