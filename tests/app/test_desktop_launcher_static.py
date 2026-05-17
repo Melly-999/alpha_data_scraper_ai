@@ -328,3 +328,77 @@ class TestBuildScriptNoCommitWarning:
         assert "not commit" in lower or "do not commit" in lower or "must not" in lower, (
             "build script must contain wording advising NOT to commit generated artifacts"
         )
+
+
+# ---------------------------------------------------------------------------
+# Test 9 — PyInstaller frozen repo-root detection (DESKTOP-001C-BUG fix)
+# ---------------------------------------------------------------------------
+
+class TestLauncherFrozenRootDetection:
+    """Verify that the launcher handles PyInstaller --onefile frozen mode.
+
+    These tests read file content only — they do NOT run the EXE,
+    execute PyInstaller, or start backend/frontend.
+
+    Background: When running as a PyInstaller --onefile EXE, __file__
+    resolves to the temp extraction directory, not the repo root.
+    The fix detects sys.frozen and uses sys.executable to determine
+    the repo root instead.
+    """
+
+    @pytest.fixture(scope="class")
+    def launcher_text(self) -> str:
+        return _read(LAUNCHER_PY)
+
+    def test_detects_sys_frozen(self, launcher_text: str) -> None:
+        assert 'sys, "frozen"' in launcher_text or "sys.frozen" in launcher_text, (
+            "launcher must detect PyInstaller frozen mode via getattr(sys, 'frozen', False)"
+        )
+
+    def test_uses_sys_executable(self, launcher_text: str) -> None:
+        assert "sys.executable" in launcher_text, (
+            "launcher must use sys.executable for repo root resolution in frozen mode"
+        )
+
+    def test_uses_parent_parent_for_frozen(self, launcher_text: str) -> None:
+        """Ensure the .parent.parent chain is present for frozen path resolution.
+
+        In the frozen path: sys.executable → dist/MellyTradeLauncher.exe
+        .parent  → dist/
+        .parent.parent → repo root
+        Both .parent calls must be present.
+        """
+        assert launcher_text.count(".parent") >= 2, (
+            "launcher must use .parent.parent (or equivalent) to walk up from "
+            "dist/MellyTradeLauncher.exe to the repo root in frozen mode"
+        )
+
+    def test_repo_root_override_still_present(self, launcher_text: str) -> None:
+        assert "--repo-root" in launcher_text, (
+            "launcher must still support --repo-root CLI override after frozen-mode fix"
+        )
+
+    def test_frozen_branch_before_source_fallback(self, launcher_text: str) -> None:
+        """frozen detection must appear before the __file__-based fallback."""
+        frozen_idx = launcher_text.find('"frozen"')
+        file_idx = launcher_text.find("Path(__file__)")
+        assert frozen_idx != -1, "sys.frozen check not found"
+        assert file_idx != -1, "Path(__file__) fallback not found"
+        assert frozen_idx < file_idx, (
+            "sys.frozen detection must appear before Path(__file__) fallback"
+        )
+
+    def test_helper_script_references_unchanged(self, launcher_text: str) -> None:
+        assert "start_backend_local.ps1" in launcher_text, (
+            "launcher must still reference start_backend_local.ps1 after frozen-mode fix"
+        )
+        assert "start_frontend_local.ps1" in launcher_text, (
+            "launcher must still reference start_frontend_local.ps1 after frozen-mode fix"
+        )
+
+    def test_no_mutation_http_added(self, launcher_text: str) -> None:
+        for method in ("POST", "PUT", "PATCH", "DELETE"):
+            assert f'method="{method}"' not in launcher_text and \
+                   f"method='{method}'" not in launcher_text, (
+                f"frozen-mode fix must not add {method} HTTP calls"
+            )

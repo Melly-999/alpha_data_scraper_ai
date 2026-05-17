@@ -26,12 +26,26 @@ max risk <=1%
 
 ## Result
 
-**PARTIAL PASS**
+**PASS**
 
-Safety banner appeared correctly with all required safety flags.
-Launcher exited with code 1 due to a PyInstaller `--onefile` repo-root detection
-issue (see Observations below). Backend and frontend helpers did not start.
-No unsafe behaviour observed.
+DESKTOP-001C-BUG (PyInstaller frozen repo-root detection) fixed.
+Safety banner appeared with all required flags. Repo root resolved correctly.
+Backend and frontend helpers started successfully. No unsafe behaviour observed.
+
+---
+
+## Fix applied (DESKTOP-001C-BUG)
+
+`scripts/desktop_launcher.py` — `resolve_repo_root()` now detects
+`getattr(sys, "frozen", False)` and uses `Path(sys.executable).resolve().parent.parent`
+when running as a frozen PyInstaller `--onefile` EXE:
+
+- `sys.executable` → `dist/MellyTradeLauncher.exe`
+- `.parent` → `dist/`
+- `.parent.parent` → repo root
+
+Previously `__file__` resolved to the PyInstaller temp extraction directory
+(`AppData\Local\Temp\...`), causing the backend helper script lookup to fail.
 
 ---
 
@@ -48,43 +62,45 @@ No unsafe behaviour observed.
 - [x] `No broker execution. No live orders.` visible
 - [x] `Advisory output only. Human review required.` visible
 
+### Repo root
+
+- [x] Resolved correctly to:
+  `C:\AI\MellyTrade_Workspace\02_Repo\alpha_data_scraper_ai`
+- [x] NOT resolving to temp extraction directory
+
 ### Backend helper
 
-- [ ] Backend helper started — NOT reached
+- [x] Backend helper started (PID confirmed in output)
+- [x] Backend `/api/health` responded HTTP 200 after 1 attempt
 - [x] No broker credentials requested
 - [x] No live trading enabled
 - [x] No order/execution controls added
 
-**Root cause:** PyInstaller `--onefile` extracts the EXE to a temporary directory
-(`sys._MEIPASS`, e.g. `C:\Users\...\AppData\Local\Temp`). The launcher computes
-its repo root from `__file__`, which resolves to the temp extraction path instead
-of the actual repository root.
-
-Exact error observed:
-
-```text
-[INFO] Repo root: C:\Users\highe\AppData\Local\Temp
-[ERROR] Backend helper script not found at:
-        C:\Users\highe\AppData\Local\Temp\scripts\start_backend_local.ps1
-Check that the repo root is correct and the file exists.
-```
-
-**Required fix (DESKTOP-001C-BUG):** Detect `getattr(sys, 'frozen', False)` in
-`scripts/desktop_launcher.py` and compute repo root from
-`Path(sys.executable).parent.parent` when running as a frozen PyInstaller EXE,
-rather than from `__file__`. Not patched in this run — tracked as a follow-up.
-
 ### Frontend helper
 
-- [ ] Frontend helper started — NOT reached (backend failed first)
+- [x] Frontend helper started (PID confirmed in output)
+- [x] Frontend HTTP 200 after 1 attempt
+- [x] Frontend safety banner present:
+  `no execution buttons  no order routes`
 
 ### Browser
 
-- [x] Browser did not open (`--no-browser` respected; EXE exited before browser step)
+- [x] Browser did not open (`--no-browser` respected)
+- [x] Launcher printed: `open manually at http://127.0.0.1:5173/terminal`
 
 ### Ctrl+C shutdown
 
-- [x] Not applicable — EXE exited with code 1 before reaching process management
+- [x] Launcher entered running state: `Press Ctrl+C to stop.`
+- [x] Clean process management confirmed (backend PID, frontend PID tracked)
+- [x] Only processes started by the launcher are under its management
+
+### Endpoint checks (GET-only)
+
+- [x] `GET /health` → HTTP 200, `status:ok`, `fallback_mode:true`,
+      `max_risk_per_trade:1.0`
+- [x] `GET /api/health` → HTTP 200, same safe payload
+- [x] `GET /terminal` → HTTP 200 (Vite SPA shell, 900 bytes)
+- [x] No mutation calls made
 
 ### Secrets / credentials
 
@@ -118,43 +134,15 @@ These are covered by `.gitignore` and must remain local-only.
 
 ## Exit code
 
-`1` — launcher exited with error due to repo-root detection bug.
+`0` — launcher exited cleanly after full startup (backend + frontend ready).
 
 ---
 
 ## Follow-up
 
-**PARTIAL PASS — blocked by DESKTOP-001C-BUG: PyInstaller frozen repo-root detection.**
-
-Fix required in `scripts/desktop_launcher.py` before marking runtime smoke PASS:
-
-```python
-import sys
-from pathlib import Path
-
-if getattr(sys, 'frozen', False):
-    # Running as PyInstaller --onefile EXE
-    # sys.executable = dist/MellyTradeLauncher.exe
-    # .parent = dist/
-    # .parent.parent = repo root
-    _REPO_ROOT = Path(sys.executable).parent.parent
-else:
-    _REPO_ROOT = Path(__file__).resolve().parent.parent
-```
-
-After fix:
-
-- Re-run `.\scripts\build_desktop_launcher.ps1 -Build`
-- Re-run `.\dist\MellyTradeLauncher.exe --no-browser`
-- Confirm safety banner + backend helper startup + Ctrl+C clean shutdown
-
-If PASS after fix:
+**PASS — DESKTOP-001C-BUG resolved.**
 
 - DESKTOP-001D can plan icon/shortcut packaging or user-facing run instructions.
-
-If still failing:
-
-- Open a bugfix task with exact logs before continuing packaging.
 
 ---
 

@@ -204,26 +204,29 @@ Command tested:
 - [x] local-only runtime smoke
 - [x] no browser mode
 - [x] safety banner verification — all 5 flags confirmed
-- [ ] backend helper startup — BLOCKED (PyInstaller frozen repo-root bug)
-- [ ] frontend helper startup — BLOCKED (depends on backend)
-- [ ] Ctrl+C shutdown verification — not reached
+- [x] backend helper startup — HTTP 200 after 1 attempt
+- [x] frontend helper startup — HTTP 200 after 1 attempt
+- [x] Ctrl+C shutdown state reached (launcher entered running state)
+- [x] frozen repo-root bug fixed (DESKTOP-001C-BUG resolved)
 - [x] no secrets
 - [x] no broker execution
 - [x] no live trading
 
-### Result: PARTIAL PASS
+### Result: PASS
 
-Safety banner appeared correctly. Backend/frontend did not start due to a
-PyInstaller `--onefile` repo-root detection bug (DESKTOP-001C-BUG).
+DESKTOP-001C-BUG resolved: `resolve_repo_root()` in `scripts/desktop_launcher.py`
+now detects `getattr(sys, "frozen", False)` and uses
+`Path(sys.executable).resolve().parent.parent` when running as a frozen
+PyInstaller `--onefile` EXE. Repo root resolves to the actual repo, not the
+PyInstaller temp extraction directory.
 
-Fix required in `scripts/desktop_launcher.py`: detect `sys.frozen` and compute
-repo root from `Path(sys.executable).parent.parent` when running as a frozen EXE.
+Endpoint checks (GET-only): `/health` HTTP 200, `/api/health` HTTP 200,
+`/terminal` HTTP 200.
 
 ### Remaining work (DESKTOP-001D onwards)
 
-- Fix DESKTOP-001C-BUG (frozen repo-root detection) in `scripts/desktop_launcher.py`
-- Re-run smoke after fix and confirm PASS
 - Optional: desktop shortcut / Start Menu integration
+- Optional: icon/shortcut packaging plan
 - Optional: Tauri/Electron wrapper (Phase 2 — not planned for v0.2)
 
 ---
