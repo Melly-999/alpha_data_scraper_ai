@@ -69,3 +69,10 @@ MellyTrade should be positioned as:
 - degraded states are obvious
 - no hidden action buttons on read-only screens
 - beta users can find safety status quickly
+
+## Related closed beta docs
+
+- `docs/product/closed_beta_disclaimer.md`
+- `docs/product/closed_beta_limitations.md`
+- `docs/product/closed_beta_bug_report_template.md`
+- `docs/qa/browser_ui_smoke_checklist.md`
