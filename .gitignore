@@ -83,3 +83,7 @@ frontend/vite.config.js
 
 # Local UI prototypes
 _prototypes/
+
+# PyInstaller generated artifacts — local-only, never commit
+*.spec
+*.exe

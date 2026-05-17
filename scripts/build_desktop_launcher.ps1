@@ -185,7 +185,8 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$ExePath = Join-Path $RepoRoot "dist" "MellyTradeLauncher.exe"
+$DistDir = Join-Path $RepoRoot "dist"
+$ExePath = Join-Path $DistDir "MellyTradeLauncher.exe"
 if (Test-Path $ExePath) {
     Write-Host ""
     Write-Host "======================================================"
