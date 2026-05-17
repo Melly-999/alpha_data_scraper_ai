@@ -13,6 +13,38 @@ The project combines a FastAPI backend, React/TypeScript dashboard, broker adapt
 
 > Current status: local workstation and paper-trading infrastructure. Live trading is intentionally disabled by default.
 
+## MellyTrade Closed Beta Demo
+
+MellyTrade is currently presented as a read-only, dry-run AI trading research terminal.
+
+It is not a live trading bot, not an execution platform, and not investment advice.
+
+Safety posture:
+
+```text
+autotrade=false
+dry_run=true
+read_only=true
+live_orders_blocked=true
+max risk <=1%
+```
+
+### Screenshots
+
+| View | Screenshot |
+|---|---|
+| Terminal overview | [terminal-overview.png](docs/assets/screenshots/closed-beta/terminal-overview.png) |
+| AI scanner workspace | [ai-scanner-workspace.png](docs/assets/screenshots/closed-beta/ai-scanner-workspace.png) |
+| Risk manager read-only | [risk-manager-readonly.png](docs/assets/screenshots/closed-beta/risk-manager-readonly.png) |
+| Audit event rail | [audit-event-rail.png](docs/assets/screenshots/closed-beta/audit-event-rail.png) |
+| Broker safe-disconnected | [broker-status-safe-disconnected.png](docs/assets/screenshots/closed-beta/broker-status-safe-disconnected.png) |
+
+Related docs:
+
+- [Closed beta disclaimer](docs/product/closed_beta_disclaimer.md)
+- [Closed beta limitations](docs/product/closed_beta_limitations.md)
+- [Browser UI smoke checklist](docs/qa/browser_ui_smoke_checklist.md)
+
 ---
 
 ## MellyTrade Terminal V1
