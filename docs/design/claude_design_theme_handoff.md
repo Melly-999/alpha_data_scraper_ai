@@ -233,3 +233,70 @@ Suggested import structure:
 - No trading/execution controls added.
 - `validate_safety_config.py` passes.
 - frontend build passes.
+
+---
+
+## Crimson severity-only layer
+
+Crimson is not a full app theme.
+
+It only affects:
+- degraded states (critical/blocked level — red severity)
+- blocked states
+- NO_TRADE surfaces
+- hard-stop / danger surfaces
+- compliance / risk emphasis views
+
+It must not recolor:
+- base app background
+- main panels
+- sidebar
+- typography
+- primary Amber/Navy brand accents
+
+Base theme remains Amber by default or Navy when explicitly enabled.
+
+### Implementation token mapping
+
+The CSS implementation in `frontend/src/components/terminal/terminal.css` uses these
+token names (mapped from the design palette above):
+
+| Design token | CSS implementation token | Amber default | Crimson override |
+|---|---|---|---|
+| `--sev-degraded` / `--neg` | `--terminal-red` | `#ff6b6b` | `#dc2626` |
+| `--sev-degraded-bg` | `--terminal-danger-bg` | `rgba(255,107,107,.10)` | `rgba(220,38,38,.10)` |
+| `--sev-degraded-br` | `--terminal-danger-border` | `rgba(255,107,107,.30)` | `rgba(220,38,38,.34)` |
+| *(new)* | `--terminal-danger-glow` | `rgba(255,107,107,.12)` | `rgba(220,38,38,.18)` |
+
+### Component classes that consume danger tokens
+
+These classes use the token variables and therefore respond to the Crimson layer:
+
+| Class | Surface | Severity level |
+|---|---|---|
+| `.scanner-action--no-trade` | NO_TRADE action chip | Red / critical |
+| `.scanner-preview-card--no-trade` | Scanner card left border | Red / critical |
+| `.signal-chip--sell` | Signal SELL display chip | Red / critical |
+| `.value-negative` | Negative price delta | Red / critical |
+| `.permission-grid .denied strong` | Denied permission entry | Red / critical |
+| `.event-entry.warning strong` | Warning event entry | Red / critical |
+
+### Classes intentionally NOT affected by Crimson
+
+These classes are amber/warning level (not critical/blocked) and correctly stay amber:
+
+| Class | Reason |
+|---|---|
+| `.service-pill--degraded` | Service degraded = warning level (amber), not blocked |
+| `.degraded-services-banner` | Advisory/attention banner = warning level (amber) |
+
+### Combining
+
+```
+<html>                                           → Amber + standard red (default)
+<html data-theme="navy">                         → Navy + standard red
+<html data-severity="crimson">                   → Amber + loud crimson danger
+<html data-theme="navy" data-severity="crimson"> → Navy + loud crimson danger
+```
+
+Crimson activates via devtools only. No user-facing theme switcher. No persistence.
