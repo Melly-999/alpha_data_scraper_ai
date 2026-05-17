@@ -272,4 +272,47 @@ This step adds a local Windows shortcut helper and tester-facing run instruction
 
 ---
 
+---
+
+## DESKTOP-001E — Distribution Planning status
+
+This step adds a distribution planning guide for the MellyTrade Windows desktop
+launcher. Docs-only update — no runtime behavior or safety posture changed.
+
+### This PR adds
+
+- `docs/distribution/desktop_distribution_plan.md` — distribution options and recommended ZIP path for v0.2 beta
+- `docs/qa/desktop_distribution_smoke_checklist.md` — operator smoke checklist for validating the distribution ZIP
+- `docs/product/beta_tester_desktop_distribution_notes.md` — tester-facing install and launch notes
+- `tests/app/test_desktop_distribution_docs_static.py` — static inspection tests (read-only, no artifact creation)
+
+### Status
+
+- [x] Distribution plan doc — options A/B/C/D compared, Option A (ZIP) recommended for v0.2
+- [x] ZIP pack steps documented (PowerShell `Compress-Archive`)
+- [x] ZIP verify steps documented
+- [x] Safety constraints documented
+- [x] Artifact policy documented (`dist/`, `build/`, `*.spec`, `*.exe`, `*.zip`, `*.msi` local-only)
+- [x] SmartScreen workaround documented
+- [x] Tester-facing install and launch notes
+- [x] Operator smoke checklist
+- [x] Static tests — read-only, no EXE/shortcut/ZIP execution
+- [ ] No installer implemented (planning only)
+- [ ] No code signing (tracked for v0.3+)
+- [ ] No auto-update
+- [x] No secrets bundled
+- [x] No broker execution
+- [x] No live trading
+
+### Remaining work (DESKTOP-001F onwards)
+
+- Actual ZIP packaging operational step (out-of-band, not a code change)
+- Optional: icon asset design
+- Optional: signed build plan (v0.3+)
+- Optional: NSIS/Inno Setup installer (v0.3+)
+- Optional: winget / Microsoft Store (post-launch)
+- Optional: Tauri/Electron wrapper (Phase 2 — not planned for v0.2)
+
+---
+
 *MellyTrade DESKTOP-001 — Windows Local Launcher EXE Plan*
