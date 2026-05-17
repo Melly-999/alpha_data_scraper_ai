@@ -76,14 +76,19 @@ universe selector to the scanner UI.
 
 **Depends on:** SIG-UNIVERSE-001
 
-**Scope (tentative):**
+**Scope:**
 
-- `app/api/routes/signals.py` — add `GET /signals/scanner/universes` (read-only)
-- Frontend — universe selector dropdown (display-only, no mutation)
+- `app/schemas/signal_scanner.py` — `SignalUniversePreset`, `SignalUniverseListResponse` Pydantic models
+- `app/api/routes/signals.py` — `GET /signals/scanner/universes` (read-only), `universe` query param on preview
+- `frontend/src/lib/scannerPreviewApi.ts` — `getScannerUniverses()`, updated `getScannerPreview({ symbols?, universe? })`
+- `frontend/src/components/terminal/AIWorkspacePanel.tsx` — local universe state, `<select>` dropdown, local re-fetch
+- `frontend/src/components/terminal/terminal.css` — universe selector row/select/loading styles
+- `tests/app/test_signal_universe_endpoint.py` — 31 endpoint tests
 - No POST/PUT/PATCH/DELETE routes
 - No execution controls
+- No broker calls
 
-**Status:** Planned — blocked on SIG-UNIVERSE-001 merge
+**Status:** In progress — `feature/sig-universe-selector-v1`
 
 ---
 

@@ -7,7 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.api.deps import get_container
 from app.core.container import AppContainer
 from app.schemas.signal import SignalDetail, SignalReasoning, SignalSummary
-from app.schemas.signal_scanner import SignalScannerBatch
+from app.schemas.signal_scanner import (
+    SignalScannerBatch,
+    SignalUniverseListResponse,
+    SignalUniversePreset,
+)
 from app.schemas.signal_decision import (
     DecisionDirection,
     DecisionType,
@@ -28,6 +32,45 @@ _decision_service = SignalDecisionHistoryService()
 _lifecycle_service = SignalLifecycleService(_decision_service)
 _scanner_default_symbols = ("AAPL", "NVDA", "MSFT", "TSLA", "EURUSD", "XAUUSD")
 _scanner_max_symbols = 25
+
+# Human-readable display labels for each universe name.
+# Unknown names are formatted by replacing underscores with spaces and title-casing.
+_UNIVERSE_LABELS: dict[str, str] = {
+    "ai_mega_caps": "AI Mega Caps",
+    "xtb_cfd_watchlist": "XTB / CFD Watchlist",
+    "core_macro": "Core Macro",
+    "polish_eu_watchlist": "Polish / EU Watchlist",
+    "default_demo": "Default Demo",
+}
+
+
+def _universe_label(name: str) -> str:
+    """Return a display label for a universe name."""
+    return _UNIVERSE_LABELS.get(name, name.replace("_", " ").title())
+
+
+def _resolve_scanner_symbols(
+    raw_symbols: str | None,
+    universe: str | None,
+) -> list[str]:
+    """Resolve which symbols to scan.
+
+    Priority:
+    1. Explicit ``symbols`` query param — always takes precedence.
+    2. ``universe`` query param — resolved via signal_universe service;
+       unknown names safely fall back to ``default_demo``.
+    3. Default symbols tuple — used when neither is provided.
+
+    No broker calls, no network calls, no persistence.
+    """
+    if raw_symbols is not None and raw_symbols.strip():
+        return _parse_scanner_symbols(raw_symbols)
+    if universe is not None and universe.strip():
+        from app.services.signal_universe import list_symbols_for_universe
+
+        universe_symbols = list_symbols_for_universe(universe.strip())
+        return list(universe_symbols) or list(_scanner_default_symbols)
+    return list(_scanner_default_symbols)
 
 
 def _parse_scanner_symbols(raw_symbols: str | None) -> list[str]:
@@ -64,6 +107,42 @@ def _action_to_direction(action: str) -> str:
 
 
 @router.get(
+    "/signals/scanner/universes",
+    response_model=SignalUniverseListResponse,
+)
+def signal_scanner_universes() -> SignalUniverseListResponse:
+    """Read-only universe preset list.
+
+    Advisory-only GET endpoint that returns all available scanner universe
+    presets defined in SIG-UNIVERSE-001.  No execution, no broker call,
+    no mutation, no persistence.
+    """
+    from app.services.signal_universe import list_universes
+
+    universe_map = list_universes()
+    presets: list[SignalUniversePreset] = []
+
+    for name, items in universe_map.items():
+        symbols = [item.symbol for item in items if item.symbol]
+        asset_classes = sorted({item.asset_class for item in items if item.asset_class})
+        tags: set[str] = set()
+        for item in items:
+            tags.update(item.tags)
+        presets.append(
+            SignalUniversePreset(
+                name=name,
+                label=_universe_label(name),
+                symbols=symbols,
+                item_count=len(symbols),
+                asset_classes=asset_classes,
+                tags=sorted(tags),
+            )
+        )
+
+    return SignalUniverseListResponse(universes=presets)
+
+
+@router.get(
     "/signals/scanner/preview",
     response_model=SignalScannerBatch,
 )
@@ -73,6 +152,14 @@ def signal_scanner_preview(
         description=(
             "Optional comma-separated preview symbols. Read-only scanner preview "
             "only; no execution, broker call, or persistence."
+        ),
+    ),
+    universe: str | None = Query(
+        default=None,
+        description=(
+            "Optional universe preset name (e.g. 'ai_mega_caps', 'xtb_cfd_watchlist'). "
+            "Ignored when symbols are explicitly provided.  Unknown names fall back to "
+            "default_demo.  Read-only; no execution, broker call, or persistence."
         ),
     ),
 ) -> SignalScannerBatch:
@@ -91,7 +178,7 @@ def signal_scanner_preview(
     from app.services.signal_scanner import scan_symbols
     from app.services.supabase_client import get_safe_supabase_write_client
 
-    batch = scan_symbols(_parse_scanner_symbols(symbols))
+    batch = scan_symbols(_resolve_scanner_symbols(symbols, universe))
 
     # SUPA-011: fire-and-forget persist each scanner result as a decision record.
     # The preview response is never blocked by persistence failure.

@@ -16,6 +16,29 @@ export type SignalScannerAction =
   | "SHORT_SETUP"
   | "NO_TRADE";
 
+// ---------------------------------------------------------------------------
+// SIG-UNIVERSE-002 — Universe types
+// ---------------------------------------------------------------------------
+
+export type SignalUniversePreset = {
+  name: string;
+  label: string;
+  symbols: string[];
+  item_count: number;
+  asset_classes: string[];
+  tags: string[];
+  read_only: true;
+  execution_mode: "dry_run_only";
+  requires_human_review: true;
+};
+
+export type SignalUniverseListResponse = {
+  read_only: true;
+  execution_mode: "dry_run_only";
+  requires_human_review: true;
+  universes: SignalUniversePreset[];
+};
+
 export type SignalScannerResult = {
   symbol: string;
   action: SignalScannerAction;
@@ -124,16 +147,130 @@ function normalizeScannerBatch(
   };
 }
 
+// ---------------------------------------------------------------------------
+// SIG-UNIVERSE-002 — Universe list fallback and fetch
+// ---------------------------------------------------------------------------
+
+function createFallbackUniverseListResponse(): SignalUniverseListResponse {
+  return {
+    read_only: true,
+    execution_mode: "dry_run_only",
+    requires_human_review: true,
+    universes: [
+      {
+        name: "ai_mega_caps",
+        label: "AI Mega Caps",
+        symbols: ["NVDA", "GOOGL", "AMZN", "MSFT", "AAPL", "META", "TSLA", "AMD", "AVGO", "ORCL"],
+        item_count: 10,
+        asset_classes: ["equity"],
+        tags: ["ai", "mega-cap", "us-equity"],
+        read_only: true,
+        execution_mode: "dry_run_only",
+        requires_human_review: true,
+      },
+      {
+        name: "xtb_cfd_watchlist",
+        label: "XTB / CFD Watchlist",
+        symbols: ["US100", "US500", "XAUUSD", "NATGAS", "EURUSD", "GBPUSD", "USDJPY", "BTCUSD"],
+        item_count: 8,
+        asset_classes: ["index", "commodity", "fx", "crypto"],
+        tags: ["cfd", "xtb", "macro"],
+        read_only: true,
+        execution_mode: "dry_run_only",
+        requires_human_review: true,
+      },
+      {
+        name: "core_macro",
+        label: "Core Macro",
+        symbols: ["EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "OIL.WTI", "BTCUSD", "ETHUSD"],
+        item_count: 7,
+        asset_classes: ["fx", "commodity", "crypto"],
+        tags: ["macro", "fx", "commodities"],
+        read_only: true,
+        execution_mode: "dry_run_only",
+        requires_human_review: true,
+      },
+      {
+        name: "polish_eu_watchlist",
+        label: "Polish / EU Watchlist",
+        symbols: ["PKN", "CDR", "DAX", "EURPLN", "USDPLN"],
+        item_count: 5,
+        asset_classes: ["equity", "index", "fx"],
+        tags: ["polish", "eu", "regional"],
+        read_only: true,
+        execution_mode: "dry_run_only",
+        requires_human_review: true,
+      },
+      {
+        name: "default_demo",
+        label: "Default Demo",
+        symbols: ["AAPL", "NVDA", "MSFT", "EURUSD", "XAUUSD", "BTCUSD"],
+        item_count: 6,
+        asset_classes: ["equity", "fx", "commodity", "crypto"],
+        tags: ["demo", "default"],
+        read_only: true,
+        execution_mode: "dry_run_only",
+        requires_human_review: true,
+      },
+    ],
+  };
+}
+
+export async function getScannerUniverses(): Promise<SignalUniverseListResponse> {
+  try {
+    const response = await fetch(joinUrl("/signals/scanner/universes"), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
+
+    if (!response.ok) {
+      return createFallbackUniverseListResponse();
+    }
+
+    const payload = (await response.json()) as Partial<SignalUniverseListResponse>;
+    if (
+      payload?.read_only !== true ||
+      payload?.execution_mode !== "dry_run_only" ||
+      !Array.isArray(payload?.universes)
+    ) {
+      return createFallbackUniverseListResponse();
+    }
+
+    return payload as SignalUniverseListResponse;
+  } catch {
+    return createFallbackUniverseListResponse();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Scanner preview — updated to accept optional universe param
+// ---------------------------------------------------------------------------
+
+export type ScannerPreviewOptions = {
+  symbols?: readonly string[];
+  universe?: string;
+};
+
 export async function getScannerPreview(
-  symbols?: readonly string[],
+  options?: ScannerPreviewOptions | readonly string[],
 ): Promise<SignalScannerBatch> {
-  const filteredSymbols = (symbols ?? [])
+  // Backward-compatible: if called with a plain array, treat it as { symbols }
+  let resolved: ScannerPreviewOptions;
+  if (Array.isArray(options)) {
+    resolved = { symbols: options as readonly string[] };
+  } else {
+    resolved = (options as ScannerPreviewOptions | undefined) ?? {};
+  }
+
+  const filteredSymbols = (resolved.symbols ?? [])
     .map((symbol) => symbol.trim())
     .filter(Boolean);
   const query = new URLSearchParams();
 
   if (filteredSymbols.length > 0) {
     query.set("symbols", filteredSymbols.join(","));
+  } else if (resolved.universe && resolved.universe.trim()) {
+    query.set("universe", resolved.universe.trim());
   }
 
   const path = query.toString()

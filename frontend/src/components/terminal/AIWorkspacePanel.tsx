@@ -1,6 +1,14 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { SignalScannerAction } from "../../lib/scannerPreviewApi";
+import {
+  getScannerPreview,
+  getScannerUniverses,
+} from "../../lib/scannerPreviewApi";
+import type {
+  SignalScannerAction,
+  SignalScannerBatch,
+  SignalUniversePreset,
+} from "../../lib/scannerPreviewApi";
 import type { TerminalShellData } from "./TerminalShell";
 
 type Agent = {
@@ -117,6 +125,43 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
 
   const activeAgents = useMemo(
     () => agents.filter((agent) => agent.health !== "idle").length,
+    [],
+  );
+
+  // SIG-UNIVERSE-002 — Universe selector state (read-only, display-only, no execution)
+  const [universePresets, setUniversePresets] = useState<SignalUniversePreset[]>([]);
+  const [selectedUniverse, setSelectedUniverse] = useState<string>("");
+  const [localScannerBatch, setLocalScannerBatch] = useState<SignalScannerBatch>(
+    data.scannerPreview,
+  );
+  const [universeLoading, setUniverseLoading] = useState(false);
+
+  // Fetch available universe presets on mount — GET-only, no side effects
+  useEffect(() => {
+    let cancelled = false;
+    getScannerUniverses().then((response) => {
+      if (!cancelled) {
+        setUniversePresets(response.universes);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Re-fetch scanner preview when the universe selection changes
+  const handleUniverseChange = useCallback(
+    async (universeName: string) => {
+      setSelectedUniverse(universeName);
+      if (!universeName) return;
+      setUniverseLoading(true);
+      try {
+        const batch = await getScannerPreview({ universe: universeName });
+        setLocalScannerBatch(batch);
+      } finally {
+        setUniverseLoading(false);
+      }
+    },
     [],
   );
 
@@ -245,9 +290,41 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                 <span className="workspace-chip">HUMAN REVIEW</span>
                 <span className="workspace-chip">NO ORDER ROUTING</span>
               </div>
-              {data.scannerPreview.results.length > 0 ? (
+
+              {universePresets.length > 0 && (
+                <div className="universe-selector-row" aria-label="Scanner universe selector">
+                  <label
+                    className="universe-selector-label"
+                    htmlFor="scanner-universe-select"
+                  >
+                    Universe
+                  </label>
+                  <select
+                    id="scanner-universe-select"
+                    className="universe-selector-select"
+                    value={selectedUniverse}
+                    onChange={(e) => { void handleUniverseChange(e.target.value); }}
+                    aria-label="Select scanner universe — display only, advisory"
+                    disabled={universeLoading}
+                  >
+                    <option value="">Default symbols</option>
+                    {universePresets.map((preset) => (
+                      <option key={preset.name} value={preset.name}>
+                        {preset.label} ({preset.item_count})
+                      </option>
+                    ))}
+                  </select>
+                  {universeLoading && (
+                    <span className="universe-selector-loading" aria-live="polite">
+                      Loading…
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {localScannerBatch.results.length > 0 ? (
                 <div className="scanner-preview-grid" aria-label="Scanner preview results">
-                  {data.scannerPreview.results.map((result) => (
+                  {localScannerBatch.results.map((result) => (
                     <article
                       key={`${result.symbol}-${result.timestamp}`}
                       className={`scanner-preview-card${result.action === "NO_TRADE" ? " scanner-preview-card--no-trade" : ""}`}
