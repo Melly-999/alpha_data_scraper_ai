@@ -93,3 +93,54 @@ Graphify query mode was available in this install and the answers below were sum
 - `graphify-out/graph.json` was generated successfully.
 - `graphify-out/graph.html` was skipped by Graphify because the graph exceeded the HTML visualization node limit.
 - `graphify-out/` stays ignored and uncommitted by policy unless explicitly requested.
+
+---
+
+## Closed Beta Demo v0.1 Graphify Refresh
+
+**Date:** 2026-05-17
+**main HEAD SHA:** a5d9719
+**Milestone:** MellyTrade Closed Beta Demo v0.1 package — COMPLETE
+**Graphify refresh status:** PASS
+
+### Commands run
+
+```bash
+graphify update . --no-cluster   # AST re-extraction, no LLM, no cluster — 6468 nodes, 16794 edges
+graphify cluster-only .           # Reclustered — 6429 nodes, 9001 edges, 493 communities
+```
+
+### Graph stats after refresh
+
+- Nodes: 6429
+- Edges: 9001
+- Communities: 493
+- Graph HTML: skipped (node count exceeds 5000 viz limit — expected)
+
+### Key docs now on main (merged PRs #114–#119)
+
+| PR | Doc(s) |
+|---|---|
+| #114 | `frontend/src/components/terminal/terminal.css` — CSS theme tokens (Amber/Navy/Crimson) |
+| #115 | `frontend/src/components/terminal/AIWorkspacePanel.tsx`, `MarketOverviewGrid.tsx` — scanner/watchlist polish |
+| #116 | `docs/product/closed_beta_disclaimer.md`, `docs/product/closed_beta_limitations.md` |
+| #117 | `docs/demo/readme_screenshot_pack.md`, `docs/assets/screenshots/closed-beta/` |
+| #118 | `docs/release/closed_beta_demo_v0_1_candidate.md`, `docs/demo/final_local_demo_smoke_report.md` |
+| #119 | `docs/beta/beta_tester_quick_start.md`, `docs/beta/beta_tester_invite_instructions.md`, `docs/beta/beta_tester_feedback_guide.md`, `docs/release/closed_beta_demo_v0_1_next_steps.md` |
+
+### Safety posture (enforced — unchanged)
+
+```
+autotrade          = false
+dry_run            = true
+read_only          = true
+live_orders_blocked = true
+max risk           <= 1%
+```
+
+### Next recommended tasks
+
+- `git tag -a v0.1-beta` — optional release tag after confirming safety validator green on main
+- Hosted deployment plan — select provider, define staging vs production, deployment smoke checklist
+- Beta tester invite rollout — follow `docs/beta/beta_tester_invite_instructions.md`
+- Auth / access-control plan — define private access model before any public beta access
