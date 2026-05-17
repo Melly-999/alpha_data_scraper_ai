@@ -42,6 +42,7 @@
   --terminal-safe-border:    rgba(83, 214, 129, 0.34);
   --terminal-danger-bg:      rgba(255, 107, 107, 0.10);
   --terminal-danger-border:  rgba(255, 107, 107, 0.30);
+  --terminal-danger-glow:    rgba(255, 107, 107, 0.12);
 
   /* Type */
   --terminal-mono: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
@@ -72,14 +73,46 @@
   --terminal-accent-border:  rgba(74, 144, 217, 0.28);
 }
 
-/* ── Crimson — severity/risk-only override (data-severity="crimson" on <html>) ─
-   NOT a full theme. Only the danger color changes.
-   green / blue / amber severity remain unchanged.
-   Do NOT make the whole app red. Do NOT apply as default.                     */
+/*
+ * Crimson severity layer.
+ * Not a full theme.
+ * Only affects degraded / danger / blocked / NO_TRADE surfaces.
+ * Amber or Navy remains the base palette underneath.
+ * Activate via data-severity="crimson" on <html>.
+ * Orthogonal to data-theme — can compose with Amber or Navy.
+ *
+ * What Crimson changes:  --terminal-red, --terminal-danger-bg,
+ *                        --terminal-danger-border, --terminal-danger-glow
+ * What Crimson does NOT change:  --terminal-bg, --terminal-surface,
+ *                        --terminal-chrome-bg, --terminal-sidebar-bg,
+ *                        --terminal-text, --terminal-muted,
+ *                        --terminal-amber, --terminal-green, --terminal-blue,
+ *                        --terminal-accent-bg, --terminal-accent-border
+ *
+ * Affected surfaces: .scanner-action--no-trade, .scanner-preview-card--no-trade,
+ *                    .signal-chip--sell, .value-negative, .permission-grid .denied
+ * NOT affected:      .service-pill--degraded (amber/warning level — intentional)
+ *                    .degraded-services-banner (amber/warning level — intentional)
+ */
 [data-severity="crimson"] {
   --terminal-red:            #dc2626;
   --terminal-danger-bg:      rgba(220, 38, 38, 0.10);
   --terminal-danger-border:  rgba(220, 38, 38, 0.34);
+  --terminal-danger-glow:    rgba(220, 38, 38, 0.18);
+}
+
+/* Danger surfaces read louder under Crimson — stronger border + subtle glow.
+   Applied only to blocked / NO_TRADE / danger component classes.
+   Global app surfaces and non-danger UI are unaffected. */
+[data-severity="crimson"] .scanner-action--no-trade,
+[data-severity="crimson"] .scanner-preview-card--no-trade,
+[data-severity="crimson"] .signal-chip--sell {
+  box-shadow: 0 0 0 1px var(--terminal-danger-border),
+              0 0 8px var(--terminal-danger-glow);
+}
+
+[data-severity="crimson"] .scanner-preview-card--no-trade {
+  border-left-width: 4px;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -1345,15 +1378,15 @@
 }
 
 .scanner-action--no-trade {
-  border-color: rgba(255, 107, 107, 0.32);
-  background: rgba(255, 107, 107, 0.08);
+  border-color: var(--terminal-danger-border);
+  background: var(--terminal-danger-bg);
   color: var(--terminal-red);
 }
 
 /* NO_TRADE card: left rail tint only — card surface stays near-neutral */
 
 .scanner-preview-card--no-trade {
-  border-color: rgba(255, 107, 107, 0.22);
+  border-color: var(--terminal-danger-border);
   border-left: 3px solid var(--terminal-red);
 }
 
@@ -1406,8 +1439,8 @@
 }
 
 .signal-chip--sell {
-  border-color: rgba(255, 107, 107, 0.28);
-  background: rgba(255, 107, 107, 0.07);
+  border-color: var(--terminal-danger-border);
+  background: var(--terminal-danger-bg);
   color: var(--terminal-red);
 }
 
