@@ -431,9 +431,12 @@ Status:
 
 Docs added:
 
+- `docs/beta/first_source_only_tester_feedback_tracker.md`
+- `docs/qa/first_source_only_tester_feedback_review_gate.md`
 - `docs/qa/local_demo_tester_smoke_checklist.md`
 - `docs/qa/local_demo_404_regression_checklist.md`
 - `tests/app/test_local_demo_smoke_docs_static.py`
+- `tests/app/test_first_source_only_tester_feedback_tracker_static.py`
 
 Purpose:
 
@@ -450,3 +453,36 @@ Next:
 - Collect first tester feedback using
   `docs/beta/source_only_tester_feedback_form.md`.
 - Track findings in future `BETA-FEEDBACK-001`.
+
+---
+
+## BETA-FEEDBACK-001 — First tester feedback tracker status
+
+Status:
+
+- First tester feedback tracker added
+- First tester feedback review gate added
+- Static docs tests added
+- No runtime behavior changed
+- No backend routes added
+- No frontend runtime changed
+- No generated artifacts committed
+- No tester access granted
+- No invite sent
+- No second tester approved
+
+Purpose:
+
+Track and review feedback from the first trusted source-only beta tester before
+deciding whether a second tester can be invited.
+
+Expansion rule:
+
+Do not invite a second tester until the first tester feedback review gate
+returns PASS.
+
+Next:
+
+- Run feedback review gate after first tester returns feedback.
+- If PASS, prepare `BETA-ACCESS-002` second tester expansion gate.
+- If HOLD/BLOCKED, resolve issues first.
