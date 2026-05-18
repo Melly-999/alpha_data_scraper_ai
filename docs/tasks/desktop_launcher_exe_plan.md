@@ -315,4 +315,52 @@ launcher. Docs-only update — no runtime behavior or safety posture changed.
 
 ---
 
+---
+
+## DESKTOP-001F — Source-Only Beta Package Review status
+
+This step defines the safe source-only beta access model for the first cohort
+of trusted testers. Docs-only update — no runtime behavior or safety posture
+changed.
+
+### This PR adds
+
+- `docs/distribution/source_only_beta_package_review.md` — safe sharing model, pre-share checks, stop conditions
+- `docs/qa/source_only_beta_preflight_checklist.md` — operator preflight checklist before granting access
+- `docs/product/beta_tester_source_access_guide.md` — tester-facing safe first run guide
+- `tests/app/test_source_only_beta_docs_static.py` — static inspection tests (read-only, no artifact creation)
+
+### Status
+
+- [x] Source-only beta review doc
+- [x] Preflight checklist
+- [x] Tester source access guide
+- [x] Static tests — read-only, no EXE/ZIP/network execution
+- [x] No generated artifacts committed
+- [x] No installer
+- [x] No public EXE release artifact
+- [x] No live trading
+- [x] No broker execution
+- [x] No secrets bundled
+
+### Recommended
+
+- Source-only beta for first trusted testers (preflight checklist must PASS)
+- Local build beta only after preflight passes
+
+### Deferred
+
+- Generated ZIP bundle distribution
+- Public EXE release artifact
+- Installer (NSIS/Inno — tracked for v0.3+)
+- Code signing (tracked for v0.3+)
+- Auto-update
+
+### Next
+
+- DESKTOP-001G installer tool comparison
+- or BETA-ACCESS-001 first source-only tester rollout
+
+---
+
 *MellyTrade DESKTOP-001 — Windows Local Launcher EXE Plan*
