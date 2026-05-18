@@ -162,4 +162,6 @@ values.
 - [`docs/openclaw/DAILY_USAGE.md`](DAILY_USAGE.md) — practical daily commands (Polish)
 - [`docs/openclaw/SECURITY_MODEL.md`](SECURITY_MODEL.md) — threat model and mitigations
 - [`docs/openclaw/DISCORD_LOCAL_SMOKE_CHECKLIST.md`](DISCORD_LOCAL_SMOKE_CHECKLIST.md) — OPENCLAW-002 phone/Discord smoke tests
+- [`docs/openclaw/DISCORD_BOT_SETUP_GUIDE.md`](DISCORD_BOT_SETUP_GUIDE.md) — OPENCLAW-003 Discord bot creation and permissions
+- [`docs/openclaw/OPENCLAW_LOCAL_CONFIG_TEMPLATE.md`](OPENCLAW_LOCAL_CONFIG_TEMPLATE.md) — OPENCLAW-003 local config shape reference
 - [`skills/mellytrade-operator/SKILL.md`](../../skills/mellytrade-operator/SKILL.md) — operator skill definition
