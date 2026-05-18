@@ -520,3 +520,33 @@ Next:
 - If PASS, operator may manually grant read-only repository access to exactly
   one second tester.
 - If HOLD/BLOCKED, resolve issues first.
+
+---
+
+## BETA-OPS-001 - Beta rollout operator command center status
+
+Status:
+
+- Operator command center added
+- Master checklist added
+- Static docs tests added
+- No runtime behavior changed
+- No backend routes added
+- No frontend runtime changed
+- No generated artifacts committed
+- No tester access granted
+- No invite sent
+- No tester approved automatically
+
+Purpose:
+
+Provide one central operator entry point for the safe source-only beta rollout,
+including PASS/HOLD/BLOCKED gates, P0/P1/P2/P3 severity model, and links to
+all beta rollout docs.
+
+Next:
+
+- Use this command center before any beta tester access decision.
+- Keep all expansion actions manual.
+- If rollout grows beyond two testers, create `BETA-ACCESS-003` for cohort
+  management.
