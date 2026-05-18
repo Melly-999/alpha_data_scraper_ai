@@ -363,4 +363,52 @@ changed.
 
 ---
 
+---
+
+## BETA-ACCESS-001 — First Source-Only Tester Rollout status
+
+This step prepares the first trusted tester access using source-only GitHub
+repository access. Docs-only update — no runtime behavior or safety posture
+changed.
+
+### This PR adds
+
+- `docs/beta/source_only_first_tester_rollout.md` — rollout steps and tester selection criteria
+- `docs/beta/source_only_tester_invite_message.md` — ready-to-send invite message templates
+- `docs/beta/source_only_tester_feedback_form.md` — structured feedback form with P0/P1/P2/P3 severity
+- `docs/qa/source_only_beta_rollout_gate.md` — pre-access gate with PASS/BLOCKED approval
+- `tests/app/test_source_only_beta_rollout_docs_static.py` — static inspection tests (read-only)
+
+### Status
+
+- [x] First tester rollout doc
+- [x] Invite message templates (short, technical, follow-up)
+- [x] Feedback form (P0/P1/P2/P3 severity)
+- [x] Rollout gate (PASS/BLOCKED approval)
+- [x] Static tests — read-only, no access granted, no messages sent
+- [x] Read-only access only
+- [x] No generated artifacts shared
+- [x] No installer
+- [x] No live trading
+- [x] No broker execution
+- [x] No secrets bundled
+
+### Next steps (manual, out-of-band)
+
+- Run rollout gate (`docs/qa/source_only_beta_rollout_gate.md`) — gate must PASS
+- Grant read-only repository access manually via GitHub settings
+- Send invite manually using `docs/beta/source_only_tester_invite_message.md`
+- Collect feedback using `docs/beta/source_only_tester_feedback_form.md`
+- Review feedback before inviting second tester
+
+### Deferred
+
+- Second tester rollout (blocked until first feedback reviewed)
+- DESKTOP-001G installer tool comparison
+- Installer (NSIS/Inno — tracked for v0.3+)
+- Code signing (tracked for v0.3+)
+- Auto-update
+
+---
+
 *MellyTrade DESKTOP-001 — Windows Local Launcher EXE Plan*
