@@ -412,3 +412,41 @@ changed.
 ---
 
 *MellyTrade DESKTOP-001 — Windows Local Launcher EXE Plan*
+
+---
+
+## QA-LOCAL-DEMO-001 — Tester smoke checklist after local-demo endpoint fix
+
+Status:
+
+- Tester smoke checklist added
+- 404 regression checklist added
+- Static docs tests added
+- No runtime behavior changed
+- No backend routes added in this task
+- No frontend runtime changed in this task
+- No generated artifacts committed
+- No tester access granted
+- No invite sent
+
+Docs added:
+
+- `docs/qa/local_demo_tester_smoke_checklist.md`
+- `docs/qa/local_demo_404_regression_checklist.md`
+- `tests/app/test_local_demo_smoke_docs_static.py`
+
+Purpose:
+
+Verify from a tester perspective that the local source-only beta launches
+cleanly and no longer logs 404s for:
+
+- `/api/backtest/summary`
+- `/api/investment`
+- `/api/signals/feed`
+
+Next:
+
+- Run checklist manually after each local-demo endpoint change.
+- Collect first tester feedback using
+  `docs/beta/source_only_tester_feedback_form.md`.
+- Track findings in future `BETA-FEEDBACK-001`.
