@@ -55,6 +55,40 @@ export type BacktestSummary = {
   sample_size: number;
 };
 
+type LocalDemoEnvelope = {
+  read_only: true;
+  execution_mode: "dry_run_only";
+  requires_human_review: true;
+  degraded: true;
+  source: "local_demo" | "local_placeholder";
+  live_orders_blocked: true;
+};
+
+type LocalDemoBacktestResponse =
+  | BacktestSummary
+  | (LocalDemoEnvelope & {
+      summary: BacktestSummary;
+    });
+
+type LocalDemoSignalFeedResponse =
+  | SignalItem[]
+  | (LocalDemoEnvelope & {
+      risk_allowed: false;
+      signals: SignalItem[];
+      message: string;
+    });
+
+type LocalDemoInvestmentResponse = LocalDemoEnvelope & {
+  portfolio: {
+    positions_count: number;
+    cash: number | null;
+    equity: number | null;
+    currency: string | null;
+    status: "not_connected";
+  };
+  message: string;
+};
+
 export type NewsItem = {
   id: string;
   headline: string;
@@ -263,7 +297,7 @@ export function getWatchlist(): Promise<MarketItem[]> {
 }
 
 export function getSignalFeed(): Promise<SignalItem[]> {
-  return getJson("/signals/feed", [
+  return getJson<LocalDemoSignalFeedResponse>("/signals/feed", [
     {
       id: "sig-eurusd-hold",
       symbol: "EURUSD",
@@ -280,7 +314,7 @@ export function getSignalFeed(): Promise<SignalItem[]> {
       timeframe: "M15/H1",
       reason: "Volatility elevated; waiting for confirmation.",
     },
-  ]);
+  ]).then((response) => (Array.isArray(response) ? response : response.signals));
 }
 
 export function getRiskStatus(): Promise<RiskStatus> {
@@ -305,11 +339,30 @@ export function getRiskPolicy(): Promise<RiskPolicy> {
 }
 
 export function getBacktestSummary(): Promise<BacktestSummary> {
-  return getJson("/backtest/summary", {
+  return getJson<LocalDemoBacktestResponse>("/backtest/summary", {
     win_rate: 58,
     max_drawdown_pct: 4.2,
     profit_factor: 1.34,
     sample_size: 142,
+  }).then((response) => ("summary" in response ? response.summary : response));
+}
+
+export function getInvestment(): Promise<LocalDemoInvestmentResponse> {
+  return getJson("/investment", {
+    read_only: true,
+    execution_mode: "dry_run_only",
+    requires_human_review: true,
+    degraded: true,
+    source: "local_demo",
+    live_orders_blocked: true,
+    portfolio: {
+      positions_count: 0,
+      cash: null,
+      equity: null,
+      currency: null,
+      status: "not_connected",
+    },
+    message: "Investment dashboard is local-demo only and provides no personalized recommendations.",
   });
 }
 
