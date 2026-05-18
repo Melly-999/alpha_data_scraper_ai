@@ -161,4 +161,5 @@ values.
 - [`docs/openclaw/INSTALL_CHECKLIST.md`](INSTALL_CHECKLIST.md) — step-by-step setup
 - [`docs/openclaw/DAILY_USAGE.md`](DAILY_USAGE.md) — practical daily commands (Polish)
 - [`docs/openclaw/SECURITY_MODEL.md`](SECURITY_MODEL.md) — threat model and mitigations
+- [`docs/openclaw/DISCORD_LOCAL_SMOKE_CHECKLIST.md`](DISCORD_LOCAL_SMOKE_CHECKLIST.md) — OPENCLAW-002 phone/Discord smoke tests
 - [`skills/mellytrade-operator/SKILL.md`](../../skills/mellytrade-operator/SKILL.md) — operator skill definition
