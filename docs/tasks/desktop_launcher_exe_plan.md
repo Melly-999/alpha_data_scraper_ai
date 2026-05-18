@@ -486,3 +486,37 @@ Next:
 - Run feedback review gate after first tester returns feedback.
 - If PASS, prepare `BETA-ACCESS-002` second tester expansion gate.
 - If HOLD/BLOCKED, resolve issues first.
+
+---
+
+## BETA-ACCESS-002 — Second tester expansion gate status
+
+Status:
+
+- Second tester expansion gate added
+- Second tester pre-access checklist added
+- Static docs tests added
+- No runtime behavior changed
+- No backend routes added
+- No frontend runtime changed
+- No generated artifacts committed
+- No tester access granted
+- No invite sent
+- No second tester approved automatically
+
+Purpose:
+
+Define the manual conditions for inviting exactly one second trusted
+source-only beta tester after first tester feedback review passes.
+
+Expansion rule:
+
+Do not invite a second tester unless
+`docs/qa/first_source_only_tester_feedback_review_gate.md` returns PASS.
+
+Next:
+
+- Run this gate manually before granting any second tester access.
+- If PASS, operator may manually grant read-only repository access to exactly
+  one second tester.
+- If HOLD/BLOCKED, resolve issues first.
