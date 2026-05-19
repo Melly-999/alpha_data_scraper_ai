@@ -1,0 +1,48 @@
+# Documentation-only example for MellyTrade.
+# This file is not consumed automatically by the trading runtime.
+
+reviewer:
+  name: ai-pr-reviewer
+  mode: advisory-only
+  comments_only: true
+  human_review_required: true
+  no_auto_approve: true
+  no_auto_merge: true
+
+scope:
+  focus:
+    - safety_invariants
+    - test_coverage
+    - scope_creep
+    - secrets_exposure
+    - broker_execution_risk
+    - frontend_order_button_risk
+    - api_route_safety
+  forbid:
+    - autotrade=true
+    - dry_run=false
+    - live_orders_blocked=false
+    - max_risk_over_1pct
+    - broker_execution_code
+    - mt5_ibkr_order_routing
+    - live_connect_controls
+    - secrets_or_credentials
+    - non_paper_execution_endpoints
+
+safety_posture:
+  autotrade: false
+  dry_run: true
+  read_only: true
+  live_orders_blocked: true
+  max_risk_pct: 1.0
+
+secrets:
+  github_token: "${GITHUB_TOKEN}"
+  gemini_api_key: "${GEMINI_API_KEY}"
+
+notes:
+  - "Advisory review only"
+  - "No investment advice"
+  - "No live trading recommendations"
+  - "No broker execution or order placement"
+
