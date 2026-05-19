@@ -402,6 +402,16 @@ MT5_SERVER=...                   # MT5 broker server
 
 ---
 
+## MCP and documentation lookup
+
+Rules:
+- Use Context7 before changing code that depends on external APIs/libraries.
+- Use Chrome DevTools MCP or equivalent browser smoke check for frontend changes.
+- Never use MCP tools to execute trades, place orders, modify risk policy, or expose secrets.
+- Keep all trading/broker operations read-only unless a separate explicit task says otherwise, and even then preserve safety gates.
+
+---
+
 ## Branch & PR Guidelines
 
 - **Branch name**: `claude/feature-name` or `feature/name` (never push directly to main)

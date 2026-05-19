@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "ctx7", "mcp"],
+      "env": {
+        "CONTEXT7_API_KEY": "CONTEXT7_API_KEY_PLACEHOLDER"
+      }
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"]
+    }
+  },
+  "notes": [
+    "No write or execution trading tools are included.",
+    "No secrets, tokens, account IDs, or private paths are included."
+  ]
+}
