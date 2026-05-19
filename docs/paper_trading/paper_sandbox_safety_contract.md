@@ -152,18 +152,20 @@ Every endpoint under `/api/paper/**` must comply with all of the following:
 
 ### PAPER series (in-memory paper sandbox)
 
-The original PAPER-001 has been split into three focused increments to keep
-each PR minimal and scope-safe.  No increment may add broker execution,
-MT5/IBKR calls, live order placement, or mutating (POST/PUT/PATCH/DELETE)
-sandbox routes unless explicitly approved via a contract update.
+The PAPER series is split into focused, scope-safe increments.  No increment
+may add broker execution, MT5/IBKR calls, live order placement, or mutating
+(POST/PUT/PATCH/DELETE) sandbox routes unless explicitly approved via a
+contract update to this document.
 
 | ID | Title | Status | Notes |
 |---|---|---|---|
 | **PAPER-001A** | Backend in-memory paper sandbox foundation | ✅ Merged | `app/schemas/paper_sandbox.py`, `app/services/paper_sandbox.py`, 47 tests. No route wired. |
-| **PAPER-001B** | GET-only paper sandbox preview endpoint | 🔄 Current | `GET /api/paper/sandbox/preview`. Read-only, dry-run-only. **No POST/PUT/PATCH/DELETE.** No frontend UI. |
-| **PAPER-001C** | AI Workspace paper sandbox preview panel | ⬜ Planned | Frontend read-only panel consuming the PAPER-001B endpoint. **Display only — no order/buy/sell/execute buttons.** |
-| **PAPER-002** | Paper sandbox activity/audit history rail | ⬜ Planned | Audit log / activity trail for submitted sandbox entries. |
-| **PAPER-003** | Local demo script: draft → sandbox preview → UI | ⬜ Planned | End-to-end local demo only. No broker execution. No live trading. |
+| **PAPER-001B** | GET-only paper sandbox preview endpoint | ✅ Merged | `GET /api/paper/sandbox/preview`. Read-only, dry-run-only. No POST/PUT/PATCH/DELETE. No frontend UI. |
+| **PAPER-001C** | AI Workspace paper sandbox preview panel | ✅ Merged | Frontend read-only panel consuming PAPER-001B. Display only — no order/buy/sell/execute buttons. |
+| **PAPER-002A** | Backend in-memory paper sandbox history service | 🔄 Current | `app/schemas/paper_sandbox_history.py`, `app/services/paper_sandbox_history.py`. **Backend/schema/tests only — no route wired, no frontend UI.** |
+| **PAPER-002B** | GET-only paper sandbox history endpoint | ⬜ Planned | `GET /api/paper/sandbox/history`. Read-only, dry-run-only. No POST/PUT/PATCH/DELETE. No frontend UI. |
+| **PAPER-002C** | AI Workspace paper sandbox activity/audit rail | ⬜ Planned | Frontend read-only audit trail panel consuming PAPER-002B. Display only — no order/buy/sell/execute buttons. |
+| **PAPER-003** | Local demo script: draft → sandbox preview → history/audit → UI | ⬜ Planned | End-to-end local demo only. No broker execution. No live trading. No mutating routes. |
 
 ### Supporting infrastructure
 
@@ -213,6 +215,59 @@ PAPER-001C is frontend visibility only:
 - May only consume `GET /api/paper/sandbox/preview`.
 - Must not add any order/buy/sell/execute/place-order frontend controls.
 - Panel is read-only — display of paper simulation state only.
+
+---
+
+## PAPER-002A implementation rules
+
+PAPER-002A adds the in-memory paper sandbox activity/audit history foundation.
+
+### What PAPER-002A delivers
+
+- `app/schemas/paper_sandbox_history.py` — `PaperAuditEvent` and
+  `PaperAuditHistory` Pydantic schemas with locked safety flags.
+- `app/services/paper_sandbox_history.py` — `PaperAuditHistoryService`
+  in-memory singleton; sequential local event IDs (`paper_audit_000001`);
+  forbidden-field metadata sanitization; 250-event cap; thread-safe.
+- `tests/app/test_paper_sandbox_history.py` — comprehensive test suite.
+
+### What PAPER-002A must NOT do
+
+- **No route wired** — GET endpoint is deferred to PAPER-002B.
+- **No frontend UI** — panel is deferred to PAPER-002C.
+- **No broker execution** — no MT5, IBKR, or any real exchange API.
+- **No database / Supabase / network** — in-memory only.
+- **No secrets, credentials, account IDs, or API tokens** — forbidden keys
+  are sanitized out of event metadata.
+- **No POST/PUT/PATCH/DELETE routes** — none added in this increment.
+- **No autotrade/dry-run/read-only policy weakening**.
+
+### Safety flags every event must carry
+
+| Flag | Required value |
+|---|---|
+| `paper_only` | `true` |
+| `dry_run` | `true` |
+| `read_only` | `true` |
+| `live_orders_blocked` | `true` |
+| `execution_mode` | `"dry_run_only"` |
+| `broker_execution_allowed` | `false` |
+| `risk_allowed` | `false` |
+| `requires_human_review` | `true` |
+
+### PAPER-002B constraints (GET endpoint — upcoming)
+
+- Must only add `GET /api/paper/sandbox/history`.
+- No POST/PUT/PATCH/DELETE routes.
+- No frontend UI (deferred to PAPER-002C).
+- Must return all safety flags above in every response.
+
+### PAPER-002C constraints (frontend panel — upcoming)
+
+- Read-only display of audit history from PAPER-002B endpoint.
+- No order/buy/sell/execute/place-order controls.
+- No connect-live UX.
+- Display-only, advisory-only, sandbox preview only.
 
 ---
 
