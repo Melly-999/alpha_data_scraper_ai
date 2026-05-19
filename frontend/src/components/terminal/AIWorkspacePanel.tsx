@@ -10,6 +10,7 @@ import type {
   SignalUniversePreset,
 } from "../../lib/scannerPreviewApi";
 import type { TerminalShellData } from "./TerminalShell";
+import { PaperSandboxActivityRail } from "./PaperSandboxActivityRail";
 import { PaperSandboxPreviewPanel } from "./PaperSandboxPreviewPanel";
 import { PaperTicketPreviewPanel } from "./PaperTicketPreviewPanel";
 
@@ -374,6 +375,8 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
             </section>
 
             <PaperSandboxPreviewPanel />
+
+            <PaperSandboxActivityRail />
 
             <PaperTicketPreviewPanel />
 
