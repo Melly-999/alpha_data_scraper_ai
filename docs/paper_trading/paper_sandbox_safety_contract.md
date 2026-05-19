@@ -165,7 +165,7 @@ contract update to this document.
 | **PAPER-002A** | Backend in-memory paper sandbox history service | ✅ Merged | `app/schemas/paper_sandbox_history.py`, `app/services/paper_sandbox_history.py`. **Backend/schema/tests only — no route wired, no frontend UI.** |
 | **PAPER-002B** | GET-only paper sandbox history endpoint | ✅ Merged | `GET /api/paper/sandbox/history`. Read-only, dry-run-only. No POST/PUT/PATCH/DELETE. No frontend UI. |
 | **PAPER-002C** | AI Workspace paper sandbox activity/audit rail | 🔄 Current | Frontend read-only audit trail panel consuming PAPER-002B. Display only — no order/buy/sell/execute buttons. |
-| **PAPER-003** | Local demo script: draft → sandbox preview → history/audit → UI | ⬜ Planned | End-to-end local demo only. No broker execution. No live trading. No mutating routes. |
+| **PAPER-003** | Local demo script: draft → sandbox preview → history/audit → UI | 🔄 Current | End-to-end local demo only. `scripts/demo_paper_sandbox_readonly_smoke.ps1` and `docs/demo/paper_sandbox_readonly_smoke.md`. No broker execution. No live trading. No mutating routes. |
 
 ### Supporting infrastructure
 
