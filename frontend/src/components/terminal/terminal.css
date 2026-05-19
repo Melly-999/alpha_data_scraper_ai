@@ -1709,3 +1709,113 @@
   border-top: 1px solid var(--terminal-border);
   padding-top: 8px;
 }
+
+/* PAPER-001C — Paper Sandbox Preview Panel */
+
+.paper-sandbox-preview-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.paper-sandbox-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.paper-sandbox-endpoint {
+  font: 11px var(--terminal-mono);
+  color: var(--terminal-accent, #4a9eff);
+  word-break: break-all;
+}
+
+.paper-sandbox-ts {
+  font: 10px var(--terminal-mono);
+  color: var(--terminal-muted);
+}
+
+.paper-sandbox-loading {
+  font-size: 11px;
+  color: var(--terminal-muted);
+  padding: 8px 0;
+}
+
+.paper-sandbox-empty {
+  font-size: 11px;
+  color: var(--terminal-muted);
+  padding: 8px 0;
+  line-height: 1.45;
+}
+
+.paper-sandbox-error {
+  border: 1px solid var(--terminal-border);
+  background: var(--terminal-surface-dim);
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.paper-sandbox-error strong {
+  font-size: 12px;
+  color: var(--terminal-warn, #f0a040);
+}
+
+.paper-sandbox-error p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--terminal-muted);
+}
+
+.paper-sandbox-contract {
+  border-top: 1px solid var(--terminal-border);
+  padding-top: 8px;
+  display: grid;
+  gap: 2px;
+}
+
+.paper-sandbox-entries {
+  display: grid;
+  gap: 8px;
+}
+
+.paper-sandbox-entry-card {
+  border: 1px solid var(--terminal-border);
+  background: var(--terminal-surface-dim);
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.paper-sandbox-entry-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.paper-sandbox-entry-side {
+  font: 700 11px var(--terminal-mono);
+  padding: 2px 6px;
+  border: 1px solid var(--terminal-border);
+  color: var(--terminal-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.paper-sandbox-entry-id {
+  font: 10px var(--terminal-mono);
+  word-break: break-all;
+  color: var(--terminal-muted);
+}
+
+.paper-sandbox-entry-ts {
+  font: 10px var(--terminal-mono);
+  color: var(--terminal-muted);
+}
+
+.paper-sandbox-footer {
+  border-top: 1px solid var(--terminal-border);
+  padding-top: 8px;
+  margin-top: 4px;
+}
