@@ -10,6 +10,7 @@ import type {
   SignalUniversePreset,
 } from "../../lib/scannerPreviewApi";
 import type { TerminalShellData } from "./TerminalShell";
+import { PaperTicketPreviewPanel } from "./PaperTicketPreviewPanel";
 
 type Agent = {
   name: string;
@@ -370,6 +371,8 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                 </div>
               )}
             </section>
+
+            <PaperTicketPreviewPanel />
 
             <div className="workspace-selected-task">
               <div className="workspace-section-head">
