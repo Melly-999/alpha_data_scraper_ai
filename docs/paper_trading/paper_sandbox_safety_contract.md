@@ -393,3 +393,11 @@ If a future PR needs to relax any rule above, the PR must:
 
 Silently bypassing a guardrail without updating this document is a
 safety regression by definition.
+
+---
+
+## Related demo docs
+
+- [`docs/demo/demo_002_screenshot_pack.md`](../demo/demo_002_screenshot_pack.md)
+- [`docs/demo/demo_002_screenshot_inventory.md`](../demo/demo_002_screenshot_inventory.md)
+- [`docs/demo/demo_002_portfolio_story.md`](../demo/demo_002_portfolio_story.md)
