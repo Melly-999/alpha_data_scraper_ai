@@ -46,6 +46,15 @@
 
   /* Type */
   --terminal-mono: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+
+  /* Red-black frame accents */
+  --mt-black:              #050507;
+  --mt-black-2:            #0a0a0d;
+  --mt-red-dark:           #3b0508;
+  --mt-red-deep:           #7f1d1d;
+  --mt-red:                #dc2626;
+  --mt-red-hot:            #ef4444;
+  --mt-border-black:       #151515;
 }
 
 /* ── Navy — optional palette (data-theme="navy" on <html>) ─────────────────────
@@ -120,6 +129,8 @@
    ══════════════════════════════════════════════════════════════════════════════ */
 
 .terminal-root {
+  position: relative;
+  isolation: isolate;
   color-scheme: dark;
   /* tokens inherited from :root — see token block above */
   font-family:
@@ -131,8 +142,43 @@
   grid-template-rows: auto 1fr auto;
   overflow-x: clip;
   background:
-    linear-gradient(180deg, rgba(214, 164, 76, 0.06), transparent 230px),
-    var(--terminal-bg);
+    radial-gradient(circle at 50% 0%, rgba(127, 29, 29, 0.16), transparent 32%),
+    radial-gradient(circle at 50% 100%, rgba(220, 38, 38, 0.06), transparent 24%),
+    linear-gradient(180deg, rgba(10, 10, 13, 0.95), rgba(5, 5, 7, 0.98) 34%, rgba(5, 5, 7, 1));
+  box-shadow: inset 0 1px 0 rgba(239, 68, 68, 0.05);
+}
+
+.terminal-root::before {
+  content: "";
+  position: fixed;
+  inset: 12px;
+  border-radius: 28px;
+  padding: 1px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(239, 68, 68, 0.82),
+      rgba(5, 5, 7, 0.96) 26%,
+      rgba(127, 29, 29, 0.78) 52%,
+      rgba(5, 5, 7, 0.96) 76%,
+      rgba(220, 38, 38, 0.66)
+    );
+  pointer-events: none;
+  z-index: 0;
+  box-shadow:
+    0 0 0 1px rgba(220, 38, 38, 0.08),
+    0 0 34px rgba(127, 29, 29, 0.18),
+    inset 0 0 24px rgba(0, 0, 0, 0.65);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.terminal-root > * {
+  position: relative;
+  z-index: 1;
 }
 
 .terminal-root a {
@@ -337,6 +383,14 @@
 }
 
 .terminal-main {
+  border: 1px solid rgba(127, 29, 29, 0.16);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(12, 13, 16, 0.84), rgba(5, 5, 7, 0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(239, 68, 68, 0.04),
+    inset 0 0 0 1px rgba(21, 21, 21, 0.56),
+    0 0 24px rgba(127, 29, 29, 0.08);
   min-width: 0;
   padding: 16px;
   display: grid;
@@ -347,9 +401,12 @@
 .loading-screen,
 .command-center,
 .terminal-panel {
-  border: 1px solid var(--terminal-border);
-  background: linear-gradient(180deg, rgba(21, 26, 33, 0.96), rgba(13, 16, 21, 0.96));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(21, 21, 21, 0.94);
+  background:
+    linear-gradient(180deg, rgba(17, 17, 20, 0.96), rgba(7, 7, 9, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    inset 0 0 0 1px rgba(127, 29, 29, 0.04);
 }
 
 .loading-screen {
@@ -758,6 +815,27 @@
 
 .ai-workspace-panel {
   padding-bottom: 0;
+}
+
+.ai-workspace-panel,
+.paper-sandbox-preview-panel,
+#risk,
+#audit,
+#broker {
+  border-color: rgba(127, 29, 29, 0.42);
+  background:
+    linear-gradient(180deg, rgba(17, 17, 20, 0.96), rgba(7, 7, 9, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(239, 68, 68, 0.08),
+    0 0 18px rgba(127, 29, 29, 0.08);
+}
+
+.ai-workspace-panel .panel-header,
+.paper-sandbox-preview-panel .panel-header,
+#risk .panel-header,
+#audit .panel-header,
+#broker .panel-header {
+  border-bottom-color: rgba(127, 29, 29, 0.22);
 }
 
 .workspace-shell {
@@ -1778,8 +1856,9 @@
 }
 
 .paper-sandbox-entry-card {
-  border: 1px solid var(--terminal-border);
-  background: var(--terminal-surface-dim);
+  border: 1px solid rgba(127, 29, 29, 0.18);
+  background:
+    linear-gradient(180deg, rgba(13, 13, 16, 0.96), rgba(7, 7, 9, 0.98));
   padding: 10px;
   display: grid;
   gap: 4px;
@@ -1797,8 +1876,9 @@
 .paper-sandbox-entry-side {
   font: 700 11px var(--terminal-mono);
   padding: 2px 6px;
-  border: 1px solid var(--terminal-border);
-  color: var(--terminal-muted);
+  border: 1px solid rgba(127, 29, 29, 0.24);
+  color: var(--terminal-text);
+  background: rgba(127, 29, 29, 0.08);
   white-space: nowrap;
   flex-shrink: 0;
 }
