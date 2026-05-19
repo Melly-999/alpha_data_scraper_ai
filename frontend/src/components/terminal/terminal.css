@@ -1553,3 +1553,159 @@
 .data-stale {
   color: var(--terminal-amber);
 }
+
+/* ── PDS-004: Paper Ticket Preview Panel ─────────────────────────────────── */
+/* Advisory-only. No execution semantics. paper_only=true, dry_run=true.     */
+
+.paper-ticket-preview-panel {
+  margin-top: 16px;
+}
+
+.paper-ticket-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  margin: 10px 0 0;
+}
+
+.paper-ticket-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.paper-ticket-row label {
+  font: 10px var(--terminal-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--terminal-muted);
+}
+
+.paper-ticket-row--full {
+  grid-column: 1 / -1;
+}
+
+.paper-ticket-input {
+  background: var(--terminal-surface);
+  border: 1px solid var(--terminal-border);
+  color: var(--terminal-text);
+  font: 12px var(--terminal-mono);
+  padding: 5px 8px;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.paper-ticket-input:focus {
+  border-color: var(--terminal-amber);
+}
+
+.paper-ticket-textarea {
+  resize: vertical;
+  min-height: 54px;
+}
+
+.paper-ticket-submit-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.paper-ticket-preview-btn {
+  background: var(--terminal-accent-bg);
+  border: 1px solid var(--terminal-accent-border);
+  color: var(--terminal-amber);
+  font: 11px/1 var(--terminal-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 7px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.paper-ticket-preview-btn:hover:not(:disabled) {
+  background: var(--terminal-accent-bg-md);
+  border-color: var(--terminal-amber);
+}
+
+.paper-ticket-preview-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Result area */
+
+.paper-ticket-result {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--terminal-border);
+  background: var(--terminal-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.paper-ticket-result--accepted {
+  border-color: var(--terminal-safe-border);
+  background: var(--terminal-safe-bg);
+}
+
+.paper-ticket-result--rejected {
+  border-color: var(--terminal-danger-border);
+  background: var(--terminal-danger-bg);
+}
+
+.paper-ticket-result--error {
+  border-color: var(--terminal-border);
+  background: var(--terminal-surface-2);
+}
+
+.paper-ticket-verdict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paper-ticket-verdict strong {
+  font: 13px var(--terminal-mono);
+  color: var(--terminal-text);
+}
+
+.paper-ticket-reasons,
+.paper-ticket-warnings {
+  margin: 0;
+  padding: 0 0 0 14px;
+  font: 11px var(--terminal-mono);
+}
+
+.paper-ticket-reasons li {
+  color: var(--terminal-red);
+  margin-bottom: 3px;
+}
+
+.paper-ticket-warnings li {
+  color: var(--terminal-amber);
+  margin-bottom: 3px;
+}
+
+.paper-ticket-draft-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+
+.paper-ticket-id {
+  font: 10px var(--terminal-mono);
+  word-break: break-all;
+  color: var(--terminal-muted);
+}
+
+.paper-ticket-contract {
+  border-top: 1px solid var(--terminal-border);
+  padding-top: 8px;
+}
