@@ -433,5 +433,19 @@ Rules:
 
 ---
 
+## Reusable prompt and skill pack
+
+Rules:
+- Use [docs/ai_workflow/reusable_prompt_pack.md](docs/ai_workflow/reusable_prompt_pack.md) for repeatable task prompts.
+- Use [docs/ai_workflow/repo_local_skill_pack.md](docs/ai_workflow/repo_local_skill_pack.md) for repo-local skill guidance.
+- Use [prompts/ai_workflow/*](prompts/ai_workflow/) for copy-paste task prompts.
+- Use [skills/*/SKILL.md](skills/) as reusable agent instruction modules.
+- Before coding against external APIs/libraries, use the Context7 docs lookup prompt or skill.
+- For frontend changes, use the frontend DevTools prompt or skill.
+- For every PR, run the safety audit and publish gate.
+- These prompt/skill files do not grant permission to modify trading execution, broker execution, live trading, or risk posture.
+
+---
+
 **Last Updated**: April 2026  
 **Agent-Focused Context**: See `.ai-agents/` directory for detailed reference guides

@@ -16,3 +16,9 @@ The beta rollout docs are source-only, read-only, dry-run-only, and manual. They
 
 - [MCP, Context7, and Chrome DevTools setup](ai_workflow/mcp_context7_chrome_devtools_setup.md)
 - [AI coding workflow](ai_workflow/ai_coding_workflow.md)
+
+## AI workflow packs
+
+- [Reusable prompt pack](ai_workflow/reusable_prompt_pack.md)
+- [Repo-local skill pack](ai_workflow/repo_local_skill_pack.md)
+- [MCP Context7 and Chrome DevTools setup](ai_workflow/mcp_context7_chrome_devtools_setup.md)
