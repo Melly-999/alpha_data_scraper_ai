@@ -59,22 +59,6 @@ powershell -ExecutionPolicy Bypass -File scripts/demo_paper_sandbox_readonly_smo
 
 Screenshots were captured locally outside the repository and are intentionally not committed as binary assets.
 
-## MellyTrade Closed Beta Demo
-
-MellyTrade is currently presented as a read-only, dry-run AI trading research terminal.
-
-It is not a live trading bot, not an execution platform, and not investment advice.
-
-Safety posture:
-
-```text
-autotrade=false
-dry_run=true
-read_only=true
-live_orders_blocked=true
-max risk <=1%
-```
-
 ## Beta rollout documentation
 
 For source-only beta operations, start here:
