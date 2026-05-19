@@ -50,6 +50,10 @@ TERMINAL_V1_GET_ONLY_PREFIXES: tuple[str, ...] = (
 #   - /risk/config (PUT)         → operator updates risk gates
 #   - /risk/emergency-stop (POST)→ kill-switch that BLOCKS trading
 #   - /broker/dry-run-report (POST) → records dry-run-only execution report
+#   - /paper/tickets/draft (POST) → PDS-003 paper-only decision support;
+#       no broker execution, no live trading, no paper fills yet;
+#       enforces paper_only=true, dry_run=true, risk_allowed=false,
+#       broker_execution_allowed=false; human review always required.
 # If you need to add another mutating route, add it here together with a
 # justification — the review will catch unintended additions.
 ADMIN_NON_GET_ALLOWLIST: frozenset[tuple[str, str]] = frozenset(
@@ -57,6 +61,7 @@ ADMIN_NON_GET_ALLOWLIST: frozenset[tuple[str, str]] = frozenset(
         ("PUT", "/api/risk/config"),
         ("POST", "/api/risk/emergency-stop"),
         ("POST", "/api/broker/dry-run-report"),
+        ("POST", "/api/paper/tickets/draft"),
     }
 )
 
