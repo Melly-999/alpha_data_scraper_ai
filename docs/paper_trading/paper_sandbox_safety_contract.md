@@ -140,19 +140,79 @@ Every endpoint under `/api/paper/**` must comply with all of the following:
 
 ## Roadmap relation
 
+### PDS series (ticket contract and draft pipeline)
+
 | ID | Title | Status |
 |---|---|---|
 | **PDS-001** | Paper-only TradeTicket schema & validator | ✅ Merged |
 | **PDS-002** | Ticket Draft Service from Scanner Preview | ✅ Merged |
-| **PAPER-GUARD-001** | This document + guardrail tests | ✅ This PR |
-| **PDS-003** | Draft endpoint (read-only, no execution) | ⬜ Planned |
-| **PDS-004** | AI Workspace ticket preview | ⬜ Planned |
-| **PAPER-001** | In-memory paper broker sandbox | ⬜ Planned |
-| **PAPER-002** | PaperOrder / PaperFill / PaperPosition schemas | ⬜ Planned |
-| **PAPER-003** | Paper-only execute endpoint behind human approval | ⬜ Planned |
-| **PAPER-004** | Paper portfolio state and sandbox reset | ⬜ Planned |
+| **PAPER-GUARD-001** | This document + guardrail tests | ✅ Merged |
+| **PDS-003** | Draft endpoint (read-only, no execution) | ✅ Merged |
+| **PDS-004** | AI Workspace ticket preview | ✅ Merged |
+
+### PAPER series (in-memory paper sandbox)
+
+The original PAPER-001 has been split into three focused increments to keep
+each PR minimal and scope-safe.  No increment may add broker execution,
+MT5/IBKR calls, live order placement, or mutating (POST/PUT/PATCH/DELETE)
+sandbox routes unless explicitly approved via a contract update.
+
+| ID | Title | Status | Notes |
+|---|---|---|---|
+| **PAPER-001A** | Backend in-memory paper sandbox foundation | ✅ Merged | `app/schemas/paper_sandbox.py`, `app/services/paper_sandbox.py`, 47 tests. No route wired. |
+| **PAPER-001B** | GET-only paper sandbox preview endpoint | 🔄 Current | `GET /api/paper/sandbox/preview`. Read-only, dry-run-only. **No POST/PUT/PATCH/DELETE.** No frontend UI. |
+| **PAPER-001C** | AI Workspace paper sandbox preview panel | ⬜ Planned | Frontend read-only panel consuming the PAPER-001B endpoint. **Display only — no order/buy/sell/execute buttons.** |
+| **PAPER-002** | Paper sandbox activity/audit history rail | ⬜ Planned | Audit log / activity trail for submitted sandbox entries. |
+| **PAPER-003** | Local demo script: draft → sandbox preview → UI | ⬜ Planned | End-to-end local demo only. No broker execution. No live trading. |
+
+### Supporting infrastructure
+
+| ID | Title | Status |
+|---|---|---|
 | **SUPA-003** | Audit writer service | ⬜ Planned |
 | **OPENCLAW-005** | Discord phone smoke tests | ⬜ Planned |
+
+---
+
+## PAPER-001B implementation rules
+
+PAPER-001B adds exactly one endpoint: `GET /api/paper/sandbox/preview`.
+
+### What PAPER-001B does
+
+- Returns the current in-memory `PaperSandboxState` (entries, count, safety flags).
+- Explicit empty-state response when no records exist (`count=0`, `entries=[]`).
+- Intended for consumption by the PAPER-001C read-only frontend panel.
+
+### What PAPER-001B must NOT do
+
+- **No POST, PUT, PATCH, or DELETE routes** — GET only.
+- **No frontend UI** — that is PAPER-001C.
+- **No broker execution** — no MT5, IBKR, or any real exchange API.
+- **No live order placement** — the endpoint is observational only.
+- **No autotrade/dry-run/read-only policy changes**.
+- **No secrets, credentials, account IDs, or API tokens** in responses.
+
+### Safety flags the endpoint must always return
+
+| Flag | Required value |
+|---|---|
+| `paper_only` | `true` |
+| `dry_run` | `true` |
+| `read_only` | `true` |
+| `live_orders_blocked` | `true` |
+| `execution_mode` | `"dry_run_only"` |
+| `broker_execution_allowed` | `false` |
+| `risk_allowed` | `false` |
+| `requires_human_review` | `true` |
+
+### PAPER-001C constraints
+
+PAPER-001C is frontend visibility only:
+
+- May only consume `GET /api/paper/sandbox/preview`.
+- Must not add any order/buy/sell/execute/place-order frontend controls.
+- Panel is read-only — display of paper simulation state only.
 
 ---
 

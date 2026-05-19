@@ -120,3 +120,6 @@ class PaperSandboxState(BaseModel):
     read_only: Literal[True] = True
     live_orders_blocked: Literal[True] = True
     execution_mode: Literal["dry_run_only"] = "dry_run_only"
+    requires_human_review: Literal[True] = True
+    risk_allowed: Literal[False] = False
+    broker_execution_allowed: Literal[False] = False
