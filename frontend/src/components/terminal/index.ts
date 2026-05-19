@@ -1,4 +1,5 @@
 export { AIWorkspacePanel } from "./AIWorkspacePanel";
+export { PaperSandboxActivityRail } from "./PaperSandboxActivityRail";
 export { PaperSandboxPreviewPanel } from "./PaperSandboxPreviewPanel";
 export { PaperTicketPreviewPanel } from "./PaperTicketPreviewPanel";
 export { AgentStatusBar } from "./AgentStatusBar";

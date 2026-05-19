@@ -163,8 +163,8 @@ contract update to this document.
 | **PAPER-001B** | GET-only paper sandbox preview endpoint | ✅ Merged | `GET /api/paper/sandbox/preview`. Read-only, dry-run-only. No POST/PUT/PATCH/DELETE. No frontend UI. |
 | **PAPER-001C** | AI Workspace paper sandbox preview panel | ✅ Merged | Frontend read-only panel consuming PAPER-001B. Display only — no order/buy/sell/execute buttons. |
 | **PAPER-002A** | Backend in-memory paper sandbox history service | ✅ Merged | `app/schemas/paper_sandbox_history.py`, `app/services/paper_sandbox_history.py`. **Backend/schema/tests only — no route wired, no frontend UI.** |
-| **PAPER-002B** | GET-only paper sandbox history endpoint | 🔄 Current | `GET /api/paper/sandbox/history`. Read-only, dry-run-only. No POST/PUT/PATCH/DELETE. No frontend UI. |
-| **PAPER-002C** | AI Workspace paper sandbox activity/audit rail | ⬜ Planned | Frontend read-only audit trail panel consuming PAPER-002B. Display only — no order/buy/sell/execute buttons. |
+| **PAPER-002B** | GET-only paper sandbox history endpoint | ✅ Merged | `GET /api/paper/sandbox/history`. Read-only, dry-run-only. No POST/PUT/PATCH/DELETE. No frontend UI. |
+| **PAPER-002C** | AI Workspace paper sandbox activity/audit rail | 🔄 Current | Frontend read-only audit trail panel consuming PAPER-002B. Display only — no order/buy/sell/execute buttons. |
 | **PAPER-003** | Local demo script: draft → sandbox preview → history/audit → UI | ⬜ Planned | End-to-end local demo only. No broker execution. No live trading. No mutating routes. |
 
 ### Supporting infrastructure
@@ -293,13 +293,51 @@ PAPER-002B adds exactly one endpoint: `GET /api/paper/sandbox/history`.
 | `risk_allowed` | `false` |
 | `requires_human_review` | `true` |
 
-### PAPER-002C constraints (frontend panel — upcoming)
+---
 
-- May only consume `GET /api/paper/sandbox/history`.
-- Must not add any order/buy/sell/execute/place-order frontend controls.
-- Panel is read-only — display of paper audit/activity history only.
-- No connect-live UX.
-- Display-only, advisory-only, sandbox history only.
+## PAPER-002C implementation rules
+
+PAPER-002C adds the read-only AI Workspace activity/audit rail panel.
+
+### What PAPER-002C delivers
+
+- `frontend/src/lib/paperSandboxApi.ts` — Extended with `PaperAuditEvent`,
+  `PaperAuditHistory`, `PaperHistoryApiResult` TypeScript types and
+  `getPaperSandboxHistory()` GET-only client function.
+- `frontend/src/components/terminal/PaperSandboxActivityRail.tsx` — New
+  read-only panel. Polls `GET /api/paper/sandbox/history` every 20 s.
+  Displays event count, audit event rows (newest first), severity chips,
+  safety badges, safety contract snapshot, empty/error/loading states.
+- `frontend/src/components/terminal/AIWorkspacePanel.tsx` — Mounts
+  `<PaperSandboxActivityRail />` in the workspace main column, adjacent to
+  `<PaperSandboxPreviewPanel />`.
+- `frontend/src/components/terminal/index.ts` — Exports the new component.
+- `frontend/src/components/terminal/terminal.css` — Adds `paper-audit-*`
+  CSS classes consistent with the terminal design system.
+- `docs/paper_trading/paper_sandbox_safety_contract.md` — Updated roadmap.
+
+### What PAPER-002C must NOT do
+
+- **No POST, PUT, PATCH, or DELETE frontend calls** — GET only.
+- **No order/buy/sell/execute/place-order/submit-order buttons** — display only.
+- **No broker execution UI** — no MT5, IBKR, or any real exchange controls.
+- **No connect-live UX** — panel is purely observational.
+- **No autotrade/dry-run/read-only policy changes**.
+- **No secrets, credentials, account IDs, or API tokens** in UI state.
+- **No backend route changes** — all backend work was completed in PAPER-002A/B.
+
+### Safety flags the panel must always display
+
+| Flag | Required value |
+|---|---|
+| `paper_only` | `true` |
+| `dry_run` | `true` |
+| `read_only` | `true` |
+| `live_orders_blocked` | `true` |
+| `execution_mode` | `"dry_run_only"` |
+| `broker_execution_allowed` | `false` |
+| `risk_allowed` | `false` |
+| `requires_human_review` | `true` |
 
 ---
 

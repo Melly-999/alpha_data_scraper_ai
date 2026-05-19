@@ -1819,3 +1819,179 @@
   padding-top: 8px;
   margin-top: 4px;
 }
+
+/* ── PAPER-002C — Paper Sandbox Activity / Audit Rail ───────────────────── */
+
+.paper-audit-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.paper-audit-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paper-audit-endpoint {
+  font-family: var(--terminal-mono);
+  font-size: 0.72rem;
+  color: var(--terminal-amber);
+  word-break: break-all;
+}
+
+.paper-audit-ts {
+  font-family: var(--terminal-mono);
+  font-size: 0.72rem;
+  color: var(--terminal-muted);
+}
+
+.paper-audit-loading {
+  font-size: 0.78rem;
+  color: var(--terminal-muted);
+  padding: 8px 0;
+  font-style: italic;
+}
+
+.paper-audit-empty {
+  font-size: 0.78rem;
+  color: var(--terminal-muted);
+  padding: 8px 0;
+  font-style: italic;
+}
+
+.paper-audit-error {
+  background: var(--terminal-danger-bg);
+  border: 1px solid var(--terminal-danger-border);
+  border-radius: 4px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paper-audit-error strong {
+  font-size: 0.80rem;
+  color: var(--terminal-red);
+}
+
+.paper-audit-error p {
+  font-size: 0.75rem;
+  color: var(--terminal-muted);
+  margin: 0;
+}
+
+.paper-audit-contract {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--terminal-border);
+  padding-top: 8px;
+}
+
+.paper-audit-events {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Individual audit event row */
+.paper-audit-event-row {
+  background: var(--terminal-surface);
+  border: 1px solid var(--terminal-border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paper-audit-event-topline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Severity chips */
+.paper-audit-severity {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.audit-severity--info {
+  background: rgba(118, 169, 255, 0.12);
+  color: var(--terminal-blue);
+  border: 1px solid rgba(118, 169, 255, 0.28);
+}
+
+.audit-severity--warning {
+  background: var(--terminal-accent-bg);
+  color: var(--terminal-amber);
+  border: 1px solid var(--terminal-accent-border);
+}
+
+.audit-severity--blocked {
+  background: var(--terminal-danger-bg);
+  color: var(--terminal-red);
+  border: 1px solid var(--terminal-danger-border);
+}
+
+.paper-audit-event-type {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--terminal-text);
+  font-family: var(--terminal-mono);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paper-audit-event-ts {
+  font-size: 0.68rem;
+  color: var(--terminal-muted);
+  font-family: var(--terminal-mono);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.paper-audit-event-message {
+  font-size: 0.76rem;
+  color: var(--terminal-text);
+  margin: 0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.paper-audit-event-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.paper-audit-event-source {
+  font-size: 0.68rem;
+  color: var(--terminal-muted);
+  font-family: var(--terminal-mono);
+}
+
+.paper-audit-event-metakeys {
+  font-size: 0.68rem;
+  color: var(--terminal-muted);
+  font-family: var(--terminal-mono);
+  opacity: 0.75;
+}
+
+.paper-audit-footer {
+  border-top: 1px solid var(--terminal-border);
+  padding-top: 8px;
+  margin-top: 4px;
+}
