@@ -1,4 +1,5 @@
 export { AIWorkspacePanel } from "./AIWorkspacePanel";
+export { PaperSandboxPreviewPanel } from "./PaperSandboxPreviewPanel";
 export { PaperTicketPreviewPanel } from "./PaperTicketPreviewPanel";
 export { AgentStatusBar } from "./AgentStatusBar";
 export { TerminalBootScreen } from "./TerminalBootScreen";
