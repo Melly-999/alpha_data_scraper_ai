@@ -164,8 +164,8 @@ contract update to this document.
 | **PAPER-001C** | AI Workspace paper sandbox preview panel | ✅ Merged | Frontend read-only panel consuming PAPER-001B. Display only — no order/buy/sell/execute buttons. |
 | **PAPER-002A** | Backend in-memory paper sandbox history service | ✅ Merged | `app/schemas/paper_sandbox_history.py`, `app/services/paper_sandbox_history.py`. **Backend/schema/tests only — no route wired, no frontend UI.** |
 | **PAPER-002B** | GET-only paper sandbox history endpoint | ✅ Merged | `GET /api/paper/sandbox/history`. Read-only, dry-run-only. No POST/PUT/PATCH/DELETE. No frontend UI. |
-| **PAPER-002C** | AI Workspace paper sandbox activity/audit rail | 🔄 Current | Frontend read-only audit trail panel consuming PAPER-002B. Display only — no order/buy/sell/execute buttons. |
-| **PAPER-003** | Local demo script: draft → sandbox preview → history/audit → UI | 🔄 Current | End-to-end local demo only. `scripts/demo_paper_sandbox_readonly_smoke.ps1` and `docs/demo/paper_sandbox_readonly_smoke.md`. No broker execution. No live trading. No mutating routes. |
+| **PAPER-002C** | AI Workspace paper sandbox activity/audit rail | ✅ Merged | Frontend read-only audit trail panel consuming PAPER-002B. Display only — no order/buy/sell/execute buttons. |
+| **PAPER-003** | Local demo script: draft → sandbox preview → history/audit → UI | 🔄 Current | `scripts/demo_paper_sandbox_local.ps1`, `docs/demo/paper_sandbox_local_demo.md`, `scripts/demo_paper_sandbox_readonly_smoke.ps1`, `docs/demo/paper_sandbox_readonly_smoke.md`. Local smoke/demo only — no broker execution, no backend route added, no frontend trading control. |
 
 ### Supporting infrastructure
 
@@ -327,6 +327,48 @@ PAPER-002C adds the read-only AI Workspace activity/audit rail panel.
 - **No backend route changes** — all backend work was completed in PAPER-002A/B.
 
 ### Safety flags the panel must always display
+
+| Flag | Required value |
+|---|---|
+| `paper_only` | `true` |
+| `dry_run` | `true` |
+| `read_only` | `true` |
+| `live_orders_blocked` | `true` |
+| `execution_mode` | `"dry_run_only"` |
+| `broker_execution_allowed` | `false` |
+| `risk_allowed` | `false` |
+| `requires_human_review` | `true` |
+
+---
+
+## PAPER-003 implementation rules
+
+PAPER-003 adds a local demo smoke script and documentation only.
+
+### What PAPER-003 delivers
+
+- `scripts/demo_paper_sandbox_local.ps1` — PowerShell smoke script that
+  validates the local paper sandbox dashboard flow end-to-end:
+  safety config → backend health → preview endpoint → history endpoint →
+  frontend workspace route → screenshot checklist.
+- `docs/demo/paper_sandbox_local_demo.md` — Human-readable demo guide
+  with startup instructions, screenshot checklist, and safety statement.
+- `docs/paper_trading/paper_sandbox_safety_contract.md` — Updated roadmap.
+
+### What PAPER-003 must NOT do
+
+- **No new backend route** — calls only existing `GET /api/paper/sandbox/preview`
+  and `GET /api/paper/sandbox/history`.
+- **No broker execution** — no MT5, IBKR, or any real exchange API.
+- **No live order placement** — demo script is observational only.
+- **No frontend trading controls** — no order/buy/sell/execute/place-order
+  buttons added or changed.
+- **No mutation** — no POST/PUT/PATCH/DELETE calls in the script.
+- **No secrets, credentials, account IDs, or API tokens** stored or passed.
+- **No autotrade/dry-run/read-only policy changes**.
+- **No database, Supabase, or external network calls** — localhost only.
+
+### Safety posture the script always verifies
 
 | Flag | Required value |
 |---|---|
