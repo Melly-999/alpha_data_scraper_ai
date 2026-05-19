@@ -20,6 +20,7 @@ from app.api.routes import (
     mt5,
     local_demo,
     orders,
+    paper_tickets,
     positions,
     risk,
     safety,
@@ -133,6 +134,7 @@ for router in (
     terminal.router,
     safety.router,
     supabase.router,
+    paper_tickets.router,
 ):
     app.include_router(router, prefix="/api")
 
