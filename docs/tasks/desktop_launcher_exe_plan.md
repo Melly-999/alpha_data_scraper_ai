@@ -550,3 +550,29 @@ Next:
 - Keep all expansion actions manual.
 - If rollout grows beyond two testers, create `BETA-ACCESS-003` for cohort
   management.
+
+## BETA-DOCS-INDEX-001 - Beta docs index status
+
+Status:
+
+- Beta docs index added
+- Docs README linked to beta docs
+- Root README linked to beta docs
+- Static docs tests added
+- No runtime behavior changed
+- No backend routes added
+- No frontend runtime changed
+- No generated artifacts committed
+- No tester access granted
+- No invite sent
+- No tester approved automatically
+
+Purpose:
+
+Make the safe source-only beta rollout docs easy to discover from project documentation entrypoints.
+
+Next:
+
+Use `docs/beta/README.md` as the beta documentation entrypoint.
+Keep all tester access decisions manual.
+Use the operator command center before any beta tester access decision.

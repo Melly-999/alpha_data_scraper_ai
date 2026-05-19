@@ -29,6 +29,18 @@ live_orders_blocked=true
 max risk <=1%
 ```
 
+## Beta rollout documentation
+
+For source-only beta operations, start here:
+
+- [Beta Docs Index](docs/beta/README.md)
+- [Beta Rollout Operator Command Center](docs/beta/beta_rollout_operator_command_center.md)
+- [Beta Rollout Operator Master Checklist](docs/qa/beta_rollout_operator_master_checklist.md)
+
+Safety note:
+
+The beta rollout is source-only, read-only, dry-run-only, and manual. It does not approve live trading, broker execution, investment advice, or generated artifact releases.
+
 ### Screenshots
 
 | View | Screenshot |
