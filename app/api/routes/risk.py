@@ -8,11 +8,27 @@ from app.schemas.risk import (
     EmergencyStopResponse,
     RiskConfig,
     RiskConfigUpdate,
+    RiskPolicyResponse,
     RiskStatus,
     RiskViolation,
 )
+from app.services.risk_policy import RiskPolicyService
 
 router = APIRouter(tags=["risk"])
+
+_risk_policy_service = RiskPolicyService()
+
+
+@router.get("/risk/policy", response_model=RiskPolicyResponse)
+def risk_policy() -> RiskPolicyResponse:
+    """Read-only risk policy for the Terminal V1 dashboard.
+
+    Returns a static advisory-only risk policy payload describing current
+    safety posture and risk limits. GET-only. Performs no mutation, no broker
+    connection, and no order placement. Policy values are read-only and cannot
+    be changed via this endpoint.
+    """
+    return _risk_policy_service.get_policy()
 
 
 @router.get("/risk/config", response_model=RiskConfig)

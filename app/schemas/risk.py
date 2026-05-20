@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from app.schemas.common import BlockedReason, Severity
 
@@ -64,3 +66,45 @@ class EmergencyStopResponse(BaseModel):
     timestamp: datetime
     config: RiskConfig
     violation: RiskViolation
+
+
+class RiskPolicyResponse(BaseModel):
+    """Read-only risk policy projection for the Terminal V1 dashboard.
+
+    Fields match the frontend terminalApi.ts RiskPolicy type.  Additional
+    safety fields are included for contract validation.  All safety-critical
+    values are Literal-typed and cannot be weakened by callers.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # Frontend-compatible fields (matches terminalApi.ts RiskPolicy type)
+    min_confidence: int = 70
+    daily_loss_cap_pct: float = 3.0
+    open_position_cap: int = 3
+    execution_enabled: Literal[False] = False
+
+    # Safety flags (Literal-locked)
+    read_only: Literal[True] = True
+    dry_run: Literal[True] = True
+    auto_trade: Literal[False] = False
+    live_orders_blocked: Literal[True] = True
+    execution_mode: Literal["dry_run_only"] = "dry_run_only"
+    broker_execution_enabled: Literal[False] = False
+    requires_human_review: Literal[True] = True
+
+    # Risk invariants
+    max_risk_per_trade_pct: float = 1.0
+    stop_loss_required: Literal[True] = True
+    take_profit_required: Literal[True] = True
+
+    safety_note: str = (
+        "Read-only risk policy. No live orders or broker execution available."
+    )
+
+    @field_validator("max_risk_per_trade_pct")
+    @classmethod
+    def _max_risk_ceiling(cls, v: float) -> float:
+        if v > 1.0:
+            raise ValueError("max_risk_per_trade_pct must be <= 1.0")
+        return v
