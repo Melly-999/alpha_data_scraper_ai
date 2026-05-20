@@ -2075,3 +2075,100 @@
   padding-top: 8px;
   margin-top: 4px;
 }
+
+.audit-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--terminal-border);
+  border-radius: 4px;
+  background: rgba(11, 16, 26, 0.88);
+  padding: 10px 12px;
+}
+
+.audit-filter-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.audit-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 140px;
+}
+
+.audit-filter-field--search {
+  flex: 2 1 220px;
+}
+
+.audit-filter-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--terminal-muted);
+}
+
+.audit-filter-input,
+.audit-filter-select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: rgba(7, 11, 18, 0.96);
+  color: var(--terminal-text);
+  border: 1px solid var(--terminal-border);
+  border-radius: 4px;
+  padding: 7px 10px;
+  font: 0.76rem var(--terminal-mono);
+}
+
+.audit-filter-input::placeholder {
+  color: rgba(181, 191, 207, 0.6);
+}
+
+.audit-filter-input:focus-visible,
+.audit-filter-select:focus-visible,
+.audit-filter-reset:focus-visible {
+  outline: 1px solid var(--terminal-amber);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.24);
+}
+
+.audit-filter-actions {
+  display: flex;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
+.audit-filter-reset {
+  border: 1px solid var(--terminal-accent-border);
+  background: rgba(127, 29, 29, 0.12);
+  color: var(--terminal-text);
+  border-radius: 4px;
+  padding: 7px 10px;
+  font: 0.72rem var(--terminal-mono);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.audit-filter-reset:hover {
+  border-color: var(--terminal-accent);
+  background: rgba(127, 29, 29, 0.18);
+}
+
+.audit-filter-summary {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--terminal-muted);
+  font-family: var(--terminal-mono);
+}
+
+.paper-audit-empty--filtered,
+.event-list-empty--filtered {
+  color: var(--terminal-amber);
+  border-left: 2px solid var(--terminal-amber);
+  padding-left: 10px;
+}
