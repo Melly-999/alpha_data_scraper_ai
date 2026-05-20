@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 AuditSeverity = Literal["info", "success", "warning", "error", "safety"]
 
@@ -82,3 +82,79 @@ class TradingPlanResponse(BaseModel):
     label: str = "READ-ONLY PLAN PREVIEW — NO ORDERS PLACED"
     items: list[TradingPlanItem]
     generated_at: datetime
+
+
+# --- Terminal Summary (API-001) -------------------------------------------
+#
+# Read-only terminal summary for the Terminal V1 dashboard. Matches the
+# TerminalSummary TypeScript type in frontend/src/lib/terminalApi.ts so the
+# frontend receives a shape-compatible response instead of a 404 fallback.
+# All safety fields are Literal so response_model validation enforces them.
+
+
+class TerminalSafetyState(BaseModel):
+    """Mirrors the frontend SafetyState type. All fields are locked Literals."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    read_only: Literal[True] = True
+    dry_run: Literal[True] = True
+    auto_trade: Literal[False] = False
+    live_orders_blocked: Literal[True] = True
+
+
+class TerminalBrokerPermissions(BaseModel):
+    """Read-only IBKR Paper adapter permission map. Orders/execution always denied."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    market_data: Literal["allowed"] = "allowed"
+    account_read: Literal["allowed"] = "allowed"
+    positions_read: Literal["allowed"] = "allowed"
+    orders: Literal["denied"] = "denied"
+    live_execution: Literal["denied"] = "denied"
+
+
+class TerminalBrokerStatus(BaseModel):
+    """Mirrors the frontend IBKRStatus type. Execution is always disabled."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: Literal["IBKR Paper"] = "IBKR Paper"
+    status: Literal["connected", "disconnected", "degraded", "paper", "read-only"] = (
+        "degraded"
+    )
+    read_only: Literal[True] = True
+    execution_enabled: Literal[False] = False
+    data_freshness: str = "safe-degraded"
+    latency_ms: int = 0
+    diagnostics: list[str] = Field(default_factory=list)
+    permissions: TerminalBrokerPermissions = Field(
+        default_factory=TerminalBrokerPermissions
+    )
+
+    @field_validator("latency_ms")
+    @classmethod
+    def _non_negative(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("latency_ms must be >= 0")
+        return v
+
+
+class TerminalSummaryResponse(BaseModel):
+    """Response schema for GET /terminal/summary.
+
+    Advisory-only, read-only. No execution semantics, no broker calls,
+    no order routing. Matches the TerminalSummary TypeScript type so
+    the frontend receives a valid shape instead of returning the local
+    fallback.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    terminal: str = "MellyTrade V1 Terminal"
+    mode: Literal["read-only"] = "read-only"
+    backend: Literal["online", "fallback"] = "fallback"
+    safety: TerminalSafetyState = Field(default_factory=TerminalSafetyState)
+    broker: TerminalBrokerStatus = Field(default_factory=TerminalBrokerStatus)
+    updated_at: datetime
