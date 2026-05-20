@@ -11,7 +11,7 @@
 //   - All UI copy makes the paper-only advisory posture clear.
 //   - Safety flags are always visible regardless of history state.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   createFallbackAuditHistory,
@@ -20,6 +20,7 @@ import {
   type PaperAuditHistory,
   type PaperHistoryApiResult,
 } from "../../lib/paperSandboxApi";
+import { AuditRailFilters, type AuditFilterOption } from "./AuditRailFilters";
 
 const POLL_INTERVAL_MS = 20_000;
 
@@ -135,6 +136,27 @@ function AuditErrorBanner({ message }: { message: string }) {
   );
 }
 
+const PAPER_SEVERITY_OPTIONS: AuditFilterOption[] = [
+  { value: "info", label: "Info" },
+  { value: "warning", label: "Warning" },
+  { value: "blocked", label: "Blocked" },
+];
+
+function matchesAuditSearch(event: PaperAuditEvent, query: string) {
+  if (!query) return true;
+  const searchable = [
+    event.event_type,
+    event.source,
+    event.severity,
+    event.message,
+    event.timestamp,
+    JSON.stringify(event.metadata),
+  ]
+    .join(" ")
+    .toLowerCase();
+  return searchable.includes(query);
+}
+
 // ---------------------------------------------------------------------------
 // Main panel
 // ---------------------------------------------------------------------------
@@ -143,6 +165,9 @@ export function PaperSandboxActivityRail() {
   const [apiResult, setApiResult] = useState<PaperHistoryApiResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<string>("");
+  const [searchValue, setSearchValue] = useState("");
+  const [severityValue, setSeverityValue] = useState("");
+  const [sourceValue, setSourceValue] = useState("");
 
   const fetchHistory = useCallback(async () => {
     const result = await getPaperSandboxHistory();
@@ -167,6 +192,34 @@ export function PaperSandboxActivityRail() {
 
   // Newest-first display order
   const displayEvents = [...displayHistory.events].reverse();
+  const sourceOptions = useMemo<AuditFilterOption[]>(
+    () =>
+      Array.from(new Set(displayEvents.map((event) => event.source)))
+        .filter((source) => source.trim().length > 0)
+        .sort((left, right) => left.localeCompare(right))
+        .map((source) => ({ value: source, label: source })),
+    [displayEvents],
+  );
+
+  const filteredEvents = useMemo(
+    () =>
+      displayEvents.filter((event) => {
+        if (severityValue && event.severity !== severityValue) {
+          return false;
+        }
+        if (sourceValue && event.source !== sourceValue) {
+          return false;
+        }
+        return matchesAuditSearch(event, searchValue.trim().toLowerCase());
+      }),
+    [displayEvents, searchValue, severityValue, sourceValue],
+  );
+
+  const hasActiveFilters =
+    searchValue.trim().length > 0 || severityValue.length > 0 || sourceValue.length > 0;
+  const filterSummary = hasActiveFilters
+    ? `Showing ${filteredEvents.length} of ${displayEvents.length} audit events.`
+    : undefined;
 
   return (
     <section
@@ -185,6 +238,23 @@ export function PaperSandboxActivityRail() {
       </p>
 
       <AuditSafetyBadges />
+
+      <AuditRailFilters
+        searchValue={searchValue}
+        onSearchValueChange={setSearchValue}
+        severityValue={severityValue}
+        onSeverityValueChange={setSeverityValue}
+        sourceValue={sourceValue}
+        onSourceValueChange={setSourceValue}
+        severityOptions={PAPER_SEVERITY_OPTIONS}
+        sourceOptions={sourceOptions}
+        summary={filterSummary}
+        onClear={() => {
+          setSearchValue("");
+          setSeverityValue("");
+          setSourceValue("");
+        }}
+      />
 
       <div className="paper-audit-meta" aria-label="Audit history status summary">
         <div className="rail-metric">
@@ -227,13 +297,19 @@ export function PaperSandboxActivityRail() {
         </div>
       )}
 
-      {!loading && apiResult?.ok === true && displayEvents.length > 0 && (
+      {!loading && apiResult?.ok === true && displayHistory.count > 0 && filteredEvents.length === 0 && (
+        <div className="paper-audit-empty paper-audit-empty--filtered" aria-live="polite">
+          No audit events match the current filters.
+        </div>
+      )}
+
+      {!loading && apiResult?.ok === true && filteredEvents.length > 0 && (
         <div className="paper-audit-events" aria-label="Audit event history">
           <div className="workspace-section-head">
             <span>Recent events</span>
             <span>newest first · audit only · no execution</span>
           </div>
-          {displayEvents.map((event) => (
+          {filteredEvents.map((event) => (
             <AuditEventRow key={event.event_id} event={event} />
           ))}
         </div>
