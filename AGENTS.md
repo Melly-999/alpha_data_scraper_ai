@@ -445,6 +445,31 @@ Rules:
 - For every PR, run the safety audit and publish gate.
 - These prompt/skill files do not grant permission to modify trading execution, broker execution, live trading, or risk posture.
 
+## Open Design Workflow
+
+- Open Design is used externally for safe prototype exploration only.
+- External Open Design path: `C:\AI\MellyTrade_Workspace\04_Tools\open-design`
+- MellyTrade design system path: `C:\AI\MellyTrade_Workspace\04_Tools\open-design\design-systems\mellytrade-terminal`
+- Start Open Design with:
+
+```powershell
+cd C:\AI\MellyTrade_Workspace\04_Tools\open-design
+pnpm tools-dev start web
+```
+
+- Review generated HTML or screenshots before porting any idea into this repo.
+- Manually port only approved UI patterns; never copy the generated artifact wholesale.
+- Keep all trading UI read-only and display-only unless an explicit future task says otherwise.
+- Frontend preview, dashboard, and signal display clients should remain GET-only.
+- Safety badges and audit-first language must remain visible in terminal-style screens.
+- Forbidden in Open Design prototypes and frontend ports:
+  - live trading controls
+  - broker execution
+  - order placement
+  - Buy/Sell/Execute buttons
+  - disable dry-run controls
+  - secrets or account IDs
+
 ---
 
 **Last Updated**: April 2026  
