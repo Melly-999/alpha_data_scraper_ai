@@ -339,12 +339,28 @@ export function getRiskPolicy(): Promise<RiskPolicy> {
 }
 
 export function getBacktestSummary(): Promise<BacktestSummary> {
-  return getJson<LocalDemoBacktestResponse>("/backtest/summary", {
+  const fallback: BacktestSummary = {
     win_rate: 58,
     max_drawdown_pct: 4.2,
     profit_factor: 1.34,
     sample_size: 142,
-  }).then((response) => ("summary" in response ? response.summary : response));
+  };
+  return getJson<LocalDemoBacktestResponse>("/backtest/summary", fallback).then(
+    (response) => {
+      const candidate: unknown =
+        "summary" in response ? response.summary : response;
+      if (
+        candidate !== null &&
+        typeof candidate === "object" &&
+        typeof (candidate as Record<string, unknown>).profit_factor === "number" &&
+        typeof (candidate as Record<string, unknown>).win_rate === "number" &&
+        typeof (candidate as Record<string, unknown>).max_drawdown_pct === "number"
+      ) {
+        return candidate as BacktestSummary;
+      }
+      return fallback;
+    },
+  );
 }
 
 export function getInvestment(): Promise<LocalDemoInvestmentResponse> {
