@@ -23,13 +23,16 @@ from app.schemas.signal_lifecycle import (
     LifecycleRiskStatus,
     SignalLifecycleResponse,
 )
+from app.schemas.signal_quality import SignalQualitySummaryResponse
 from app.services.signal_decision_history_service import SignalDecisionHistoryService
 from app.services.signal_lifecycle_service import SignalLifecycleService
+from app.services.signal_quality_summary import SignalQualitySummaryService
 
 router = APIRouter(tags=["signals"])
 
 _decision_service = SignalDecisionHistoryService()
 _lifecycle_service = SignalLifecycleService(_decision_service)
+_quality_summary_service = SignalQualitySummaryService()
 _scanner_default_symbols = ("AAPL", "NVDA", "MSFT", "TSLA", "EURUSD", "XAUUSD")
 _scanner_max_symbols = 25
 
@@ -204,7 +207,9 @@ def signal_scanner_preview(
                 take_profit_required=True,
                 max_risk_per_trade=0.01,
             )
-            write_signal_decision(decision_record, client=get_safe_supabase_write_client())
+            write_signal_decision(
+                decision_record, client=get_safe_supabase_write_client()
+            )
         except Exception:  # noqa: BLE001
             pass
 
@@ -302,6 +307,21 @@ def signal_lifecycle(
         decision=decision,
         risk_status=risk_status,
     )
+
+
+@router.get(
+    "/signals/quality/summary",
+    response_model=SignalQualitySummaryResponse,
+)
+def signal_quality_summary() -> SignalQualitySummaryResponse:
+    """Read-only advisory signal quality summary.
+
+    Aggregates scanner results into a quality snapshot for the Terminal V1
+    dashboard.  Advisory only — no execution, no broker call, no mutation,
+    no persistence.  All safety fields are Literal-typed and cannot be
+    weakened by callers.
+    """
+    return _quality_summary_service.get_summary()
 
 
 @router.get("/signals/{signal_id}", response_model=SignalDetail)
