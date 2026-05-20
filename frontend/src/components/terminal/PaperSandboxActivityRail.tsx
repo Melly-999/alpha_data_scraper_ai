@@ -190,8 +190,11 @@ export function PaperSandboxActivityRail() {
         ? apiResult.fallback
         : createFallbackAuditHistory();
 
-  // Newest-first display order
-  const displayEvents = [...displayHistory.events].reverse();
+  // Newest-first display order — memoised so downstream memos have a stable dep.
+  const displayEvents = useMemo(
+    () => [...displayHistory.events].reverse(),
+    [displayHistory.events],
+  );
   const sourceOptions = useMemo<AuditFilterOption[]>(
     () =>
       Array.from(new Set(displayEvents.map((event) => event.source)))

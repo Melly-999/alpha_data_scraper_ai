@@ -1650,6 +1650,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
+  min-width: 0;
 }
 
 .paper-ticket-row label {
@@ -1664,6 +1665,9 @@
 }
 
 .paper-ticket-input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: var(--terminal-surface);
   border: 1px solid var(--terminal-border);
   color: var(--terminal-text);
@@ -1679,6 +1683,8 @@
 }
 
 .paper-ticket-textarea {
+  width: 100%;
+  box-sizing: border-box;
   resize: vertical;
   min-height: 54px;
 }
