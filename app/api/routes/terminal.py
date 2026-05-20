@@ -4,14 +4,31 @@ from fastapi import APIRouter, Depends, Query
 
 from app.api.deps import get_container
 from app.core.container import AppContainer
-from app.schemas.terminal import AuditEventFeedResponse, TradingPlanResponse
+from app.schemas.terminal import (
+    AuditEventFeedResponse,
+    TradingPlanResponse,
+    TerminalSummaryResponse,
+)
 from app.services.audit_event_service import AuditEventService
+from app.services.terminal_summary import TerminalSummaryService
 from app.services.trading_plan_service import TradingPlanService
 
 router = APIRouter(tags=["terminal"])
 
 _audit_service = AuditEventService()
 _trading_plan_service = TradingPlanService()
+_terminal_summary_service = TerminalSummaryService()
+
+
+@router.get("/terminal/summary", response_model=TerminalSummaryResponse)
+def terminal_summary() -> TerminalSummaryResponse:
+    """Read-only terminal summary for the Terminal V1 dashboard.
+
+    Returns a static advisory-only payload describing the current terminal
+    mode, safety posture, and broker status. GET-only. Performs no mutation,
+    no broker connection, and no order placement.
+    """
+    return _terminal_summary_service.get_summary()
 
 
 @router.get("/terminal/events", response_model=AuditEventFeedResponse)
