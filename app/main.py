@@ -29,6 +29,7 @@ from app.api.routes import (
     signals,
     supabase,
     terminal,
+    watchlist,
 )
 from app.core.container import build_container
 from app.core.settings import load_settings
@@ -134,6 +135,7 @@ for router in (
     local.router,
     logs.router,
     market.router,
+    watchlist.router,
     terminal.router,
     safety.router,
     supabase.router,
