@@ -5,9 +5,10 @@ import inspect
 import pytest
 
 from app.api.routes import signals as signals_module
-from app.schemas.signal_scanner import SignalScannerBatch
+from app.schemas.signal_scanner import SignalScannerBatch, SignalUniverseListResponse
 
 SCANNER_PATH = "/api/signals/scanner/preview"
+UNIVERSES_PATH = "/api/signals/scanner/universes"
 FORBIDDEN_RESPONSE_KEYS = {
     "order_id",
     "account_id",
@@ -182,3 +183,61 @@ def test_scanner_preview_module_has_no_execution_function_names() -> None:
         name for name, obj in inspect.getmembers(signals_module, inspect.isfunction)
     }
     assert not (function_names & FORBIDDEN_FUNCTION_NAMES)
+
+
+# ---------------------------------------------------------------------------
+# /api/signals/scanner/universes
+# ---------------------------------------------------------------------------
+
+
+def test_universes_get_returns_valid_response(client) -> None:
+    response = client.get(UNIVERSES_PATH)
+    assert response.status_code == 200
+
+    payload = response.json()
+    result = SignalUniverseListResponse.model_validate(payload)
+
+    assert result.read_only is True
+    assert result.execution_mode == "dry_run_only"
+    assert result.requires_human_review is True
+    assert len(result.universes) > 0
+
+
+def test_universes_each_preset_is_safe(client) -> None:
+    response = client.get(UNIVERSES_PATH)
+    assert response.status_code == 200
+
+    result = SignalUniverseListResponse.model_validate(response.json())
+    for preset in result.universes:
+        assert preset.read_only is True
+        assert preset.execution_mode == "dry_run_only"
+        assert preset.requires_human_review is True
+        assert preset.item_count == len(preset.symbols)
+        assert preset.symbols
+
+
+def test_universes_each_preset_has_no_forbidden_keys(client) -> None:
+    response = client.get(UNIVERSES_PATH)
+    assert response.status_code == 200
+
+    result = SignalUniverseListResponse.model_validate(response.json())
+    for preset in result.universes:
+        dumped = preset.model_dump()
+        for forbidden in FORBIDDEN_RESPONSE_KEYS:
+            assert forbidden not in dumped
+
+
+@pytest.mark.parametrize("method", ["post", "put", "patch", "delete"])
+def test_universes_rejects_non_get_methods(client, method: str) -> None:
+    response = getattr(client, method)(UNIVERSES_PATH)
+    assert response.status_code == 405
+
+
+def test_universes_openapi_is_get_only(client) -> None:
+    path_item = client.app.openapi()["paths"][UNIVERSES_PATH]
+    operation_keys = {
+        key
+        for key in path_item
+        if key in {"get", "put", "post", "patch", "delete", "head", "options", "trace"}
+    }
+    assert operation_keys == {"get"}
