@@ -13,11 +13,18 @@ The project combines a FastAPI backend, React/TypeScript dashboard, broker adapt
 
 > Current status: local workstation and paper-trading infrastructure. Live trading is intentionally disabled by default.
 
-## MellyTrade Closed Beta Demo
+## MellyTrade Terminal Demo
 
-MellyTrade is currently presented as a read-only, dry-run AI trading research terminal.
+MellyTrade is a safety-first, read-only AI trading terminal prototype focused on explainable signals, paper sandbox previews, auditability, and strict execution guardrails.
 
-It is not a live trading bot, not an execution platform, and not investment advice.
+What the current demo shows:
+
+- Red-black institutional terminal UI
+- AI Workspace
+- Paper Sandbox Preview
+- Paper Sandbox Activity/Audit Rail
+- Read-only broker/safety posture
+- GET-only local smoke checks
 
 Safety posture:
 
@@ -27,7 +34,30 @@ dry_run=true
 read_only=true
 live_orders_blocked=true
 max risk <=1%
+no order/buy/sell/execute controls
+no live trading UX
 ```
+
+Demo docs:
+
+- [docs/demo/demo_002_screenshot_pack.md](docs/demo/demo_002_screenshot_pack.md)
+- [docs/demo/demo_002_screenshot_inventory.md](docs/demo/demo_002_screenshot_inventory.md)
+- [docs/demo/demo_002_portfolio_story.md](docs/demo/demo_002_portfolio_story.md)
+- [docs/demo/demo_004_showcase_copy_pack.md](docs/demo/demo_004_showcase_copy_pack.md)
+- [docs/demo/demo_004_github_readme_section.md](docs/demo/demo_004_github_readme_section.md)
+- [docs/demo/demo_004_cv_portfolio_bullets.md](docs/demo/demo_004_cv_portfolio_bullets.md)
+
+Local verification:
+
+```powershell
+py -3.11 scripts/validate_safety_config.py
+
+py -3.11 -m pytest tests/app/test_openapi_forbidden_paths.py tests/app/test_safety_invariants.py -q
+
+powershell -ExecutionPolicy Bypass -File scripts/demo_paper_sandbox_readonly_smoke.ps1 -BackendBaseUrl http://127.0.0.1:8001 -FrontendBaseUrl http://127.0.0.1:5173
+```
+
+Screenshots were captured locally outside the repository and are intentionally not committed as binary assets.
 
 ## Beta rollout documentation
 
