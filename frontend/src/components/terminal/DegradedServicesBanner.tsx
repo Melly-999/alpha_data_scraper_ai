@@ -24,7 +24,7 @@ function derivePills(
   }
 
   if (!mt5.connected) {
-    const mode = mt5.mode === "synthetic" ? "SYNTHETIC" : mt5.mode.toUpperCase();
+    const mode = mt5.mode === "synthetic" ? "SYNTHETIC" : (mt5.mode?.toUpperCase() ?? "SAFE FALLBACK");
     pills.push({ key: "mt5", label: `MT5 · ${mode}`, state: "degraded" });
   }
 
