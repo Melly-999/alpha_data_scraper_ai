@@ -13,6 +13,7 @@ import type { TerminalShellData } from "./TerminalShell";
 import { PaperSandboxActivityRail } from "./PaperSandboxActivityRail";
 import { PaperSandboxPreviewPanel } from "./PaperSandboxPreviewPanel";
 import { PaperTicketPreviewPanel } from "./PaperTicketPreviewPanel";
+import { SignalQualitySummaryCard } from "./SignalQualitySummaryCard";
 
 type Agent = {
   name: string;
@@ -279,6 +280,8 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                 </article>
               ))}
             </div>
+
+            <SignalQualitySummaryCard />
 
             <section className="workspace-rail-section workspace-scanner-preview">
               <div className="workspace-section-head">
