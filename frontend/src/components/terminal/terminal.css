@@ -2178,3 +2178,168 @@
   border-left: 2px solid var(--terminal-amber);
   padding-left: 10px;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   Signal Quality Summary Card — SIG-004B
+   Read-only advisory panel. No execution, no order controls.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.signal-quality-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--terminal-border);
+  background: var(--terminal-surface-dim);
+  padding: 12px;
+  min-width: 0;
+}
+
+.signal-quality-card--degraded {
+  border-color: var(--terminal-danger-border);
+  background: var(--terminal-danger-bg);
+}
+
+.signal-quality-card--loading {
+  opacity: 0.6;
+}
+
+.signal-quality-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--terminal-amber);
+  font: 700 11px var(--terminal-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.signal-quality-card__loading-text {
+  margin: 0;
+  color: var(--terminal-muted);
+  font: 11px var(--terminal-mono);
+}
+
+.signal-quality-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.signal-quality-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--terminal-border);
+  padding: 4px 7px;
+  font: 700 9px var(--terminal-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.signal-quality-chip--safe {
+  border-color: var(--terminal-safe-border);
+  background: var(--terminal-safe-bg);
+  color: var(--terminal-green);
+}
+
+.signal-quality-chip--warn {
+  border-color: var(--terminal-danger-border);
+  background: var(--terminal-danger-bg);
+  color: var(--terminal-red);
+}
+
+.signal-quality-chip--info {
+  border-color: var(--terminal-accent-border);
+  background: var(--terminal-accent-bg);
+  color: var(--terminal-amber);
+}
+
+.signal-quality-card__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+
+.signal-quality-card__metric {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--terminal-border);
+  background: var(--terminal-surface-dim);
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+.signal-quality-card__label {
+  color: var(--terminal-muted);
+  font: 10px var(--terminal-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.signal-quality-card__value {
+  font: 700 12px var(--terminal-mono);
+  color: var(--terminal-text);
+}
+
+.signal-quality-card__value--blocked {
+  color: var(--terminal-red);
+}
+
+.signal-quality-card__value--dry-run {
+  color: var(--terminal-amber);
+}
+
+/* Quality label colour overrides */
+.signal-quality-label--high      { color: var(--terminal-green); }
+.signal-quality-label--moderate  { color: var(--terminal-amber); }
+.signal-quality-label--low       { color: var(--terminal-red); }
+.signal-quality-label--safe_fallback { color: var(--terminal-muted); }
+
+/* Score bar */
+.signal-quality-card__score-bar-wrap {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.signal-quality-card__score-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.signal-quality-card__score-value {
+  color: var(--terminal-amber);
+  font: 700 11px var(--terminal-mono);
+}
+
+.signal-quality-card__score-bar {
+  height: 4px;
+  background: var(--terminal-border);
+  overflow: hidden;
+}
+
+.signal-quality-card__score-fill {
+  display: block;
+  height: 100%;
+  background: var(--terminal-amber);
+  transition: width 0.4s ease;
+}
+
+.signal-quality-card__note {
+  margin: 0;
+  color: var(--terminal-muted);
+  font: 10px var(--terminal-mono);
+  border-left: 2px solid var(--terminal-border-soft);
+  padding-left: 8px;
+  overflow-wrap: anywhere;
+}
+
+/* Reduced-motion: skip score bar transition */
+@media (prefers-reduced-motion: reduce) {
+  .signal-quality-card__score-fill {
+    transition: none;
+  }
+}

@@ -586,3 +586,86 @@ export async function getBrokerAccountSnapshot(): Promise<BrokerAccountResponse>
     safety_note: "Safe zero-valued fallback account snapshot.",
   });
 }
+
+// ── SIG-004 Signal Quality Summary ──────────────────────────────────────────
+
+export type SignalQualityCounts = {
+  total_signals: number;
+  watch_count: number;
+  hold_count: number;
+  long_setup_count: number;
+  short_setup_count: number;
+  no_trade_count: number;
+  average_confidence: number;
+  high_confidence_count: number;
+  stale_count: number;
+  fresh_count: number;
+  risk_blocked_count: number;
+  human_review_required_count: number;
+};
+
+export type SignalQualityMetrics = {
+  label: "safe_fallback" | "low" | "moderate" | "high";
+  score: number;
+  confidence_band: "low" | "medium" | "high";
+  freshness: "fallback" | "live" | "stale";
+  risk_posture: "blocked" | "watch_only" | "dry_run_only";
+};
+
+export type SignalQualitySummaryResponse = {
+  status: "ok" | "degraded";
+  mode: "read_only";
+  read_only: true;
+  dry_run: true;
+  live_orders_blocked: true;
+  execution_mode: "dry_run_only";
+  requires_human_review: true;
+  risk_allowed: false;
+  source: "signal_quality_summary";
+  summary: SignalQualityCounts;
+  quality: SignalQualityMetrics;
+  notes: string[];
+  updated_at: string;
+};
+
+const _signalQualityFallback: SignalQualitySummaryResponse = {
+  status: "degraded",
+  mode: "read_only",
+  read_only: true,
+  dry_run: true,
+  live_orders_blocked: true,
+  execution_mode: "dry_run_only",
+  requires_human_review: true,
+  risk_allowed: false,
+  source: "signal_quality_summary",
+  summary: {
+    total_signals: 0,
+    watch_count: 0,
+    hold_count: 0,
+    long_setup_count: 0,
+    short_setup_count: 0,
+    no_trade_count: 0,
+    average_confidence: 0,
+    high_confidence_count: 0,
+    stale_count: 0,
+    fresh_count: 0,
+    risk_blocked_count: 0,
+    human_review_required_count: 0,
+  },
+  quality: {
+    label: "safe_fallback",
+    score: 0,
+    confidence_band: "low",
+    freshness: "fallback",
+    risk_posture: "blocked",
+  },
+  notes: [
+    "Read-only advisory signal quality summary.",
+    "No order execution or broker routing is available.",
+  ],
+  updated_at: new Date().toISOString(),
+};
+
+export function getSignalQualitySummary(): Promise<SignalQualitySummaryResponse> {
+  return getJson("/signals/quality/summary", _signalQualityFallback);
+}
