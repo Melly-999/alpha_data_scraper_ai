@@ -30,3 +30,42 @@ This is a checklist only. No image files are committed here.
 - Do not include browser DevTools in final shots unless the shot is
   intentionally about debugging.
 - Do not publish any image showing `LIVE` or an executed order.
+
+## DEMO-007 / POST-SIG-004B signal quality UI evidence
+
+Text-only evidence index:
+[`docs/demo/demo_008_post_sig_004b_signal_quality_evidence.md`](demo_008_post_sig_004b_signal_quality_evidence.md)
+
+Outside-repo screenshot folder:
+
+```text
+C:\AI\MellyTrade_Workspace\screenshots\demo-007-post-sig-004b-signal-quality-ui
+```
+
+Outside-repo manifest:
+
+```text
+C:\AI\MellyTrade_Workspace\screenshots\demo-007-post-sig-004b-signal-quality-ui\manifest.md
+```
+
+Primary screenshots:
+
+- `01_dashboard_post_sig_004b_1366x768.png`
+- `02_workspace_signal_quality_card_1366x768.png`
+- `03_terminal_signal_quality_card_1366x768.png`
+- `04_signals_post_sig_004b_1366x768.png`
+- `05_audit_post_sig_004b_1366x768.png`
+- `06_brokers_post_sig_004b_1366x768.png`
+- `07_portfolio_post_sig_004b_1366x768.png`
+
+Supplementary screenshots:
+
+- `01b_dashboard_fullpage.png`
+- `02_signal_quality_card_visible_1366x768.png`
+- `02b_workspace_fullpage.png`
+- `02c_workspace_scrolled.png`
+- `03_signal_quality_card_visible_1366x768.png`
+- `03b_terminal_fullpage.png`
+- `03c_terminal_scrolled.png`
+
+Screenshots are not committed and should remain outside the repository.

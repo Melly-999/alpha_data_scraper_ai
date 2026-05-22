@@ -10,6 +10,7 @@ This terminal is designed for supervised market analysis and audit-first decisio
 - Red-black institutional terminal frame
 - AI Workspace with advisory-only analysis
 - Paper Sandbox Preview and Activity/Audit Rail
+- Signal Quality Summary card verified after SIG-004B: read-only, dry-run-only, risk-blocked, human-review-required quality snapshot with no execution controls.
 - Read-only broker and risk posture
 - GET-only paper sandbox smoke flow
 - Clear safety badges for read-only, dry-run, and live-orders-blocked states

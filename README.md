@@ -46,6 +46,7 @@ Demo docs:
 - [docs/demo/demo_004_showcase_copy_pack.md](docs/demo/demo_004_showcase_copy_pack.md)
 - [docs/demo/demo_004_github_readme_section.md](docs/demo/demo_004_github_readme_section.md)
 - [docs/demo/demo_004_cv_portfolio_bullets.md](docs/demo/demo_004_cv_portfolio_bullets.md)
+- [docs/demo/demo_008_post_sig_004b_signal_quality_evidence.md](docs/demo/demo_008_post_sig_004b_signal_quality_evidence.md)
 
 Local verification:
 
