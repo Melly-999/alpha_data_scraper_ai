@@ -13,6 +13,19 @@ The project combines a FastAPI backend, React/TypeScript dashboard, broker adapt
 
 > Current status: local workstation and paper-trading infrastructure. Live trading is intentionally disabled by default.
 
+## For Recruiters
+
+MellyTrade is a portfolio project that demonstrates how I design AI-assisted, safety-first fintech tooling: a FastAPI backend, React/TypeScript terminal UI, read-only broker/status surfaces, risk guardrails, audit/event views, paper sandbox previews, and local validation scripts. It is intentionally **read-only and dry-run**: no live trading, no broker execution, no order routes, no order buttons, and no connect-live UX.
+
+What this proves technically: API design with typed schemas, frontend dashboard/state handling, safety-first product thinking, local runbooks, pytest-backed safety checks, Git/GitHub workflow, and supervised AI-assisted engineering with human review. Stack: Python, FastAPI, Pydantic, React, TypeScript, Vite, pytest, Git, PowerShell, Docker basics, Claude Code, OpenAI Codex, GitHub Copilot, and Ollama/LM Studio.
+
+Review in 3 minutes:
+
+1. Read the safety posture below and run `py -3.11 scripts/validate_safety_config.py`.
+2. Open the recruiter case study: [docs/career/recruiter_case_study.md](docs/career/recruiter_case_study.md).
+3. Check the demo evidence plan: [docs/demo/recruiter_screenshot_checklist.md](docs/demo/recruiter_screenshot_checklist.md) and [docs/demo/recruiter_loom_demo_script.md](docs/demo/recruiter_loom_demo_script.md).
+4. Review CV positioning notes: [docs/career/cv_positioning_notes.md](docs/career/cv_positioning_notes.md).
+
 ## MellyTrade Terminal Demo
 
 MellyTrade is a safety-first, read-only AI trading terminal prototype focused on explainable signals, paper sandbox previews, auditability, and strict execution guardrails.
