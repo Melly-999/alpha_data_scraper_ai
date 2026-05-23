@@ -209,7 +209,7 @@ These apply to every task in this queue:
 - All tests pass with 0 failures on mocked data.
 - Tests are runnable without OPENAI_API_KEY set (mock only).
 
-**Status:** Not started
+**Status:** Implemented — test_no_fabrication.py (10 tests) + test_seniority_mismatch.py (10 tests), all 40 tests passing. No scorer changes required. Awaiting commit.
 
 ---
 
