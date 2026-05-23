@@ -1,0 +1,203 @@
+{
+  "_comment": "PUBLIC-SAFE EXAMPLE FILE. Replace placeholders before use. No real phone, address, salary, or private email committed here.",
+  "_safety": "advisory_only=true | auto_apply=false | fabricated_claims=forbidden | manual_review_required=true",
+  "version": "1.0",
+  "schema": "candidate_profile.example",
+
+  "identity": {
+    "name": "[FIRST_NAME] [LAST_NAME]",
+    "github_username": "Melly-999",
+    "location_city": "Torun",
+    "location_country": "Poland",
+    "timezone": "Europe/Warsaw",
+    "work_authorisation": "Poland / EU",
+    "phone": "[PHONE]",
+    "email": "[EMAIL]",
+    "linkedin": "[LINKEDIN]",
+    "portfolio": "[PORTFOLIO]"
+  },
+
+  "target_titles": [
+    "AI Automation Specialist",
+    "AI Workflow Engineer",
+    "Technical Support Engineer (FinTech / SaaS)",
+    "FinTech Support Specialist",
+    "Customer Success Technical Specialist",
+    "Junior Python Backend Developer",
+    "Junior Full-Stack Developer",
+    "Backend Developer Intern",
+    "Trading Operations Support"
+  ],
+
+  "preferred_locations": [
+    "Poland (any city)",
+    "Remote EU",
+    "Remote global"
+  ],
+
+  "work_modes": {
+    "remote": true,
+    "hybrid": true,
+    "onsite": "possible but prefer remote or hybrid"
+  },
+
+  "languages": [
+    {
+      "language": "Polish",
+      "level": "native"
+    },
+    {
+      "language": "English",
+      "level": "B2+",
+      "notes": "Professional written and spoken"
+    }
+  ],
+
+  "education_status": {
+    "current_school": "Liceum Ogolnoksztalcace dla Doroslych Cosinus, Torun",
+    "status": "in_progress",
+    "matura": "in_progress",
+    "expected_completion": "[TODO — fill in private career notes only]",
+    "formal_it_degree": false,
+    "notes": "Self-taught programmer. No completed formal IT degree. Matura in progress."
+  },
+
+  "experience_summary": {
+    "commercial_it_years": 0,
+    "customer_service_years": 3,
+    "sales_years": 2,
+    "portfolio_projects_active": [
+      "MellyTrade / Alpha AI (read-only fintech workstation)",
+      "Job Scanner Agent (design phase)"
+    ],
+    "ai_workflow_experience": true,
+    "notes": "No paid IT employment. Portfolio evidence only for technical skills. Customer service and sales background gives operational process depth."
+  },
+
+  "skills": {
+    "programming_languages": [
+      { "name": "Python 3.11", "level": 3, "evidence": "MellyTrade backend, FastAPI routes, pytest, scripts" }
+    ],
+    "frameworks": [
+      { "name": "FastAPI", "level": 2, "evidence": "MellyTrade API routes and typed schemas" },
+      { "name": "Pydantic", "level": 2, "evidence": "MellyTrade schema validation" },
+      { "name": "React 18", "level": 2, "evidence": "MellyTrade terminal UI with AI assistance" },
+      { "name": "TypeScript", "level": 2, "evidence": "MellyTrade frontend with AI assistance" },
+      { "name": "Vite", "level": 1, "evidence": "MellyTrade frontend build tooling" }
+    ],
+    "testing": [
+      { "name": "pytest", "level": 2, "evidence": "MellyTrade safety validation and signal tests" }
+    ],
+    "tooling": [
+      { "name": "Git", "level": 3, "evidence": "Daily repo workflow, branching, PRs" },
+      { "name": "GitHub", "level": 3, "evidence": "PRs, branches, Actions awareness" },
+      { "name": "PowerShell", "level": 2, "evidence": "Local dev scripts and automation" },
+      { "name": "Docker", "level": 1, "evidence": "Basic usage, Compose awareness" }
+    ],
+    "ai_tools": [
+      { "name": "Claude Code", "level": 3, "evidence": "Primary supervised AI engineering assistant" },
+      { "name": "OpenAI Codex", "level": 3, "evidence": "Code navigation and implementation drafts" },
+      { "name": "GitHub Copilot", "level": 2, "evidence": "Inline code suggestions" },
+      { "name": "Ollama / LM Studio", "level": 2, "evidence": "Local model workflow" },
+      { "name": "ChatGPT", "level": 2, "evidence": "Planning and research" }
+    ],
+    "databases": [
+      { "name": "SQLite", "level": 2, "evidence": "Basic project usage" },
+      { "name": "PostgreSQL", "level": 1, "evidence": "Learning; Supabase exposure" }
+    ],
+    "monitoring": [
+      { "name": "Prometheus", "level": 1, "evidence": "MellyTrade metrics server, awareness level" },
+      { "name": "Grafana", "level": 1, "evidence": "Monitoring stack awareness" }
+    ],
+    "concepts": [
+      "REST APIs",
+      "JSON schemas",
+      "broker adapters (read-only)",
+      "risk guardrails",
+      "audit trails",
+      "dry-run patterns",
+      "CRM/KPI/SLA processes",
+      "technical support and escalation workflows"
+    ]
+  },
+
+  "projects": [
+    {
+      "name": "MellyTrade / Alpha AI",
+      "type": "portfolio",
+      "description": "Read-only AI-assisted fintech workstation. FastAPI backend, React/TypeScript terminal UI, read-only broker/status surfaces, risk guardrails, audit/event feed, paper sandbox preview, and safety validation scripts.",
+      "safety_posture": "autotrade=false | dry_run=true | read_only=true | live_orders_blocked=true | max_risk<=1%",
+      "is_commercial": false,
+      "is_live_trading": false,
+      "github": "github.com/Melly-999/alpha_data_scraper_ai",
+      "stack": ["Python", "FastAPI", "Pydantic", "React", "TypeScript", "Vite", "pytest", "Git", "Docker basics"],
+      "ai_tooling": ["Claude Code", "OpenAI Codex", "GitHub Copilot", "Ollama", "LM Studio"]
+    },
+    {
+      "name": "Job Scanner Agent",
+      "type": "portfolio",
+      "description": "Local advisory job scanner. Scores job postings against candidate profile, detects bridge roles, identifies skill gaps, and generates application strategy briefs requiring human review. No auto-apply.",
+      "safety_posture": "advisory_only=true | auto_apply=false | fabricated_claims=forbidden",
+      "is_commercial": false,
+      "status": "design_phase"
+    }
+  ],
+
+  "career_constraints": {
+    "min_seniority": "junior",
+    "max_seniority": "mid",
+    "prefer_remote_or_hybrid": true,
+    "no_live_trading_execution_roles": true,
+    "no_financial_advisor_roles": true,
+    "no_senior_only_roles": true,
+    "relocation": "[TODO — fill in private career notes only]",
+    "availability": "[TODO — fill in private career notes only]",
+    "contract_preference": "[TODO — fill in private career notes only]",
+    "salary_expectation": "[TODO — fill in private career notes only — do NOT commit here]"
+  },
+
+  "claims_allowed": [
+    "Self-taught Python / AI automation developer",
+    "3+ years customer service, sales, and CRM/KPI/SLA process experience",
+    "MellyTrade as a portfolio project (read-only fintech workstation)",
+    "Supervised AI-assisted engineering workflow with human review, local validation, and explicit acceptance criteria",
+    "Practical FastAPI, React/TypeScript, Git/GitHub, pytest, and documentation exposure",
+    "AI tooling user: Claude Code, OpenAI Codex, GitHub Copilot, Ollama/LM Studio",
+    "Education: matura in progress / planned (NOT completed)"
+  ],
+
+  "claims_forbidden": [
+    "Completed matura (unless confirmed — fill private career notes first)",
+    "Completed degree or university education",
+    "Commercial IT employment or paid IT job",
+    "Senior or mid-level developer with commercial experience",
+    "MellyTrade as a commercial product or live trading system",
+    "Live trading or broker order execution",
+    "Autonomous trading bot or production trading AI",
+    "Financial advice or guaranteed trading results",
+    "'AI wrote the code for me' or autonomous code generation",
+    "Production client deployment (not applicable)",
+    "Expert AI engineer or principal engineer claims"
+  ],
+
+  "missing_private_fields": [
+    "phone — store in C:\\AI\\MellyTrade_Workspace\\_career\\cv\\career_notes.md only",
+    "private email — store in career_notes.md only",
+    "home address — store in career_notes.md only",
+    "salary expectation — store in career_notes.md only",
+    "exact matura completion date — store in career_notes.md only",
+    "availability date — store in career_notes.md only",
+    "KPI metrics (calls/day, QA score, sales conversion) — store in career_notes.md only",
+    "exact CRM tools used in employment — store in career_notes.md only",
+    "trained people count — store in career_notes.md only",
+    "contract preference details — store in career_notes.md only"
+  ],
+
+  "links": {
+    "github": "github.com/Melly-999",
+    "github_repo": "github.com/Melly-999/alpha_data_scraper_ai",
+    "linkedin": "[LINKEDIN]",
+    "portfolio": "[PORTFOLIO]",
+    "loom_demo": "[LOOM_URL_OPTIONAL]"
+  }
+}

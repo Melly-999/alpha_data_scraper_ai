@@ -1,0 +1,105 @@
+{
+  "_comment": "EXAMPLE FILE ONLY. Uses fake company and synthetic job data. No real job board data committed here.",
+  "_safety": "advisory_only=true | auto_apply=false | no_submission=true | human_review_required=true",
+  "schema_version": "1.0",
+
+  "job_id": "example-001-junior-python-fintech",
+  "source": "manual",
+  "source_url_placeholder": "[JOB_BOARD_URL — do not auto-fetch]",
+  "retrieved_at": "2026-05-23T08:00:00Z",
+
+  "title": "Junior Python Developer — FinTech Support & Automation",
+  "company": "Example Fintech Solutions Sp. z o.o. (SYNTHETIC EXAMPLE)",
+  "company_note": "This is a synthetic example company for schema illustration only.",
+
+  "location": "Warsaw, Poland",
+  "remote_policy": "hybrid",
+  "remote_notes": "3 days remote / 2 days onsite. Full remote considered for strong candidates.",
+
+  "seniority": "junior",
+  "employment_type": "full_time",
+
+  "salary_range": {
+    "min": 4500,
+    "max": 7000,
+    "currency": "PLN",
+    "period": "monthly_gross",
+    "note": "B2B or UoP negotiable"
+  },
+
+  "must_have_requirements": [
+    "Python 3.x (basic to intermediate)",
+    "REST API concepts (consuming and testing)",
+    "Git version control basics",
+    "Clear written and spoken communication (Polish required)",
+    "Ability to troubleshoot and document issues"
+  ],
+
+  "nice_to_have_requirements": [
+    "FastAPI or Flask experience",
+    "Basic SQL / SQLite",
+    "Docker basics",
+    "TypeScript or JavaScript basics",
+    "Experience with CRM or support ticketing systems",
+    "Exposure to AI tools or automation workflows",
+    "FinTech, trading, or financial operations domain awareness"
+  ],
+
+  "responsibilities": [
+    "Support internal fintech tooling and APIs used by operations teams",
+    "Diagnose and document API integration issues",
+    "Write basic Python scripts to automate repetitive support tasks",
+    "Collaborate with senior developers to triage and resolve bugs",
+    "Create and maintain technical support documentation",
+    "Communicate with internal stakeholders to clarify requirements"
+  ],
+
+  "degree_requirement": "none",
+  "degree_notes": "No formal degree required. Demonstrated project experience accepted.",
+
+  "matura_requirement": "none",
+  "matura_notes": "Not required as an application condition.",
+
+  "language_requirement": {
+    "required": ["Polish"],
+    "nice_to_have": ["English B1+"]
+  },
+
+  "experience_required_years": 0,
+  "experience_notes": "Junior level. Portfolio projects accepted as evidence.",
+
+  "application_url_placeholder": "[APPLY_URL — user copies manually, no auto-submit]",
+  "application_deadline": "[TODO — check job posting]",
+
+  "source": "manual_paste",
+  "source_notes": "Job description pasted manually by user. Not fetched via automation.",
+
+  "scoring_advisory": {
+    "_note": "This section is filled by the scoring engine at runtime — not pre-filled.",
+    "score": null,
+    "tag": null,
+    "bridge_role_detected": null,
+    "skill_gap": null,
+    "explanation": null,
+    "recommended_course": null,
+    "recommended_portfolio_task": null,
+    "draft_status": "ADVISORY ONLY — human review required before any action"
+  },
+
+  "red_flags": [],
+  "positive_signals": [
+    "No degree required",
+    "No matura required as application condition",
+    "Junior level — accessible without commercial IT experience",
+    "Customer service / communication skills valued",
+    "FinTech domain aligns with MellyTrade portfolio evidence",
+    "AI tools and automation mentioned as nice-to-have",
+    "Hybrid remote from Poland supported"
+  ],
+
+  "notes": "Example job posting for schema illustration. High-fit archetype for this candidate profile. Bridge role: customer service + Python + FinTech support overlap.",
+
+  "application_status": "example",
+  "applied_at": null,
+  "user_notes": "[User adds personal notes here after manual review]"
+}
