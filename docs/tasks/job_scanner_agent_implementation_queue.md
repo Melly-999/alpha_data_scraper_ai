@@ -182,7 +182,7 @@ These apply to every task in this queue:
 - No fabricated claims in any scoring output.
 - No real personal data in test fixtures.
 
-**Status:** Not started
+**Status:** Implemented — scorer.py, scoring_rules.json, tests/__init__.py, tests/test_scorer.py (20 tests, all passing). Awaiting commit.
 
 ---
 
