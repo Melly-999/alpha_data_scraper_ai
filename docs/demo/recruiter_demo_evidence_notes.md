@@ -90,3 +90,11 @@ The initial GitHub README screenshot was rejected because it showed a public 404
 ## Recommended Next Step
 
 Record the recruiter Loom using `docs/demo/recruiter_loom_demo_script.md` and reference the screenshots from the outside-repo screenshot folder. Keep binary screenshots outside the repository unless a future task explicitly asks for a curated, redacted asset pack.
+
+## Loom Evidence Status
+
+- Loom recording: not recorded yet.
+- Planned script: `docs/demo/recruiter_loom_demo_script.md`.
+- Recording checklist: `docs/demo/recruiter_loom_evidence_checklist.md`.
+- Video files should stay outside the repository.
+- Only a public-safe Loom link may be added to repo docs later after manual privacy and safety review.
