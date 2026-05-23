@@ -1,0 +1,66 @@
+{
+  "_comment": "Machine-readable scoring rules for the Job Scanner Agent. Advisory use only. No auto-apply. No fabricated claims.",
+  "_safety": "advisory_only=true | auto_apply=false | manual_review_required=true",
+  "schema_version": "1.0",
+
+  "max_score": 100,
+
+  "category_weights": {
+    "role_fit": 25,
+    "skill_fit": 25,
+    "project_evidence_fit": 20,
+    "bridge_role_fit": 10,
+    "location_work_mode_fit": 10,
+    "language_seniority_education_fit": 10
+  },
+
+  "penalties": {
+    "senior_only_role": -30,
+    "mandatory_degree_if_not_confirmed": -25,
+    "mandatory_matura_if_not_confirmed": -20,
+    "live_trading_or_financial_advice_required": -50,
+    "commercial_it_required_if_missing": -20,
+    "auto_apply_or_spam_requirement": -100,
+    "requests_sensitive_data_too_early": -50
+  },
+
+  "score_tags": {
+    "apply_now": 65,
+    "stretch": 45,
+    "learn_first": 25,
+    "skip": 0
+  },
+
+  "hard_skip_flags": [
+    "live_trading_or_financial_advice_required",
+    "auto_apply_or_spam_requirement",
+    "requires_false_claims",
+    "requests_sensitive_data_too_early"
+  ],
+
+  "bridge_role_criteria": {
+    "min_criteria_for_bonus": 2,
+    "criteria": [
+      "job mentions customer support, client communication, or stakeholder management",
+      "job is in FinTech, SaaS, or trading operations domain",
+      "job title contains Support, Operations, Technical Account, Customer Success, Helpdesk, Tier 1, Tier 2",
+      "job mentions CRM, ticketing systems, or escalation workflows",
+      "job does not require a CS degree",
+      "job mentions AI tools, automation, or process improvement"
+    ]
+  },
+
+  "tag_descriptions": {
+    "apply_now": "Strong fit. Current portfolio is sufficient to apply. Review and edit cover letter before sending.",
+    "stretch": "Possible fit. Strong cover letter + bridge angle can help. Be honest about gaps.",
+    "learn_first": "Missing 1-2 key skills. Close the gap first, set a timeline, then revisit.",
+    "skip": "Not accessible without fabrication or ineligible. Do not apply. Log reason."
+  },
+
+  "safety_invariants": {
+    "manual_review_required": true,
+    "auto_apply_allowed": false,
+    "advisory_only": true,
+    "no_fabrication_required": true
+  }
+}
