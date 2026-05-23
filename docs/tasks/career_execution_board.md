@@ -27,12 +27,11 @@
 
 ## P2 - Job Scanner MVP
 
-| ID | Goal | Expected files | Estimated time | Dependencies | Acceptance criteria | Recommended tool |
-|---|---|---|---:|---|---|---|
-| P2-01 | Job Scanner README | `job_scanner/README.md` | 45 min | P0-01 | Scope states advisory-only, no auto-apply, no fabricated claims | Codex |
-| P2-02 | Candidate profile example | `job_scanner/candidate_profile.example.json` | 45 min | P0-01 | Public-safe profile schema with no private contact data | Codex |
-| P2-03 | Job posting example | `job_scanner/job_posting.example.json` | 30 min | P2-01 | Schema covers title, requirements, remote, seniority, degree requirement and source | Codex |
-| P2-04 | Scoring rules doc | `job_scanner/scoring_rules.md` | 60 min | P2-02, P2-03 | 0-100 score with weights, red flags and bridge-role logic | Codex |
-| P2-05 | Scoring prototype | `job_scanner/score_job.py` or notebook | 90-180 min | P2-04 | Manual pasted job can be scored locally without auto-apply | Codex / OpenCode |
-| P2-06 | Tests | `job_scanner/tests/` | 60-120 min | P2-05 | Tests cover no-fabrication flags, senior-only penalty and degree-gated roles | Codex / OpenCode |
-| P2-07 | Weekly report format | `job_scanner/weekly_report_template.md` | 45 min | P2-04 | Report groups apply-now, stretch, skip, missing skills and next portfolio tasks | Codex |
+| ID | Goal | Expected files | Estimated time | Dependencies | Acceptance criteria | Status | Recommended tool |
+|---|---|---|---:|---|---|---|---|
+| JOBSCAN-001 | Docs-only foundation | `job_scanner/README.md`, `job_scanner/examples/candidate_profile.example.json`, `job_scanner/examples/job_posting.example.json`, `job_scanner/scoring_rules.md` | 120 min | P0-01 | Advisory-only disclaimer, no auto-apply, no fabricated claims, no private data, privacy scan passed, validation script passed | Complete (branch: docs/jobscan-001-foundation) | OpenCode |
+| JOBSCAN-002 | Scoring prototype | `job_scanner/scorer.py`, `job_scanner/scoring_rules.json`, `job_scanner/tests/test_scorer.py` | 90-180 min | JOBSCAN-001 | Manual pasted job scored 0-100 locally; no auto-apply; 10+ test cases | Not started | OpenCode |
+| JOBSCAN-003 | No-fabrication and seniority mismatch tests | `job_scanner/tests/test_no_fabrication.py`, `job_scanner/tests/test_seniority_mismatch.py` | 60-120 min | JOBSCAN-002 | All tests pass with mocked API; no fabrication phrases in generated drafts; senior-only jobs tagged skip | Not started | OpenCode |
+| JOBSCAN-004 | Weekly report template | `job_scanner/weekly_report_template.md` | 45 min | JOBSCAN-001 | Report groups apply-now, stretch, skip; includes missing skills and next portfolio tasks; advisory disclaimer at top | Not started | OpenCode |
+| JOBSCAN-005 | Optional local CLI | `job_scanner/cli.py`, `job_scanner/extractor.py`, `job_scanner/prompts/` | 90-180 min | JOBSCAN-002, JOBSCAN-003 | CLI runnable locally without live API key; no HTTP POST to job boards; APPROVE step required for cover letter save | Not started | OpenCode |
+| JOBSCAN-006 | Optional dashboard integration | `frontend/src/pages/JobScanner.tsx`, FastAPI GET routes | Deferred | JOBSCAN-005 | GET-only; no apply button; no form submission; MellyTrade safety posture unchanged | Deferred | OpenCode |

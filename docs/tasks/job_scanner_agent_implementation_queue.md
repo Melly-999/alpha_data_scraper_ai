@@ -117,293 +117,173 @@ These apply to every task in this queue:
 
 ---
 
-## JOBSCAN-001 — Candidate Profile Schema
+## JOBSCAN-001 — Docs-Only Foundation
 
-**Scope:** Create the local candidate profile JSON file that the scoring engine uses.
+**Scope:** Create the docs-only foundation for the Job Scanner Agent: README, public-safe candidate profile example, job posting example, and scoring rules document. No runtime code. No scraping. No auto-apply. No private data.
 
-**Files expected:**
-- `job_scanner/candidate_profile.json`
-- `job_scanner/README.md` (advisory-only disclaimer)
+**Branch:** `docs/jobscan-001-foundation`
+
+**Files created:**
+- `job_scanner/README.md` — purpose, scope, non-goals, advisory-only safety model, manual review requirement, scoring overview, bridge-role strategy, target roles, input/output examples, planned files, future phases
+- `job_scanner/examples/candidate_profile.example.json` — public-safe placeholder candidate profile with no private contact data
+- `job_scanner/examples/job_posting.example.json` — synthetic job posting schema example
+- `job_scanner/scoring_rules.md` — 0–100 score model, category weights, penalties, red flags, hard skip criteria, no-fabrication rule, manual review rule
 
 **Validation:**
-- JSON is valid and matches the schema in `job_scanner_agent_design.md`.
-- Contains: personal context (no sensitive data committed), education status, experience, skills, target roles, constraints, hard_no_flags.
-- `hard_no_flags` includes: `requires_completed_degree`, `requires_matura_proof_for_application`, `requires_commercial_IT_experience`, `requires_live_trading_execution`.
-- README states: advisory tool only, no auto-apply, no fabrication, no financial advice.
+- No runtime code added.
+- No scraping or job board calls.
+- No auto-apply path.
+- No private contact details committed.
+- No DOCX/PDF/media files committed.
+- Privacy scan: no phone, email, address, API keys, broker IDs, fake claims found.
+- Safety scan: no auto-apply, no fabricated experience, no live trading claims.
 
 **Safety constraints:**
-- No real address, phone number, or broker credentials in the committed file.
-- Email in `.env.example` only.
+- No real address, phone number, private email, or broker credentials in any committed file.
+- All contact fields use `[PLACEHOLDER]` format in example files.
+- Salary expectation stays in private career notes only.
 
 **Acceptance criteria:**
-- Profile JSON is versionable with no secrets.
+- README clearly states advisory-only, no auto-apply, no fabrication, no financial advice.
+- Candidate profile example is versionable with no secrets.
 - Scoring rules are understandable without reading code.
-- README advisory disclaimer is present.
+- No runtime code, workflow YAML, config.json, or trading safety settings modified.
 
-**Status:** Not started
-
----
-
-## JOBSCAN-002 — Job Posting Schema and Storage
-
-**Scope:** Define the job posting JSON schema and SQLite storage layer.
-
-**Files expected:**
-- `job_scanner/schemas/job_schema.py` (Pydantic model)
-- `job_scanner/db/models.py` (SQLite via sqlalchemy or sqlite3)
-- `job_scanner/db/migrations/001_initial.sql`
-- `job_scanner/tests/test_job_schema.py`
-
-**Validation:**
-- Schema matches `job_scanner_agent_design.md` Job Posting Schema.
-- Includes: `job_id`, `source`, `source_url`, `retrieved_at`, `raw_text`, `extracted`, `scoring`, `strategy`, `application_status`.
-- SQLite migration creates `jobs` table and `strategy_drafts` table.
-- Round-trip test: create a job record, save to SQLite, retrieve, assert fields intact.
-- Duplicate detection test: same company + title + URL → duplicate flag.
-
-**Safety constraints:**
-- No actual personal data in test fixtures.
-- Test fixtures use synthetic company names and job descriptions.
-
-**Acceptance criteria:**
-- pytest passes with 0 failures.
-- Schema and DB layer are importable without external API keys.
-
-**Status:** Not started
+**Status:** Complete (branch docs/jobscan-001-foundation)
 
 ---
 
-## JOBSCAN-003 — Scoring Engine
+## JOBSCAN-002 — Scoring Prototype
 
-**Scope:** Build the deterministic 0–100 scoring engine.
+**Scope:** Build the deterministic 0–100 scoring engine. Advisory output only. No auto-apply.
 
 **Files expected:**
 - `job_scanner/scorer.py`
-- `job_scanner/scoring_rules.json`
+- `job_scanner/scoring_rules.json` (machine-readable weights)
 - `job_scanner/tests/test_scorer.py`
 
 **Validation:**
-- Score components match design doc: core skill match (30), entry-level realism (20), degree/matura tolerance (15), portfolio relevance (15), remote/Poland-friendly (10), customer-service bridge value (10).
-- Penalties applied: senior-only (-30), mandatory degree (-25), mandatory matura (-20), live trading (-50), heavy production ML (-20), financial advisor licence (-50).
+- Score components match `scoring_rules.md`: role fit (25), skill fit (25), project evidence fit (20), bridge-role fit (10), location/work mode fit (10), language/seniority/education fit (10).
+- Penalties applied correctly: senior-only (−30), mandatory degree (−25), mandatory matura (−20), live trading (−50), financial advisor licence (−50), commercial IT required (−20).
 - Deterministic: same input → same score on repeat runs.
 - Role tags: `apply_now` (65–100), `stretch` (45–64), `learn_first` (25–44), `skip` (0–24).
-- Bridge-role detection: any 2 of the 6 criteria → bridge_role_detected=True.
+- Bridge-role detection: any 2 of 6 criteria → `bridge_role_detected=true`.
 - Skill gap detection: blocking vs. improvement gaps.
 
 **Acceptance criteria:**
-- `test_scorer.py` includes at least 10 test cases.
+- `test_scorer.py` has at least 10 test cases.
 - Senior-only job scores < 40.
 - Portfolio-relevant junior FinTech job without degree requirement scores > 60.
 - Jobs requiring live trading execution score < 25 (skip tag).
 - Score is unchanged on 5 consecutive calls with same input.
 
+**Safety constraints:**
+- No auto-apply path introduced.
+- No fabricated claims in any scoring output.
+- No real personal data in test fixtures.
+
 **Status:** Not started
 
 ---
 
-## JOBSCAN-004 — OpenAI Prompt / System Design
+## JOBSCAN-003 — No-Fabrication and Seniority Mismatch Tests
 
-**Scope:** Design and implement the LLM extraction and explanation prompts. No auto-apply, no fabrication guardrails enforced by prompt design and post-processing.
+**Scope:** Build a dedicated test suite asserting that no generated output fabricates qualifications or misrepresents seniority. Tests run without live API calls (mock responses).
 
 **Files expected:**
-- `job_scanner/extractor.py`
+- `job_scanner/tests/test_no_fabrication.py`
+- `job_scanner/tests/test_seniority_mismatch.py`
+
+**Validation:**
+- `test_no_fabrication.py` asserts generated cover letter drafts do NOT contain:
+  - "commercial IT experience" (fabricated)
+  - "I have a degree" or "university" (fabricated)
+  - "matura completed" (fabricated)
+  - "live trading" as a candidate capability
+  - MellyTrade described as "commercial product" or "live system"
+- `test_no_fabrication.py` asserts every cover letter draft contains `DRAFT — requires human review and approval before sending`.
+- `test_seniority_mismatch.py` asserts senior-only jobs (3+ years IT required) are tagged `skip` or `learn_first`.
+- All tests use mocked API responses — no real OpenAI calls in CI.
+
+**Acceptance criteria:**
+- All tests pass with 0 failures on mocked data.
+- Tests are runnable without OPENAI_API_KEY set (mock only).
+
+**Status:** Not started
+
+---
+
+## JOBSCAN-004 — Weekly Report Template
+
+**Scope:** Create a weekly review report template. Advisory output only. No auto-apply.
+
+**Files expected:**
+- `job_scanner/weekly_report_template.md`
+
+**Validation:**
+- Template groups results into: apply-now, stretch, skip sections.
+- Template includes: most common skill gaps, next portfolio task, suggested course, bridge-role highlights.
+- Template includes advisory disclaimer at top.
+- Template includes manual action checklist (not automated).
+
+**Acceptance criteria:**
+- Template is human-readable without running any code.
+- All sections clearly marked advisory only.
+- No auto-apply or auto-submit language.
+
+**Status:** Not started
+
+---
+
+## JOBSCAN-005 — Optional Local CLI
+
+**Scope:** Build a local CLI for pasting job descriptions and getting scores. Advisory output only. No HTTP POST to job boards. No auto-apply.
+
+**Files expected:**
+- `job_scanner/cli.py` (Click-based)
+- `job_scanner/extractor.py` (OpenAI Responses API extraction)
 - `job_scanner/prompts/extraction_system_prompt.txt`
 - `job_scanner/prompts/scoring_explanation_prompt.txt`
 - `job_scanner/prompts/cover_letter_draft_prompt.txt`
-- `job_scanner/tests/test_no_fabrication.py`
+- `.env.example` (API key template — real key never committed)
 
 **Validation:**
-- Extraction system prompt instructs LLM to return JSON only, not add information not in the job text, and flag red_flags.
-- Cover letter prompt includes MANDATORY instructions: DRAFT watermark, no degree claim, no commercial IT claim, no MellyTrade as commercial claim.
-- `test_no_fabrication.py` asserts that generated cover letters contain `DRAFT — requires human review`.
-- `test_no_fabrication.py` asserts generated cover letters do not contain phrases like "commercial experience", "I have a degree", "university", "matura completed".
-- Extractor falls back gracefully if `OPENAI_API_KEY` is not set (raises `ConfigError`, not crashes).
-
-**Safety constraints:**
-- No real job description from a real company in committed test fixtures.
-- No personal name/email/address in committed test fixtures.
-- API key loaded from `.env` via `python-dotenv`.
+- CLI command: `python job_scanner/cli.py ingest --paste` → prompts for job text → returns score + tag + gap list.
+- Extractor falls back gracefully if `OPENAI_API_KEY` is not set.
+- No auto-apply path in CLI.
+- Cover letter draft generation requires explicit user confirmation step before saving.
+- All prompts include no-fabrication MANDATORY instructions.
 
 **Acceptance criteria:**
-- `test_no_fabrication.py` passes with 0 failures (can mock the API response in tests).
-- Extraction prompt produces valid JSON that passes `job_schema.py` validation.
-- Cover letter prompt output always includes the DRAFT watermark.
+- CLI runnable locally without live API key using mock adapter.
+- No HTTP POST to any job board from CLI.
+- Cover letter saved only after explicit APPROVE input.
 
 **Status:** Not started
 
 ---
 
-## JOBSCAN-005 — Source Adapters (Mock / No Scraping)
+## JOBSCAN-006 — Optional Dashboard Integration
 
-**Scope:** Build controlled job discovery adapters. Phase 1: manual paste + mock adapter. Phase 2: RSS feed adapter (no scraping).
+**Scope:** Optional: integrate Job Scanner Agent read-only view into the MellyTrade React dashboard. Deferred — implement after CLI is stable.
 
-**Files expected:**
-- `job_scanner/sources/__init__.py`
-- `job_scanner/sources/manual_adapter.py` (paste raw text → job record)
-- `job_scanner/sources/mock_adapter.py` (returns 5 synthetic jobs for testing)
-- `job_scanner/sources/rss_adapter.py` (reads RSS feeds, normalises to job schema)
-- `job_scanner/tests/test_sources.py`
+**Files expected (future):**
+- `frontend/src/pages/JobScanner.tsx` (read-only job list)
+- `frontend/src/components/ScoreBadge.tsx`
+- `frontend/src/components/DraftWarning.tsx`
+- FastAPI GET routes for job scanner data
 
-**Validation:**
-- Manual adapter: paste text → returns normalised job dict.
-- Mock adapter: returns 5 deterministic synthetic job records for offline testing.
-- RSS adapter: reads a real RSS URL (with rate limiting), normalises 3 fields (title, company, link) minimum.
-- RSS adapter: respects `RATE_LIMIT_SECONDS` env var.
-- RSS adapter: stores source URL and retrieved_at timestamp.
-- All adapters produce output that passes `job_schema.py` validation.
+**Validation (future):**
+- Dashboard is GET-only for job data.
+- No apply button or form submission to external services.
+- All draft content clearly marked `DRAFT — review before use`.
+- MellyTrade safety posture (autotrade=false, dry_run=true, live_orders_blocked=true) is not affected.
 
 **Safety constraints:**
-- RSS adapter must not POST to any URL.
-- RSS adapter only fetches permitted public feeds.
-- No browser automation (Playwright, Selenium) in any adapter.
+- No order buttons, no trade execution, no broker connection UX added.
+- Dashboard integration must not modify any existing trading safety settings.
 
-**Acceptance criteria:**
-- `test_sources.py` passes with 0 failures using mock adapter (no real network in CI).
-- Manual adapter is usable from CLI without any API key.
-- RSS adapter is gated behind an explicit `--source rss` flag.
-
-**Status:** Not started
-
----
-
-## JOBSCAN-006 — Report Output
-
-**Scope:** Build the daily and weekly report generators.
-
-**Files expected:**
-- `job_scanner/report.py`
-- `job_scanner/templates/daily_report.md.jinja`
-- `job_scanner/templates/weekly_report.md.jinja`
-- `job_scanner/tests/test_report.py`
-
-**Validation:**
-- Daily report: top 5 jobs by score, score + tag per job, action list (apply / learn / skip).
-- Weekly report: skill gap trends across saved jobs, top bridge roles, highest-priority portfolio task, suggested course from roadmap, application status summary.
-- Reports render to clean markdown.
-- Reports do not contain any fabricated content or claims.
-- Report output is saved to `output/reports/YYYY-MM-DD_daily.md` or `YYYY-WW_weekly.md`.
-
-**Safety constraints:**
-- Reports marked as advisory only at the top.
-- No report includes auto-generated application submission confirmation.
-
-**Acceptance criteria:**
-- `test_report.py` passes with 0 failures using mock job data.
-- Daily report renders in under 2 seconds.
-- Report files are saved and retrievable without overwriting previous reports.
-
-**Status:** Not started
-
----
-
-## JOBSCAN-007 — Dashboard MVP
-
-**Scope:** Build a minimal Streamlit or FastAPI + React read-only dashboard for saved jobs and reports.
-
-**Files expected (Streamlit MVP):**
-- `job_scanner/dashboard.py` (Streamlit)
-- or `job_scanner_api/app/routes/jobs.py` (FastAPI GET routes)
-
-**Validation (Streamlit):**
-- Displays saved jobs from SQLite with score badges and tags.
-- Clicking a job shows: score breakdown, gap list, recruiter notes.
-- Draft cover letter is visible but clearly marked `DRAFT — review before use`.
-- No apply button, no POST to external sites.
-- No delete or edit actions on job records (read-only view only).
-
-**Safety constraints:**
-- Dashboard is read-only.
-- No form submission to job boards.
-- No storage of API keys in dashboard code.
-
-**Acceptance criteria:**
-- Dashboard launches with `streamlit run dashboard.py` or `uvicorn`.
-- All displayed drafts show DRAFT watermark.
-- No HTTP POST to external services from the dashboard.
-
-**Status:** Not started
-
----
-
-## JOBSCAN-008 — Tailored CV / Cover Letter Draft Generator
-
-**Scope:** Build the per-job CV bullet and cover letter draft generator with mandatory human approval step before saving final draft.
-
-**Files expected:**
-- `job_scanner/strategy.py`
-- `job_scanner/tests/test_strategy.py`
-- `job_scanner/tests/test_no_fabrication.py` (extended)
-
-**Validation:**
-- `generate_cv_bullets(job, profile)` returns bullets based only on verified portfolio evidence.
-- `generate_cover_letter_draft(job, profile)` returns draft with DRAFT watermark on first line.
-- Human approval step: CLI prompts `Review draft and type APPROVE to save, or SKIP to discard`.
-- Saved drafts go to `output/drafts/YYYY-MM-DD_{job_id}_cover_letter.md`.
-- All drafts include: target role, candidate name, DRAFT watermark, revision date.
-
-**Safety constraints:**
-- No draft is automatically sent or submitted.
-- `test_no_fabrication.py` asserts the following are NEVER present in generated output:
-  - "I have completed my matura"
-  - "I have a university degree"
-  - "years of commercial IT experience"
-  - "my production system"
-  - MellyTrade described as "commercial product" or "live system"
-
-**Acceptance criteria:**
-- `test_no_fabrication.py` passes with 0 failures (mocked API responses).
-- Human approval step cannot be bypassed programmatically.
-- Drafts are saved only after explicit APPROVE input.
-
-**Status:** Not started
-
----
-
-## JOBSCAN-009 — Weekly Opportunity Review
-
-**Scope:** Build the weekly review workflow: aggregate skill gaps, rank bridge roles, generate weekly action plan.
-
-**Files expected:**
-- `job_scanner/weekly_review.py`
-- `job_scanner/tests/test_weekly_review.py`
-- `output/reports/` (output directory, gitignored)
-
-**Validation:**
-- Aggregates skill gaps across all jobs saved in the past 7 days.
-- Ranks top 3 most common missing skills.
-- Maps each gap to a course from `docs/career/course_certification_roadmap.md`.
-- Maps each gap to a portfolio task (new feature to add to MellyTrade or Job Scanner Agent).
-- Generates 7-day action plan: apply (N jobs), learn (skill), build (portfolio task), document.
-- Weekly review is saved to `output/reports/YYYY-WW_weekly_review.md`.
-
-**Safety constraints:**
-- No auto-apply actions in the action plan.
-- Action plan items are advisory.
-- Output includes advisory disclaimer.
-
-**Acceptance criteria:**
-- `test_weekly_review.py` passes with 0 failures using synthetic job data.
-- Action plan contains at least one apply, one learn, and one build item.
-- Weekly report is saved without overwriting previous weeks.
-
-**Status:** Not started
-
----
-
-## Implementation Order
-
-```
-Now (this session):    CAREER-001, CAREER-002, CAREER-003, CAREER-004 — Complete
-Next sprint:           JOBSCAN-001 (candidate profile + README)
-                       JOBSCAN-002 (schema + SQLite)
-Then:                  JOBSCAN-003 (scoring engine)
-                       JOBSCAN-004 (LLM prompts + no-fabrication tests)
-Then:                  JOBSCAN-005 (source adapters)
-                       JOBSCAN-006 (report output)
-Then:                  JOBSCAN-007 (dashboard MVP)
-                       JOBSCAN-008 (cover letter generator)
-                       JOBSCAN-009 (weekly review)
-```
+**Status:** Deferred (implement after JOBSCAN-005 is stable)
 
 ---
 
