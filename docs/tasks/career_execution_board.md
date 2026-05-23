@@ -22,6 +22,7 @@
 | P1-03 | GitHub profile README | GitHub profile repo README outside this repo | 60 min | P0-06 | Profile shows target roles, MellyTrade, AI-assisted workflow and contact placeholder | User / Claude Code |
 | P1-04 | Course/certification roadmap final review | `docs/career/course_certification_roadmap.md` | 45 min | Target role selection | Roadmap is reduced to high-ROI courses only; no certificate collecting | Codex |
 | P1-05 | First application templates | Private `_career/applications/` folder | 60-90 min | Final CV | Templates for support, AI automation, fintech support and junior backend | User / Codex |
+| CAREER-005 | GitHub + LinkedIn profile copy pack | `docs/career/github_profile_readme_draft.md`, `docs/career/github_pinned_repo_descriptions.md`, `docs/career/linkedin_copy_pack.md` | 60-90 min | P0-06, P1-03 | Public-safe copy exists with placeholders, no private contact data, no overclaims, and read-only/dry-run project positioning | Codex |
 
 ## P2 - Job Scanner MVP
 
