@@ -669,3 +669,93 @@ const _signalQualityFallback: SignalQualitySummaryResponse = {
 export function getSignalQualitySummary(): Promise<SignalQualitySummaryResponse> {
   return getJson("/signals/quality/summary", _signalQualityFallback);
 }
+
+// ── PORT-001 Portfolio Risk Summary ─────────────────────────────────────────
+
+export type PortfolioRiskExposure = {
+  total_positions: number;
+  open_positions: number;
+  total_notional: number;
+  gross_exposure_pct: number;
+  net_exposure_pct: number;
+  cash_buffer_pct: number;
+};
+
+export type PortfolioRiskLimits = {
+  max_risk_per_trade_pct: number;
+  max_portfolio_risk_pct: number;
+  risk_used_pct: number;
+  remaining_risk_capacity_pct: number;
+  max_open_positions: number;
+};
+
+export type PortfolioRiskPosture = {
+  label: "safe_fallback" | "read_only" | "risk_blocked" | "dry_run_only";
+  status: "ok" | "degraded";
+  broker_execution_allowed: false;
+  live_orders_blocked: true;
+  risk_allowed: false;
+  requires_human_review: true;
+};
+
+export type PortfolioRiskSummaryResponse = {
+  status: "ok" | "degraded";
+  mode: "read_only";
+  read_only: true;
+  dry_run: true;
+  live_orders_blocked: true;
+  execution_mode: "dry_run_only";
+  requires_human_review: true;
+  risk_allowed: false;
+  source: "portfolio_risk_summary";
+  exposure: PortfolioRiskExposure;
+  limits: PortfolioRiskLimits;
+  posture: PortfolioRiskPosture;
+  notes: string[];
+  updated_at: string;
+};
+
+const _portfolioRiskSummaryFallback: PortfolioRiskSummaryResponse = {
+  status: "degraded",
+  mode: "read_only",
+  read_only: true,
+  dry_run: true,
+  live_orders_blocked: true,
+  execution_mode: "dry_run_only",
+  requires_human_review: true,
+  risk_allowed: false,
+  source: "portfolio_risk_summary",
+  exposure: {
+    total_positions: 0,
+    open_positions: 0,
+    total_notional: 0,
+    gross_exposure_pct: 0,
+    net_exposure_pct: 0,
+    cash_buffer_pct: 100,
+  },
+  limits: {
+    max_risk_per_trade_pct: 1.0,
+    max_portfolio_risk_pct: 5.0,
+    risk_used_pct: 0,
+    remaining_risk_capacity_pct: 5.0,
+    max_open_positions: 5,
+  },
+  posture: {
+    label: "safe_fallback",
+    status: "degraded",
+    broker_execution_allowed: false,
+    live_orders_blocked: true,
+    risk_allowed: false,
+    requires_human_review: true,
+  },
+  notes: [
+    "Read-only portfolio risk summary.",
+    "No order execution or broker routing is available.",
+    "Risk capacity is advisory and dry-run only.",
+  ],
+  updated_at: new Date().toISOString(),
+};
+
+export function getPortfolioRiskSummary(): Promise<PortfolioRiskSummaryResponse> {
+  return getJson("/portfolio/risk-summary", _portfolioRiskSummaryFallback);
+}
