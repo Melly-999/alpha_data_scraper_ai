@@ -2343,3 +2343,159 @@
     transition: none;
   }
 }
+
+/* ── PORT-001 Portfolio Risk Summary Card ──────────────────────────────────── */
+
+.portfolio-risk-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--terminal-border);
+  background: var(--terminal-surface-dim);
+  padding: 12px;
+  min-width: 0;
+}
+
+.portfolio-risk-card--degraded {
+  border-color: var(--terminal-danger-border);
+  background: var(--terminal-danger-bg);
+}
+
+.portfolio-risk-card--loading {
+  opacity: 0.6;
+}
+
+.portfolio-risk-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--terminal-amber);
+  font: 700 11px var(--terminal-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.portfolio-risk-card__loading-text {
+  margin: 0;
+  color: var(--terminal-muted);
+  font: 11px var(--terminal-mono);
+}
+
+.portfolio-risk-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.portfolio-risk-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--terminal-border);
+  padding: 4px 7px;
+  font: 700 9px var(--terminal-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.portfolio-risk-chip--safe {
+  border-color: var(--terminal-safe-border);
+  background: var(--terminal-safe-bg);
+  color: var(--terminal-green);
+}
+
+.portfolio-risk-chip--warn {
+  border-color: var(--terminal-danger-border);
+  background: var(--terminal-danger-bg);
+  color: var(--terminal-red);
+}
+
+.portfolio-risk-chip--info {
+  border-color: var(--terminal-accent-border);
+  background: var(--terminal-accent-bg);
+  color: var(--terminal-amber);
+}
+
+.portfolio-risk-card__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+
+.portfolio-risk-card__metric {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--terminal-border);
+  background: var(--terminal-surface-dim);
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+.portfolio-risk-card__label {
+  color: var(--terminal-muted);
+  font: 10px var(--terminal-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.portfolio-risk-card__value {
+  font: 700 12px var(--terminal-mono);
+  color: var(--terminal-text);
+}
+
+.portfolio-risk-card__value--posture {
+  color: var(--terminal-amber);
+}
+
+.portfolio-risk-card__value--dry-run {
+  color: var(--terminal-amber);
+}
+
+/* Risk capacity bar */
+.portfolio-risk-card__bar-wrap {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.portfolio-risk-card__bar-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.portfolio-risk-card__bar-value {
+  color: var(--terminal-amber);
+  font: 700 11px var(--terminal-mono);
+}
+
+.portfolio-risk-card__bar {
+  height: 4px;
+  background: var(--terminal-border);
+  overflow: hidden;
+}
+
+.portfolio-risk-card__bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--terminal-green);
+  transition: width 0.4s ease;
+}
+
+.portfolio-risk-card__note {
+  margin: 0;
+  color: var(--terminal-muted);
+  font: 10px var(--terminal-mono);
+  border-left: 2px solid var(--terminal-border-soft);
+  padding-left: 8px;
+  overflow-wrap: anywhere;
+}
+
+/* Reduced-motion: skip capacity bar transition */
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-risk-card__bar-fill {
+    transition: none;
+  }
+}

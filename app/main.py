@@ -24,6 +24,7 @@ from app.api.routes import (
     orders,
     paper_sandbox,
     paper_tickets,
+    portfolio,
     positions,
     risk,
     safety,
@@ -143,6 +144,7 @@ for router in (
     supabase.router,
     paper_tickets.router,
     paper_sandbox.router,
+    portfolio.router,
 ):
     app.include_router(router, prefix="/api")
 
