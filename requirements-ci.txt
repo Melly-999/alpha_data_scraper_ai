@@ -3,6 +3,7 @@ pandas
 matplotlib
 scikit-learn
 requests
+anthropic>=0.50.0
 beautifulsoup4
 yfinance
 httpx
