@@ -60,6 +60,45 @@ Demo docs:
 - [docs/demo/demo_004_github_readme_section.md](docs/demo/demo_004_github_readme_section.md)
 - [docs/demo/demo_004_cv_portfolio_bullets.md](docs/demo/demo_004_cv_portfolio_bullets.md)
 - [DEMO-008 — Post-SIG-004B Signal Quality UI Evidence](docs/demo/demo_008_post_sig_004b_signal_quality_evidence.md)
+- [iPad PWA Paper Run Preview Showcase](docs/showcase/ipad_pwa_paper_run_preview.md)
+
+## iPad PWA Paper Run Preview Showcase
+
+MellyTrade now includes a read-only Paper Run Preview flow that runs safely as an iPad-installable PWA.
+
+What it demonstrates:
+
+- paper trading preview
+- risk-gated decision preview
+- deterministic run preview
+- GET-only backend endpoints
+- frontend Paper Run Preview panel
+- iPad / Safari PWA support
+- safety-first design
+
+Safe architecture:
+
+- frontend calls `GET /paper/run/preview`
+- no `POST` / `PUT` / `PATCH` / `DELETE` trading mutation endpoints
+- no broker execution
+- no MT5 / IBKR account data
+- no real orders
+- backend stayed loopback-only during iPad LAN smoke
+- frontend LAN / Tailscale access was used only for local testing
+
+Safety posture:
+
+- `READ ONLY`
+- `DRY RUN`
+- `LIVE ORDERS BLOCKED`
+- `HUMAN REVIEW REQUIRED`
+- `EXECUTION OFF`
+
+Evidence:
+
+- [docs/demo/demo_009_ipad_pwa_smoke_evidence.md](docs/demo/demo_009_ipad_pwa_smoke_evidence.md)
+- [docs/demo/demo_009_ipad_pwa_screenshot_checklist.md](docs/demo/demo_009_ipad_pwa_screenshot_checklist.md)
+- [docs/devices/ipad_pwa_smoke_test.md](docs/devices/ipad_pwa_smoke_test.md)
 
 Local verification:
 
