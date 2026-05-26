@@ -204,6 +204,37 @@ class PaperPosition(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# PaperDecisionPreviewOut
+# ---------------------------------------------------------------------------
+
+
+class PaperDecisionPreviewOut(BaseModel):
+    """Response schema for GET /paper/decision/preview.
+
+    All six safety flags are Literal constants — they can never be
+    overridden by callers or the service layer.  ``preview_order`` is
+    ``None`` when the decision is blocked; it is a full ``PaperOrder``
+    object (paper-scoped, no broker fields) when the decision is allowed.
+
+    No fills, positions, runs, DB writes, or broker calls are made.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    allowed: bool
+    reason: str
+
+    paper_only: Literal[True] = True
+    dry_run: Literal[True] = True
+    read_only: Literal[True] = True
+    live_orders_blocked: Literal[True] = True
+    requires_human_review: Literal[True] = True
+    execution_enabled: Literal[False] = False
+
+    preview_order: PaperOrder | None = None
+
+
+# ---------------------------------------------------------------------------
 # PaperRun
 # ---------------------------------------------------------------------------
 
