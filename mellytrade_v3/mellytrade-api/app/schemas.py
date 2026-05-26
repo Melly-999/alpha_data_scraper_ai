@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -182,3 +182,36 @@ class RejectedOut(BaseModel):
     status: Literal["rejected"] = "rejected"
     reason: str
     detail: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# System audit event feed (Direction B — read-only observability)
+# Separate from the Sprint-1C AuditEvent/AuditOut which tracks signal decisions.
+# ---------------------------------------------------------------------------
+
+SystemAuditSeverity = Literal["info", "success", "warning", "error", "safety"]
+
+
+class SystemAuditEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    timestamp: datetime
+    type: str
+    severity: SystemAuditSeverity
+    source: str
+    message: str
+    read_only: bool = True
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SystemAuditFeedResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    dry_run: bool = True
+    auto_trade: bool = False
+    read_only: bool = True
+    degraded: bool
+    fallback: bool
+    generated_at: datetime
+    events: List[SystemAuditEvent]

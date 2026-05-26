@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Generator, List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.exception_handlers import http_exception_handler
@@ -12,6 +12,7 @@ from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
 from . import alerts, audit, cf_hub, reports
+from .audit_service import AuditEventService
 from .auth import require_api_key
 from .config import Settings, get_settings
 from .database import SessionLocal, init_db
@@ -28,6 +29,7 @@ from .schemas import (
     SignalIn,
     SignalOut,
     SignalSummaryOut,
+    SystemAuditFeedResponse,
 )
 
 log = logging.getLogger(__name__)
@@ -71,12 +73,29 @@ async def rejected_http_exception_handler(
     return await http_exception_handler(request, exc)
 
 
-def get_db() -> Session:  # pragma: no cover - trivial
+def get_db() -> Generator[Session, None, None]:  # pragma: no cover - trivial
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+
+_audit_service = AuditEventService()
+
+
+@app.get("/events", response_model=SystemAuditFeedResponse)
+def list_events(
+    limit: int = Query(default=50, ge=1, le=200),
+    settings: Settings = Depends(get_settings),
+) -> SystemAuditFeedResponse:
+    """Read-only audit/event feed.
+
+    Returns a structured list of system audit events showing backend state,
+    safety posture, and service status. GET-only. No mutation, no broker
+    connection, no order placement, no secrets.
+    """
+    return _audit_service.list_events(settings, limit=limit)
 
 
 def _live_orders_blocked(settings: Settings) -> bool:
