@@ -6,6 +6,7 @@ import { ResourceState } from "../components/shared/ResourceState";
 import { Table } from "../components/shared/Table";
 import { useAlerts } from "../hooks/useAlerts";
 import { useBrokerAccount, useBrokerHealth } from "../hooks/useBroker";
+import { useWatchlist } from "../hooks/useWatchlist";
 import { useDashboard } from "../hooks/useDashboard";
 import { useHealth } from "../hooks/useHealth";
 import { useLocalChecklist } from "../hooks/useLocalChecklist";
@@ -20,7 +21,7 @@ import type {
   TradingPlanItem,
   WatchlistItem,
 } from "../types/api";
-import type { AlertItem } from "../types/melly";
+import type { AlertItem, WatchlistItem as MellyWatchlistItem } from "../types/melly";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -395,6 +396,39 @@ function AlertSummaryRows({ alerts }: { alerts: AlertItem[] }) {
   );
 }
 
+function WatchlistSummaryRows({ rows }: { rows: MellyWatchlistItem[] }) {
+  if (rows.length === 0) {
+    return <div className="state">No watchlist rows available.</div>;
+  }
+  return (
+    <div className="dashboard-row-list">
+      {rows.slice(0, 5).map((row) => (
+        <div key={row.symbol} className="dashboard-row">
+          <div>
+            <div className="dashboard-symbol">{row.symbol}</div>
+            <div className="dashboard-muted">
+              {row.last_price.toFixed(row.last_price > 10 ? 2 : 5)} /{" "}
+              {row.change_pct > 0 ? "+" : ""}
+              {row.change_pct.toFixed(2)}%
+            </div>
+          </div>
+          <Badge
+            tone={
+              row.risk_state === "blocked"
+                ? "red"
+                : row.risk_state === "watch"
+                  ? "amber"
+                  : "green"
+            }
+          >
+            {row.risk_state}
+          </Badge>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function DashboardPage() {
   const { data, loading, error } = useDashboard();
   const health = useHealth();
@@ -405,6 +439,7 @@ export function DashboardPage() {
   const terminalEvents = useTerminalEvents(20);
   const tradingPlan = useTradingPlan();
   const alerts = useAlerts({ limit: 20 });
+  const watchlist = useWatchlist();
 
   if (loading && !data) {
     return <div className="state">Loading dashboard...</div>;
@@ -490,9 +525,19 @@ export function DashboardPage() {
 
         <Card
           title="Watchlist"
-          right={<Badge tone="blue">{data.watchlist.length} symbols</Badge>}
+          right={
+            <Badge tone={watchlist.error ? "amber" : "blue"}>
+              {watchlist.data?.length ?? data.watchlist.length} symbols
+            </Badge>
+          }
         >
-          <WatchlistRows rows={data.watchlist} />
+          {watchlist.error && !watchlist.data ? (
+            <div className="state error">{watchlist.error}</div>
+          ) : watchlist.data ? (
+            <WatchlistSummaryRows rows={watchlist.data} />
+          ) : (
+            <WatchlistRows rows={data.watchlist} />
+          )}
         </Card>
 
         <Card title="Broker">

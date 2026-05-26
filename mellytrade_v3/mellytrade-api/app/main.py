@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
-from . import alerts, audit, cf_hub, reports
+from . import alerts, audit, cf_hub, reports, watchlist
 from .audit_service import AuditEventService
 from .auth import require_api_key
 from .config import Settings, get_settings
@@ -30,6 +30,7 @@ from .schemas import (
     SignalOut,
     SignalSummaryOut,
     SystemAuditFeedResponse,
+    WatchlistItemOut,
 )
 
 log = logging.getLogger(__name__)
@@ -273,6 +274,16 @@ def list_alerts(
 ) -> List[AlertOut]:
     """Read-only alert center feed derived from existing safety state."""
     return alerts.collect_alerts(db=db, settings=settings, limit=limit)
+
+
+@app.get("/watchlist", response_model=List[WatchlistItemOut])
+def read_watchlist(
+    settings: Settings = Depends(get_settings),
+    db: Session = Depends(get_db),
+    _: str = Depends(require_api_key),
+) -> List[WatchlistItemOut]:
+    """Read-only watchlist feed with safe fallback market rows."""
+    return watchlist.collect_watchlist(db=db, settings=settings)
 
 
 @app.get("/reports/daily", response_model=ReportOut)

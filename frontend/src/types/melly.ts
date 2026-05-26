@@ -141,3 +141,20 @@ export interface AuditQuery {
 export interface AlertsQuery {
   limit?: number;
 }
+
+export type WatchlistRiskState = "clear" | "blocked" | "watch";
+
+export interface WatchlistItem {
+  symbol: string;
+  name: string;
+  asset_class: string;
+  last_price: number;
+  change_pct: number;
+  signal_status: string;
+  signal_confidence: number | null;
+  alert_count: number;
+  risk_state: WatchlistRiskState;
+  source: string;
+  generated_at: string;
+  read_only: boolean;
+}

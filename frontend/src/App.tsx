@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { TerminalPage } from "./pages/TerminalPage";
+import { WatchlistPage } from "./pages/WatchlistPage";
 
 export default function App() {
   return (
@@ -10,7 +11,7 @@ export default function App() {
       <Route path="/dashboard" element={<Navigate to="/terminal" replace />} />
       <Route path="/markets" element={<TerminalPage />} />
       <Route path="/global" element={<Navigate to="/markets" replace />} />
-      <Route path="/watchlist" element={<TerminalPage />} />
+      <Route path="/watchlist" element={<WatchlistPage />} />
       <Route path="/workspace" element={<TerminalPage />} />
       <Route path="/signals" element={<TerminalPage />} />
       <Route path="/risk" element={<TerminalPage />} />
