@@ -11,6 +11,7 @@ import type {
 } from "../../lib/scannerPreviewApi";
 import type { TerminalShellData } from "./TerminalShell";
 import { PaperSandboxActivityRail } from "./PaperSandboxActivityRail";
+import { PaperRunPreviewPanel } from "./PaperRunPreviewPanel";
 import { PaperSandboxPreviewPanel } from "./PaperSandboxPreviewPanel";
 import { PaperTicketPreviewPanel } from "./PaperTicketPreviewPanel";
 import { SignalQualitySummaryCard } from "./SignalQualitySummaryCard";
@@ -385,6 +386,8 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
             <PaperSandboxActivityRail />
 
             <PaperTicketPreviewPanel />
+
+            <PaperRunPreviewPanel />
 
             <div className="workspace-selected-task">
               <div className="workspace-section-head">
