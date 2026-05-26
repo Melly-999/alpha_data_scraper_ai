@@ -170,9 +170,7 @@ class PaperPosition(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     # --- paper-scoped identity ---
-    paper_position_id: str = Field(
-        default_factory=lambda: _new_id("pp"), min_length=1
-    )
+    paper_position_id: str = Field(default_factory=lambda: _new_id("pp"), min_length=1)
     paper_order_ref: str = Field(..., min_length=1)
     opened_at: datetime = Field(default_factory=_now_utc)
     closed_at: datetime | None = None
@@ -275,3 +273,35 @@ class PaperRun(BaseModel):
     live_orders_blocked: Literal[True] = True
     requires_human_review: Literal[True] = True
     execution_enabled: Literal[False] = False
+
+
+# ---------------------------------------------------------------------------
+# PaperRunPreviewOut
+# ---------------------------------------------------------------------------
+
+
+class PaperRunPreviewOut(BaseModel):
+    """Response schema for GET /paper/run/preview.
+
+    Exercises the full simulation pipeline (risk check → order → fill →
+    position → run) without any database write, broker call, or live
+    execution.  ``paper_run`` is ``None`` when the decision is blocked;
+    it is a full ``PaperRun`` object when the decision is allowed.
+
+    All six safety flags are Literal constants — they can never be
+    overridden by callers or the service layer.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    allowed: bool
+    reason: str
+
+    paper_only: Literal[True] = True
+    dry_run: Literal[True] = True
+    read_only: Literal[True] = True
+    live_orders_blocked: Literal[True] = True
+    requires_human_review: Literal[True] = True
+    execution_enabled: Literal[False] = False
+
+    paper_run: PaperRun | None = None

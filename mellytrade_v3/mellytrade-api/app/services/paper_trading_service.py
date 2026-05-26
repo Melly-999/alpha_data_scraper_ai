@@ -20,6 +20,8 @@ Safety invariants (identical to schemas_paper_trading.py):
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from hashlib import sha256
 from typing import Literal
 
 from app.schemas_paper_trading import (
@@ -28,7 +30,6 @@ from app.schemas_paper_trading import (
     PaperPosition,
     PaperRun,
 )
-
 
 # ---------------------------------------------------------------------------
 # Risk decision
@@ -47,6 +48,20 @@ class RiskDecision:
     allowed: bool
     reason: str
     execution_enabled: Literal[False] = False
+
+
+# ---------------------------------------------------------------------------
+# Deterministic preview helpers
+# ---------------------------------------------------------------------------
+
+
+_PREVIEW_TIMESTAMP = datetime(2024, 1, 1, tzinfo=timezone.utc)
+
+
+def _stable_id(prefix: str, *parts: object) -> str:
+    payload = "|".join(str(part) for part in parts)
+    digest = sha256(payload.encode("utf-8")).hexdigest()[:12]
+    return f"{prefix}_{digest}"
 
 
 # ---------------------------------------------------------------------------
@@ -212,4 +227,73 @@ def create_paper_run(
         open_positions_count=open_count,
         closed_positions_count=closed_count,
         max_risk_pct=max_risk_pct,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Preview stabilization
+# ---------------------------------------------------------------------------
+
+
+def stabilize_paper_run_preview(
+    order: PaperOrder,
+    fill: PaperFill,
+    position: PaperPosition,
+    run: PaperRun,
+) -> PaperRun:
+    """Return a deterministic paper-run preview without changing public APIs.
+
+    The core service functions stay unchanged.  This helper rewrites the
+    generated paper-scoped identifiers and timestamps to fixed preview
+    values so GET /paper/run/preview remains deterministic for the same
+    inputs while preserving the original PAPER-M4-002 contracts.
+    """
+    preview_order_id = _stable_id(
+        "po",
+        order.symbol,
+        order.direction,
+        order.quantity,
+        order.entry_price,
+        order.stop_loss,
+        order.take_profit,
+        order.max_risk_pct,
+    )
+    preview_fill_id = _stable_id("pf", preview_order_id, order.symbol)
+    preview_position_id = _stable_id("pp", preview_order_id, preview_fill_id)
+    preview_run_id = _stable_id(
+        "run",
+        run.max_risk_pct,
+        (preview_order_id,),
+        (preview_fill_id,),
+        (preview_position_id,),
+    )
+
+    preview_order = order.model_copy(
+        update={
+            "paper_order_id": preview_order_id,
+            "created_at": _PREVIEW_TIMESTAMP,
+        }
+    )
+    preview_fill = fill.model_copy(
+        update={
+            "paper_fill_id": preview_fill_id,
+            "paper_order_ref": preview_order_id,
+            "fill_timestamp": _PREVIEW_TIMESTAMP,
+        }
+    )
+    preview_position = position.model_copy(
+        update={
+            "paper_position_id": preview_position_id,
+            "paper_order_ref": preview_order_id,
+            "opened_at": _PREVIEW_TIMESTAMP,
+        }
+    )
+    return run.model_copy(
+        update={
+            "run_id": preview_run_id,
+            "started_at": _PREVIEW_TIMESTAMP,
+            "orders": [preview_order],
+            "fills": [preview_fill],
+            "positions": [preview_position],
+        }
     )
