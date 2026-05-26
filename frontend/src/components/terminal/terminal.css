@@ -1858,6 +1858,12 @@
   transition: border-color 0.15s;
 }
 
+.paper-run-preview-form select.paper-run-preview-input {
+  font-size: 16px;
+  line-height: 1.4;
+  min-height: 44px;
+}
+
 .paper-run-preview-input:focus {
   border-color: var(--terminal-amber);
 }
