@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import {
   getScannerPreview,
@@ -238,9 +239,10 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                 <span className="workspace-active-badge">ACTIVE</span>
                 <span className="workspace-model-badge">MT-STRATEGIST-V3</span>
               </div>
-              <div className="workspace-mini-pill" aria-live="polite">
-                Selected: {selectedAgent.name}
-              </div>
+              <Link to="/terminal/paper-run-preview" className="workspace-mini-pill">
+                Open Preview
+              </Link>
+              <div className="workspace-mini-pill">Selected: {selectedAgent.name}</div>
             </div>
 
             <div className="workspace-chip-row">

@@ -5,6 +5,7 @@ const navItems = [
   { label: "Global Markets", path: "/markets", icon: "M" },
   { label: "Watchlist", path: "/watchlist", icon: "W" },
   { label: "AI Workspace", path: "/workspace", icon: "AI" },
+  { label: "Paper Run Preview", path: "/terminal/paper-run-preview", icon: "PR" },
   { label: "Signals Feed", path: "/signals", icon: "S" },
   { label: "Risk Manager", path: "/risk", icon: "R" },
   { label: "Brokers", path: "/brokers", icon: "B" },
@@ -38,7 +39,7 @@ export function LeftSidebar() {
           <strong>Denied</strong>
         </div>
         <div>
-          <span>Live trade</span>
+          <span>Live orders</span>
           <strong>Blocked</strong>
         </div>
         <div>

@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { TerminalPage } from "./pages/TerminalPage";
+import { PaperRunPreviewPage } from "./pages/PaperRunPreviewPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
 
 export default function App() {
@@ -8,6 +9,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/terminal" replace />} />
       <Route path="/terminal" element={<TerminalPage />} />
+      <Route path="/terminal/paper-run-preview" element={<PaperRunPreviewPage />} />
       <Route path="/dashboard" element={<Navigate to="/terminal" replace />} />
       <Route path="/markets" element={<TerminalPage />} />
       <Route path="/global" element={<Navigate to="/markets" replace />} />
