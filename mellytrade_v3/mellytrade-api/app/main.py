@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Dict, Generator, List, Literal, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.exception_handlers import http_exception_handler
@@ -12,6 +12,8 @@ from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
 from . import alerts, audit, cf_hub, reports, watchlist
+from .schemas_paper_trading import PaperDecisionPreviewOut
+from .services.paper_trading_service import create_paper_order, evaluate_paper_risk
 from .audit_service import AuditEventService
 from .auth import require_api_key
 from .config import Settings, get_settings
@@ -370,3 +372,54 @@ def _signal_payload(record: SignalRecord) -> Dict[str, Any]:
         "source": record.source,
         "status": record.status,
     }
+
+
+@app.get(
+    "/paper/decision/preview",
+    response_model=PaperDecisionPreviewOut,
+    tags=["paper"],
+)
+def paper_decision_preview(
+    symbol: str = Query(..., min_length=1, max_length=16),
+    side: Literal["BUY", "SELL"] = Query(...),
+    quantity: float = Query(..., gt=0),
+    entry_price: float = Query(..., gt=0),
+    stop_loss: float = Query(..., gt=0),
+    take_profit: float = Query(..., gt=0),
+    confidence: float = Query(..., ge=0, le=100),
+    max_risk_pct: float = Query(..., gt=0),
+    _: str = Depends(require_api_key),
+) -> PaperDecisionPreviewOut:
+    """Read-only paper trading decision preview.  GET only.
+
+    Evaluates risk gates (max risk ≤ 1%, SL/TP required, BUY/SELL geometry)
+    against the supplied parameters and returns a structured allow/block
+    decision.  When allowed, a preview PaperOrder is included for inspection.
+
+    No fills, positions, or runs are created.  No broker call.  No database
+    write.  No live order execution.  All safety flags are fixed invariants.
+    """
+    decision = evaluate_paper_risk(
+        direction=side,
+        entry_price=entry_price,
+        stop_loss=stop_loss,
+        take_profit=take_profit,
+        max_risk_pct=max_risk_pct,
+    )
+    preview_order = None
+    if decision.allowed:
+        preview_order = create_paper_order(
+            symbol=symbol,
+            side=side,
+            quantity=quantity,
+            entry_price=entry_price,
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+            confidence=confidence,
+            max_risk_pct=max_risk_pct,
+        )
+    return PaperDecisionPreviewOut(
+        allowed=decision.allowed,
+        reason=decision.reason,
+        preview_order=preview_order,
+    )
