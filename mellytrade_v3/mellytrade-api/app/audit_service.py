@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from .config import Settings
-from .schemas import AuditEvent, AuditEventFeedResponse, AuditSeverity
+from .schemas import SystemAuditEvent, SystemAuditFeedResponse, SystemAuditSeverity
 
 _LIMIT_MAX = 200
 _LIMIT_MIN = 1
@@ -13,12 +13,12 @@ _LIMIT_MIN = 1
 def _event(
     event_id: str,
     event_type: str,
-    severity: AuditSeverity,
+    severity: SystemAuditSeverity,
     source: str,
     message: str,
     metadata: dict[str, Any] | None = None,
-) -> AuditEvent:
-    return AuditEvent(
+) -> SystemAuditEvent:
+    return SystemAuditEvent(
         id=event_id,
         timestamp=datetime.now(timezone.utc),
         type=event_type,
@@ -37,7 +37,7 @@ class AuditEventService:
     no order placement, no secrets. Every event has read_only=True.
     """
 
-    def _safety_events(self, settings: Settings) -> list[AuditEvent]:
+    def _safety_events(self, settings: Settings) -> list[SystemAuditEvent]:
         return [
             _event(
                 "evt-safety-001",
@@ -73,7 +73,7 @@ class AuditEventService:
             ),
         ]
 
-    def _startup_events(self) -> list[AuditEvent]:
+    def _startup_events(self) -> list[SystemAuditEvent]:
         return [
             _event(
                 "evt-startup-001",
@@ -92,7 +92,7 @@ class AuditEventService:
             ),
         ]
 
-    def _broker_events(self) -> list[AuditEvent]:
+    def _broker_events(self) -> list[SystemAuditEvent]:
         return [
             _event(
                 "evt-broker-001",
@@ -115,7 +115,7 @@ class AuditEventService:
             ),
         ]
 
-    def _mt5_events(self) -> list[AuditEvent]:
+    def _mt5_events(self) -> list[SystemAuditEvent]:
         return [
             _event(
                 "evt-mt5-001",
@@ -128,7 +128,7 @@ class AuditEventService:
             ),
         ]
 
-    def _smoke_events(self) -> list[AuditEvent]:
+    def _smoke_events(self) -> list[SystemAuditEvent]:
         return [
             _event(
                 "evt-smoke-001",
@@ -154,9 +154,9 @@ class AuditEventService:
         settings: Settings,
         *,
         limit: int = 50,
-    ) -> AuditEventFeedResponse:
+    ) -> SystemAuditFeedResponse:
         bounded = max(_LIMIT_MIN, min(limit, _LIMIT_MAX))
-        events: list[AuditEvent] = []
+        events: list[SystemAuditEvent] = []
         events.extend(self._safety_events(settings))
         events.extend(self._startup_events())
         events.extend(self._broker_events())
@@ -166,7 +166,7 @@ class AuditEventService:
         degraded = any(e.severity in {"warning", "error"} for e in events)
         fallback = any(e.type == "fallback_data_active" for e in events)
 
-        return AuditEventFeedResponse(
+        return SystemAuditFeedResponse(
             dry_run=True,
             auto_trade=False,
             read_only=True,

@@ -65,6 +65,10 @@ TypeScript validation using tsc (no emit).
 ### Pages
 
 - **Dashboard**: System overview (legacy, from Sprint 1A)
+- **Watchlist**: Read-only market watchlist
+  - Safe fallback market rows enriched by signal status and alert counts
+  - Risk-state badges for clear/watch/blocked rows
+  - Loading/error/empty states with no action buttons
 - **Signals** (new): Signal feed from both legacy API and mellytrade-api
   - Signal review table: symbol, direction, confidence, MTF alignment, risk status
   - Signal detail drawer: entry/SL/TP levels, reasoning, risk gates
@@ -123,6 +127,8 @@ All hooks poll their endpoints and cache results:
   - Returns: `{ data: AlertItem[], loading, error }`
 - **`useDailyReport()` / `useWeeklyReport()`**: Poll `/reports/daily` and `/reports/weekly` every 30s
   - Returns: `{ data: ReportItem, loading, error }`
+- **`useWatchlist()`**: Polls `/watchlist` every 15s
+  - Returns: `{ data: WatchlistItem[], loading, error }`
 
 ### API Client
 
@@ -138,6 +144,7 @@ offline/unreachable, missing API key, and rejected API key states.
 - `getAlerts(query)` → AlertItem[]
 - `getDailyReport()` → ReportItem
 - `getWeeklyReport()` → ReportItem
+- `getWatchlist()` → WatchlistItem[]
 
 Authentication is configured with `VITE_MELLY_API_KEY` for protected read-only
 endpoints. `GET /health` can still load without a key.

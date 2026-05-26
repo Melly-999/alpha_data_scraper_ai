@@ -2,7 +2,7 @@
 
 Read-only REST API for the MellyTrade Direction B trader dashboard. It exposes
 health, signal history, audit events, risk configuration, alert-center context,
-and read-only reports for decision support.
+watchlist state, and read-only reports for decision support.
 
 ## Safety Notice
 
@@ -206,6 +206,33 @@ Response:
     "metadata": {
       "dry_run": true
     }
+  }
+]
+```
+
+### `GET /watchlist`
+
+Read-only watchlist feed for dashboard scanning. Rows use safe fallback market
+data when no live market source is available and are enriched with persisted
+signal status plus derived alert counts.
+
+Response:
+
+```json
+[
+  {
+    "symbol": "EURUSD",
+    "name": "Euro / US Dollar",
+    "asset_class": "forex",
+    "last_price": 1.085,
+    "change_pct": 0.12,
+    "signal_status": "none",
+    "signal_confidence": null,
+    "alert_count": 0,
+    "risk_state": "clear",
+    "source": "fallback",
+    "generated_at": "2026-04-30T10:15:00Z",
+    "read_only": true
   }
 ]
 ```

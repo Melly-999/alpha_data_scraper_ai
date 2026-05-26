@@ -19,6 +19,7 @@ import type {
   RiskConfig,
   SignalSummary,
   SignalsQuery,
+  WatchlistItem,
 } from "../types/melly";
 
 const RAW_BASE = (import.meta.env.VITE_MELLY_API_BASE_URL ??
@@ -180,4 +181,8 @@ export function getDailyReport(): Promise<ReportItem> {
 
 export function getWeeklyReport(): Promise<ReportItem> {
   return mellyGet<ReportItem>("/reports/weekly");
+}
+
+export function getWatchlist(): Promise<WatchlistItem[]> {
+  return mellyGet<WatchlistItem[]>("/watchlist");
 }
