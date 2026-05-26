@@ -20,6 +20,7 @@ import { IBKRBrokerCard } from "./IBKRBrokerCard";
 import { LeftSidebar } from "./LeftSidebar";
 import { LoadingScreen } from "./LoadingScreen";
 import { MarketOverviewGrid } from "./MarketOverviewGrid";
+import { PaperRunPreviewPanel } from "./PaperRunPreviewPanel";
 import { NewsRail } from "./NewsRail";
 import { RiskGuardrailsCard } from "./RiskGuardrailsCard";
 import { SupabaseStatusCard } from "./SupabaseStatusCard";
@@ -53,6 +54,7 @@ type TerminalShellProps = {
 function viewFromPath(pathname: string) {
   if (pathname.includes("markets")) return "markets";
   if (pathname.includes("watchlist")) return "watchlist";
+  if (pathname.includes("paper-run-preview")) return "paper-preview";
   if (pathname.includes("workspace")) return "workspace";
   if (pathname.includes("signals")) return "signals";
   if (pathname.includes("risk")) return "risk";
@@ -215,6 +217,7 @@ export function TerminalShell({
           {view === "markets" ? <MarketOverviewGrid markets={data.markets} /> : null}
           {view === "watchlist" ? <WatchlistPanel markets={watchlist} /> : null}
           {view === "workspace" ? <AIWorkspacePanel data={data} /> : null}
+          {view === "paper-preview" ? <PaperRunPreviewPanel /> : null}
           {view === "signals" ? (
             <>
               <SignalThesisPanel signals={data.signals} />
