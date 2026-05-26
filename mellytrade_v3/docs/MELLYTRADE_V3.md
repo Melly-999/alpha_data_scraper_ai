@@ -20,7 +20,11 @@
 | `MT5_SYMBOL`, `MT5_TIMEFRAME`, `MT5_BARS` | no | `EURUSD`, `M5`, `300` | MT5 bridge fetch params |
 | `MT5_SL_PIPS`, `MT5_TP_PIPS`, `MT5_RISK_PERCENT` | no | `20`, `40`, `0.5` | MT5 bridge trade sizing |
 | `MELLYTRADE_API_URL` | no | `http://127.0.0.1:8000` | Where the bridge POSTs `/signal` |
-| `CLOUDMCP_TOKEN` | no | — | Shared token for `.mcp.json` / `.cursor/mcp.json` |
+| `CLOUDMCP_ENABLED` | no | `false` | Master switch for the CloudMCP.run unified router |
+| `CLOUDMCP_ROUTER_URL` | when enabled | — | `https://<user-id>.router.cloudmcp.run/mcp`; URL-based auth, no token |
+| `CLOUDMCP_DEFAULT_SERVERS` | no | — | Comma-separated logical servers (e.g. `files,web,memory`) |
+| `CLOUDMCP_TIMEOUT_SECONDS` | no | `30` | Router request timeout |
+| `CLOUDMCP_CONNECT_TIMEOUT_SECONDS` | no | `5` | Router connect timeout |
 
 ### Worker secrets
 
