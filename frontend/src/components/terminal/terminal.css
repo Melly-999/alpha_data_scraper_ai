@@ -1549,9 +1549,8 @@
     grid-template-columns: 1fr;
   }
 
-  /* MOBILE-PWA-001: touch targets + iOS Safari zoom prevention */
+  /* MOBILE-PWA-001: touch targets (font-size promoted to base in MOBILE-PWA-004) */
   .paper-run-preview-input {
-    font-size: 16px;
     padding: 9px 10px;
   }
 
@@ -1851,7 +1850,8 @@
   background: var(--terminal-surface);
   border: 1px solid var(--terminal-border);
   color: var(--terminal-text);
-  font: 12px var(--terminal-mono);
+  /* MOBILE-PWA-004: 16px base prevents iOS Safari zoom on focus at all viewport widths */
+  font: 16px var(--terminal-mono);
   padding: 5px 8px;
   border-radius: 3px;
   outline: none;
