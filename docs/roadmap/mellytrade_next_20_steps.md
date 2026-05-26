@@ -14,6 +14,36 @@ landed on `main` or are explicitly noted as parallelizable.
 
 ---
 
+## ⚡ Milestone Reorder Notice — 2026-05-26
+
+**The milestone order has been updated.** Paper Trading / Simulation (Milestone 4)
+is now fast-tracked to execute **before** Demo / Portfolio / Recruiter Pack
+(Milestone 3). This decision was made because working paper trading simulation
+provides greater engineering portfolio value and makes the demo walkthrough
+more compelling.
+
+**New execution order:**
+
+| Step | Milestone | Status |
+|---|---|---|
+| ✅ 1 | Terminal V1 read-only (Direction B) | Merged |
+| ✅ 2 | Audit feed (QUEUE-016/017) + Watchlist (QUEUE-018/019) | In progress — PR #195 open |
+| **⚡ 3** | **Milestone 4 FAST TRACK — Paper Trading / Simulation** | **Next — after QUEUE-019** |
+| 4 | Milestone 3 — Demo / Portfolio / Recruiter Pack | Deferred |
+| 5 | Stale PR cleanup | As needed |
+| 6 | Phase B/C Broker abstraction + IBKR (Steps 8–15 below) | Deferred |
+| 7 | Phase D Dashboard polish (Steps 16–20 below) | Deferred |
+
+**Paper Trading Fast Track plan:**
+See [`docs/roadmap/milestone_4_paper_trading_fasttrack.md`](milestone_4_paper_trading_fasttrack.md)
+for the full task breakdown (PAPER-M4-001 through PAPER-M4-008), acceptance
+criteria, and recommended execution order.
+
+The 20-step plan below (Phases A–E) remains valid for context and for work
+that begins **after** Milestone 4 completes.
+
+---
+
 ## Phase A — Immediate next steps (this week)
 
 ### Step 1 — Merge / close PR #56
@@ -350,16 +380,19 @@ is clear about what is **not** in scope for this sprint:
 
 ---
 
-## Cadence
+## Cadence (updated 2026-05-26)
 
-| Phase | Calendar | Step IDs |
+| Phase | Priority | Step IDs / Reference |
 |---|---|---|
-| A — Immediate | This week | 1 → 7 |
-| B — Broker foundation | Next 1–2 weeks | 8 → 13 |
-| C — Adapters | Weeks 2–3 | 14 → 15 |
-| D — Dashboard + risk | Weeks 3–4 | 16 → 20 |
-| E — Watchlist / news / backtest / alerts / quant research | Weeks 5+ | (out of scope here) |
+| Queue finish | **Current** | QUEUE-018/019 watchlist salvage |
+| M4 Fast Track | **Next** | [milestone_4_paper_trading_fasttrack.md](milestone_4_paper_trading_fasttrack.md) — PAPER-M4-001 → 008 |
+| M3 Demo / Portfolio | After M4 | `docs/tasks/career_execution_board.md` |
+| A — Immediate | Deferred | Steps 1 → 7 |
+| B — Broker foundation | Deferred | Steps 8 → 13 |
+| C — Adapters | Deferred | Steps 14 → 15 |
+| D — Dashboard + risk | Deferred | Steps 16 → 20 |
+| E — Watchlist / news / backtest / alerts / quant research | Long-term | (out of scope here) |
 
 ---
 
-**Last updated**: 2026-05-09
+**Last updated**: 2026-05-26
