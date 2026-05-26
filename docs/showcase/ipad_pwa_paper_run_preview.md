@@ -51,6 +51,7 @@ This showcase is meant for portfolio and README use. It presents the operator da
 - [DEMO-009 smoke evidence](../demo/demo_009_ipad_pwa_smoke_evidence.md)
 - [DEMO-009 screenshot checklist](../demo/demo_009_ipad_pwa_screenshot_checklist.md)
 - [iPad PWA smoke test guide](../devices/ipad_pwa_smoke_test.md)
+- [DEMO-010 portfolio / LinkedIn copy pack](../demo/demo_010_portfolio_linkedin_copy_pack.md)
 
 ## Portfolio-Safe Wording
 

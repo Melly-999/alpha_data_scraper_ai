@@ -61,6 +61,7 @@ Demo docs:
 - [docs/demo/demo_004_cv_portfolio_bullets.md](docs/demo/demo_004_cv_portfolio_bullets.md)
 - [DEMO-008 — Post-SIG-004B Signal Quality UI Evidence](docs/demo/demo_008_post_sig_004b_signal_quality_evidence.md)
 - [iPad PWA Paper Run Preview Showcase](docs/showcase/ipad_pwa_paper_run_preview.md)
+- [DEMO-010 — Portfolio / LinkedIn copy pack](docs/demo/demo_010_portfolio_linkedin_copy_pack.md)
 
 ## iPad PWA Paper Run Preview Showcase
 
