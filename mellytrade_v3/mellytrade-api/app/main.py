@@ -12,8 +12,15 @@ from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
 from . import alerts, audit, cf_hub, reports, watchlist
-from .schemas_paper_trading import PaperDecisionPreviewOut
-from .services.paper_trading_service import create_paper_order, evaluate_paper_risk
+from .schemas_paper_trading import PaperDecisionPreviewOut, PaperRunPreviewOut
+from .services.paper_trading_service import (
+    create_paper_fill,
+    create_paper_order,
+    create_paper_run,
+    evaluate_paper_risk,
+    open_paper_position,
+    stabilize_paper_run_preview,
+)
 from .audit_service import AuditEventService
 from .auth import require_api_key
 from .config import Settings, get_settings
@@ -423,3 +430,57 @@ def paper_decision_preview(
         reason=decision.reason,
         preview_order=preview_order,
     )
+
+
+@app.get(
+    "/paper/run/preview",
+    response_model=PaperRunPreviewOut,
+    tags=["paper"],
+)
+def paper_run_preview(
+    symbol: str = Query(..., min_length=1, max_length=16),
+    side: Literal["BUY", "SELL"] = Query(...),
+    quantity: float = Query(..., gt=0),
+    entry_price: float = Query(..., gt=0),
+    stop_loss: float = Query(..., gt=0),
+    take_profit: float = Query(..., gt=0),
+    confidence: float = Query(..., ge=0, le=100),
+    max_risk_pct: float = Query(..., gt=0),
+    _: str = Depends(require_api_key),
+) -> PaperRunPreviewOut:
+    """Read-only paper trading run preview.  GET only.
+
+    Exercises the full simulation pipeline: risk check → order → fill →
+    position → run.  When the decision is blocked, returns allowed=False
+    with an empty paper_run.  When allowed, returns a fully populated
+    PaperRun for inspection.
+
+    No fills, positions, or runs are persisted.  No broker call.  No
+    database write.  No live order execution.  All safety flags are fixed
+    invariants.
+    """
+    decision = evaluate_paper_risk(
+        direction=side,
+        entry_price=entry_price,
+        stop_loss=stop_loss,
+        take_profit=take_profit,
+        max_risk_pct=max_risk_pct,
+    )
+    if not decision.allowed:
+        return PaperRunPreviewOut(allowed=False, reason=decision.reason, paper_run=None)
+
+    order = create_paper_order(
+        symbol=symbol,
+        side=side,
+        quantity=quantity,
+        entry_price=entry_price,
+        stop_loss=stop_loss,
+        take_profit=take_profit,
+        confidence=confidence,
+        max_risk_pct=max_risk_pct,
+    )
+    fill = create_paper_fill(order)
+    position = open_paper_position(order, fill)
+    run = create_paper_run([order], [fill], [position], max_risk_pct=max_risk_pct)
+    run = stabilize_paper_run_preview(order, fill, position, run)
+    return PaperRunPreviewOut(allowed=True, reason=decision.reason, paper_run=run)
