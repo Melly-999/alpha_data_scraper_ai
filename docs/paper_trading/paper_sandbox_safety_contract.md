@@ -167,6 +167,26 @@ contract update to this document.
 | **PAPER-002C** | AI Workspace paper sandbox activity/audit rail | ✅ Merged | Frontend read-only audit trail panel consuming PAPER-002B. Display only — no order/buy/sell/execute buttons. |
 | **PAPER-003** | Local demo script: draft → sandbox preview → history/audit → UI | 🔄 Current | `scripts/demo_paper_sandbox_local.ps1`, `docs/demo/paper_sandbox_local_demo.md`, `scripts/demo_paper_sandbox_readonly_smoke.ps1`, `docs/demo/paper_sandbox_readonly_smoke.md`. Local smoke/demo only — no broker execution, no backend route added, no frontend trading control. |
 
+### PAPER-M4 series — Milestone 4 Fast Track (signal → paper decision pipeline)
+
+**⚡ Fast-tracked as next major milestone (2026-05-26).** Builds on the
+foundation above to deliver the full signal-to-decision simulation pipeline.
+Every task in this series is governed by the same safety contract rules above.
+
+See [`docs/roadmap/milestone_4_paper_trading_fasttrack.md`](../roadmap/milestone_4_paper_trading_fasttrack.md)
+for full task breakdown, acceptance criteria, and execution order.
+
+| ID | Title | Status | Notes |
+|---|---|---|---|
+| **PAPER-M4-001** | Paper trading domain model | ⬜ Planned | `PaperOrder`, `PaperPosition`, `PaperFill`, `PaperRun` schemas. No broker types. Safety flags locked with `Literal`. |
+| **PAPER-M4-002** | Risk-gated paper decision service | ⬜ Planned | Signal → `PaperDecision`. Enforces max_risk ≤ 1%, SL/TP required, confidence ≥ 70. Zero broker imports. |
+| **PAPER-M4-003** | Paper run audit trail | ⬜ Planned | Bridge: every decision emits `paper_decision_accepted` / `paper_decision_rejected` to `GET /events` and history. |
+| **PAPER-M4-004** | GET-only paper state endpoints | ⬜ Planned | `GET /api/paper/positions`, `/orders`, `/run/summary`. No mutation routes. |
+| **PAPER-M4-005** | Paper sandbox UI panel | ⬜ Planned | Read-only positions/orders/risk panel. Safety badges. No order buttons. |
+| **PAPER-M4-006** | Scenario replay | ⬜ Planned | Deterministic replay of 3+ signal scenarios through risk + decision logic. Audit events emitted. |
+| **PAPER-M4-007** | Exportable paper trading report | ⬜ Planned | `GET /api/paper/report?format=markdown|json`. Safety posture block required. |
+| **PAPER-M4-008** | End-to-end local demo script | ⬜ Planned | Full smoke: signals → risk → paper decision → audit → UI. Safety config assertion is step 1. |
+
 ### Supporting infrastructure
 
 | ID | Title | Status |

@@ -1,87 +1,74 @@
 # Current PR Stack — MellyTrade
 
-**Version:** 1.0.0
-**Last updated:** 2026-05-09
-**Branch this doc lives on:** `docs/full-auto-ai-dev-system`
+**Version:** 2.0.0
+**Last updated:** 2026-05-26
+**Current `main` baseline:** `d506175` (PR #194 — feat(audit): read-only system audit event feed)
 
 ---
 
-## Merged PRs (Baseline)
+## Merged PRs (up to date)
 
-| PR | Title | Branch | Status | Notes |
-|---|---|---|---|---|
-| #55 | Terminal V1 read-only UX, audit feed, safety tests, daily plan, demo docs | `main` | **Merged** | Terminal V1 milestone |
-| #54 | feat: add read-only dry-run journal export | `main` | Merged | |
-| #53 | feat: add read-only dry-run journal filters | `main` | Merged | |
-
-**PR #55 is the current `main` baseline.** All new branches must start from this commit (`e758f18`).
+| PR | Title | Status | Notes |
+|---|---|---|---|
+| #194 | feat(audit): add read-only system audit event feed | **Merged** (`d506175`) | QUEUE-016/017: `GET /events`, `AuditEventService`, `SystemAuditEvent` schema. PR #40 closed as superseded. |
+| #193 | feat(config): migrate CloudMCP to unified-router model | Merged | |
+| #192 | feat(ai): add safe Anthropic SDK client foundation | Merged | |
+| #191 | docs(roadmap): salvage implementation roadmap and AI dev workflow | Merged | |
+| #190 | docs(v9): salvage production hardening materials | Merged | |
+| Earlier | Terminal V1 read-only UX, paper sandbox, demo docs, risk, alerts | Merged | Foundation on main |
 
 ---
 
 ## Open PRs
 
-### PR #56 — Terminal V1 Screenshots / Demo Assets
+### PR #195 — feat(watchlist): add read-only watchlist v1
 
 | Field | Value |
 |---|---|
-| **PR Number** | #56 |
-| **Title** | Terminal V1 screenshots and demo assets |
-| **Branch** | Unknown (demo/screenshots branch) |
-| **Status** | Open |
-| **Type** | Assets / docs |
-| **Safety** | Safe — assets only; no source code changes expected |
-| **Actions** | May not trigger Actions if they're disabled at account level |
-| **Review guidance** | Verify: only image/asset files changed; no source code; no config |
-| **Merge order** | Can merge independently; does not block other PRs |
-| **Recommended action** | Human review → merge when ready |
+| **PR Number** | #195 |
+| **Title** | feat(watchlist): add read-only watchlist v1 |
+| **Branch** | `feat/direction-b-watchlist-v1-salvage` |
+| **Commit** | `7e12f04` |
+| **Status** | Draft — awaiting QUEUE-019 review |
+| **Type** | Backend + frontend feature (read-only watchlist) |
+| **Scope** | `GET /watchlist`, `watchlist.py`, `WatchlistItemOut`, `WatchlistPage.tsx`, `useWatchlist.ts`, + audit_service.py bug fix from PR #194 |
+| **Safety** | Safe — GET-only, `read_only=True` on every row, no execution routes |
+| **Review guidance** | Verify: GET only, no POST/PUT/PATCH/DELETE, `require_api_key`, audit_service.py uses System* names |
+| **Merge order** | Can merge now; unblocks M4 Fast Track |
+| **Recommended action** | QUEUE-019 — human review → squash-merge → close PR #46 as superseded |
 
 ---
 
-### PR #57 — SAFE-001: GET /api/safety/status Central Contract
+## Planned next PRs (M4 Fast Track)
 
-| Field | Value |
-|---|---|
-| **PR Number** | #57 |
-| **Title** | SAFE-001: GET /api/safety/status central contract |
-| **Branch** | Unknown (safety-contract branch) |
-| **Status** | Open |
-| **Type** | Backend feature (read-only endpoint) |
-| **Safety** | Safe — adds a GET endpoint for safety status display; no execution |
-| **Actions** | May not trigger if Actions disabled |
-| **Review guidance** | Verify: endpoint is GET only; returns `dry_run`, `autotrade`, `live_orders_blocked` fields; no POST/PUT added; no side effects |
-| **Merge order** | Merge before Phase 1 validation scripts (TEST-003 depends on this endpoint) |
-| **Recommended action** | Human review → merge before Phase 1 begins |
-
----
-
-## Docs-Planning Branches
-
-| Branch | Purpose | Status |
+| Branch | Task | Status |
 |---|---|---|
-| `docs/implementation-roadmap-and-workflow` | Implementation roadmap and AI dev workflow | Exists locally; 1 commit ahead of main |
-| `docs/full-auto-ai-dev-system` | This sprint — Safe Full Auto AI Dev System plan | **Current branch** |
+| `feat/paper-m4-001-domain-model` | PAPER-M4-001 paper trading domain model | ⬜ After QUEUE-019 |
+| `feat/paper-m4-002-decision-service` | PAPER-M4-002 risk-gated paper decision service | ⬜ After M4-001 |
+| `feat/paper-m4-003-audit-trail` | PAPER-M4-003 paper run audit trail | ⬜ After M4-002 |
+| `feat/paper-m4-004-state-endpoints` | PAPER-M4-004 GET-only paper state endpoints | ⬜ After M4-003 |
+| `feat/paper-m4-005-ui-panel` | PAPER-M4-005 paper sandbox UI panel | ⬜ After M4-004 |
+| `feat/paper-m4-006-scenario-replay` | PAPER-M4-006 scenario replay | ⬜ After M4-004 |
+| `feat/paper-m4-007-paper-report` | PAPER-M4-007 exportable paper report | ⬜ After M4-006 |
+| `docs/paper-m4-008-e2e-demo` | PAPER-M4-008 end-to-end demo script | ⬜ After M4-007 |
+| `docs/m4-paper-trading-fast-track-roadmap` | M4 roadmap docs (this sprint) | Open — current |
 
-### Branch Notes
-
-- `docs/implementation-roadmap-and-workflow` was created before this sprint. It has one doc commit. It should be reviewed and either:
-  - Opened as a PR and merged into main (if content is ready), or
-  - Kept as a reference and superseded by this sprint's docs
-- **Do not rebase either branch** — they are docs-only; no conflicts expected with main
-- Both branches should branch from `main` (from PR #55 merge commit)
+See [`docs/roadmap/milestone_4_paper_trading_fasttrack.md`](milestone_4_paper_trading_fasttrack.md)
+for the full M4 task breakdown, safety constraints, and acceptance criteria.
 
 ---
 
 ## Recommended Merge Order
 
 ```
-main (e758f18 — PR #55 baseline)
- ├── PR #56 (Terminal V1 assets) — merge independently
- ├── PR #57 (SAFE-001 contract)  — merge before Phase 1
- ├── docs/implementation-roadmap-and-workflow — review and merge
- └── docs/full-auto-ai-dev-system (this sprint) — open PR after human review
+main (d506175 — PR #194 baseline)
+ └── PR #195 (watchlist v1) — QUEUE-019 review → squash-merge
+      └── docs/m4-paper-trading-fast-track-roadmap — merge after PR #195
+           └── feat/paper-m4-001-domain-model — first M4 implementation task
 ```
 
-**Stacking rule:** These PRs are all independent from each other. None of them need to stack. Open each as a standalone PR against `main`.
+**Stacking rule:** M4 implementation PRs are sequential and should not stack.
+Each merges to main independently. M4-002 branches from main after M4-001 merges.
 
 ---
 
@@ -90,10 +77,9 @@ main (e758f18 — PR #55 baseline)
 | Branch Purpose | Should branch from |
 |---|---|
 | New docs | `main` |
-| Phase 1 validation scripts | `main` (after PR #57 merged) |
-| Phase 2 MCP skeleton | `main` (after Phase 1 merged) |
-| Phase 3 planning | `main` (after Phase 0 merged) |
+| PAPER-M4-001 and each subsequent M4 task | `main` (after previous M4 PR merged) |
 | Hotfix | `main` |
+| Phase B broker abstraction | `main` (after M4 completes) |
 
 ---
 
@@ -101,46 +87,27 @@ main (e758f18 — PR #55 baseline)
 
 | Scenario | Reason |
 |---|---|
-| PR #56 on top of PR #57 | Independent; no dependency |
-| MCP skeleton on top of docs | MCP should wait for Phase 0 review |
-| Broker code on top of MCP skeleton | Must wait for Phase 6 in roadmap |
+| M4-002 on top of M4-001 | Sequential dependency — wait for M4-001 to merge |
+| Broker code before M4 | M4 is the current priority |
 | Any execution code on any branch | Never — safety rule |
+| Live-trading routes on any branch | Never — safety rule |
 
 ---
 
-## GitHub Actions Blocker
+## GitHub Actions
 
-**Current status:** GitHub Actions may be disabled at account/org level.
+**Current status:** Actions may be disabled at account/org level.
 
-**Impact:**
-- PRs do not show CI check results
-- Merges can proceed without automated test gates (human must manually run tests)
-- `docs/` PRs are low risk even without CI
-
-**Mitigation for Phase 1+:**
-- Use local validation scripts (TEST-001, TEST-003, TEST-004, OBS-002) to substitute for CI
-- Include validation output in PR description when Actions are disabled
-- Note in each PR: "Actions disabled at account level; local validation passed — [output]"
-
-**Resolution path:**
-1. Check GitHub → Settings → Actions → General
-2. If disabled at org level: re-enable for this repo specifically
-3. If re-enabled: verify workflows in `.github/workflows/` are still valid
-4. Do NOT modify workflow YAML to work around the block
+**Mitigation:** Use local validation scripts before every PR:
+```powershell
+py -3.11 scripts/validate_safety_config.py
+py -3.11 -m pytest tests/app/ -q
+```
+Include validation output in the PR description.
 
 ---
 
-## Next Recommended PRs
-
-After this docs sprint is committed:
-
-| Recommended PR | Branch | Priority |
-|---|---|---|
-| Merge `docs/full-auto-ai-dev-system` | This branch | High — completes Phase 0 |
-| Merge `docs/implementation-roadmap-and-workflow` | Existing branch | Medium |
-| Merge PR #56 assets | Existing PR | Medium |
-| Merge PR #57 SAFE-001 contract | Existing PR | High — unblocks Phase 1 |
-| Phase 1 validation scripts | `test/local-validation-suite` | After PR #57 merges |
+## PR Safety Checklist (Pre-Merge)
 
 ---
 
