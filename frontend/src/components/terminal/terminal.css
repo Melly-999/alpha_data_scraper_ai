@@ -1548,6 +1548,19 @@
   .workspace-grid {
     grid-template-columns: 1fr;
   }
+
+  /* MOBILE-PWA-001: touch targets + iOS Safari zoom prevention */
+  .paper-run-preview-input {
+    font-size: 16px;
+    padding: 9px 10px;
+  }
+
+  .paper-run-preview-button {
+    min-height: 44px;
+    padding: 10px 18px;
+    display: inline-flex;
+    align-items: center;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1592,6 +1605,15 @@
   .workspace-task-grid,
   .thesis-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* MOBILE-PWA-001: single-column form + wrapping action row at narrow widths */
+  .paper-run-preview-form {
+    grid-template-columns: 1fr;
+  }
+
+  .paper-run-preview-actions {
+    flex-wrap: wrap;
   }
 }
 
