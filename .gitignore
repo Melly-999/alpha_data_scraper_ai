@@ -77,6 +77,10 @@ build/
 frontend/vite.config.d.ts
 frontend/vite.config.js
 
+# Playwright output — local only, never commit
+frontend/test-results/
+frontend/playwright-report/
+
 # Local secrets
 .env.*
 !.env.example
