@@ -1794,6 +1794,225 @@
   padding-top: 8px;
 }
 
+/* PAPER-M4-005 — Paper Run Preview Panel */
+
+.paper-run-preview-panel {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.paper-run-preview-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 6px 12px;
+}
+
+.paper-run-preview-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.paper-run-preview-field label {
+  font: 10px var(--terminal-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--terminal-muted);
+}
+
+.paper-run-preview-input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: var(--terminal-surface);
+  border: 1px solid var(--terminal-border);
+  color: var(--terminal-text);
+  font: 12px var(--terminal-mono);
+  padding: 5px 8px;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.paper-run-preview-input:focus {
+  border-color: var(--terminal-amber);
+}
+
+.paper-run-preview-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.paper-run-preview-button {
+  background: var(--terminal-accent-bg);
+  border: 1px solid var(--terminal-accent-border);
+  color: var(--terminal-amber);
+  font: 11px/1 var(--terminal-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 7px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.paper-run-preview-button:hover:not(:disabled) {
+  background: var(--terminal-accent-bg-md);
+  border-color: var(--terminal-amber);
+}
+
+.paper-run-preview-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.paper-run-preview-note {
+  font: 11px var(--terminal-mono);
+  color: var(--terminal-muted);
+}
+
+.paper-run-preview-loading,
+.paper-run-preview-empty {
+  padding: 8px 0;
+  font: 11px var(--terminal-mono);
+  color: var(--terminal-muted);
+  line-height: 1.45;
+}
+
+.paper-run-preview-error {
+  border: 1px solid var(--terminal-border);
+  background: var(--terminal-surface-dim);
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.paper-run-preview-error strong {
+  font-size: 12px;
+  color: var(--terminal-warn, #f0a040);
+}
+
+.paper-run-preview-error p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--terminal-muted);
+}
+
+.paper-run-preview-output {
+  display: grid;
+  gap: 10px;
+}
+
+.paper-run-preview-decision {
+  display: grid;
+  gap: 8px;
+}
+
+.paper-run-preview-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font: 700 11px var(--terminal-mono);
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.paper-run-preview-pill.is-allowed {
+  color: var(--terminal-safe-border);
+  background: rgba(13, 77, 57, 0.18);
+  border: 1px solid rgba(13, 77, 57, 0.35);
+}
+
+.paper-run-preview-pill.is-blocked {
+  color: var(--terminal-amber);
+  background: rgba(127, 90, 0, 0.14);
+  border: 1px solid rgba(127, 90, 0, 0.3);
+}
+
+.paper-run-preview-reason {
+  margin: 0;
+  font: 12px var(--terminal-mono);
+  color: var(--terminal-text);
+  line-height: 1.45;
+}
+
+.paper-run-preview-contract {
+  border-top: 1px solid var(--terminal-border);
+  padding-top: 8px;
+  display: grid;
+  gap: 2px;
+}
+
+.paper-run-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 4px 12px;
+}
+
+.paper-run-preview-cards {
+  display: grid;
+  gap: 10px;
+}
+
+.paper-run-preview-card {
+  border: 1px solid var(--terminal-border);
+  background: var(--terminal-surface);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.paper-run-preview-card-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.paper-run-preview-card-topline strong {
+  font: 13px var(--terminal-mono);
+}
+
+.paper-run-preview-card-topline span {
+  font: 11px var(--terminal-mono);
+  color: var(--terminal-muted);
+  white-space: nowrap;
+}
+
+.paper-run-preview-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 4px 12px;
+}
+
+.paper-run-preview-id {
+  word-break: break-all;
+}
+
+.paper-run-preview-ts {
+  word-break: break-all;
+  color: var(--terminal-muted);
+}
+
+.paper-run-preview-blocked {
+  border-top: 1px solid var(--terminal-border);
+  padding-top: 8px;
+}
+
+.paper-run-preview-blocked p {
+  margin: 6px 0 0;
+  font: 11px var(--terminal-mono);
+  color: var(--terminal-muted);
+  line-height: 1.45;
+}
+
 /* PAPER-001C — Paper Sandbox Preview Panel */
 
 .paper-sandbox-preview-panel {
