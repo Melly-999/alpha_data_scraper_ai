@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "danielsanmedium.dscodegpt",
+    "aaronthomas.vscode-snazzy-operator",
+    "ms-python.python",
+    "ms-python.black-formatter",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode"
+  ]
+}
