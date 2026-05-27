@@ -313,6 +313,7 @@ The following must not be done in connection with any deployment derived from th
 ## Cross-references
 
 - [DEPLOY-002 Backend Entrypoint and Health Audit](backend_entrypoint_health_audit.md)
+- [DEPLOY-004 Hosted Backend Smoke Checklist](hosted_backend_smoke_checklist.md)
 - [iPad PWA Paper Run Preview Showcase](../showcase/ipad_pwa_paper_run_preview.md)
 - [DEMO-009 — iPad PWA smoke evidence](../demo/demo_009_ipad_pwa_smoke_evidence.md)
 - [DEMO-010 — Portfolio / LinkedIn copy pack](../demo/demo_010_portfolio_linkedin_copy_pack.md)
