@@ -62,6 +62,7 @@ Demo docs:
 - [DEMO-008 — Post-SIG-004B Signal Quality UI Evidence](docs/demo/demo_008_post_sig_004b_signal_quality_evidence.md)
 - [iPad PWA Paper Run Preview Showcase](docs/showcase/ipad_pwa_paper_run_preview.md)
 - [DEMO-010 — Portfolio / LinkedIn copy pack](docs/demo/demo_010_portfolio_linkedin_copy_pack.md)
+- [DEMO-MASCOT-001 — Melly Pet workspace companion evidence](docs/demo/demo_mascot_001_melly_pet_evidence.md)
 
 ## iPad PWA Paper Run Preview Showcase
 
@@ -116,6 +117,12 @@ The Playwright e2e suite also runs in GitHub Actions CI on every PR to main ([`.
 Screenshots were captured locally outside the repository and are intentionally not committed as binary assets.
 
 Hosted demo planning: see [docs/deployment/backend_demo_deploy_railway_render.md](docs/deployment/backend_demo_deploy_railway_render.md) for the Railway/Render backend demo path and PWA demo safety checklist.
+
+## Melly Pet Workspace Companion
+
+Melly Pet is a lightweight inline-SVG mascot used in the AI Workspace demo to reinforce the read-only, dry-run safety posture. It is a pure presentational component with no API calls, no trading controls, and no binary assets.
+
+Evidence and screenshot checklist: [docs/demo/demo_mascot_001_melly_pet_evidence.md](docs/demo/demo_mascot_001_melly_pet_evidence.md)
 
 ## Beta rollout documentation
 
