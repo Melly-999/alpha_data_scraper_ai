@@ -1,0 +1,41 @@
+# Dockerfile.api — FastAPI backend demo container (DEPLOY-003B)
+#
+# Deploy-prep only. No image has been pushed. No cloud deploy has been
+# performed. Before using this file to run a hosted demo, complete the
+# safety validation checklist in:
+#   docs/deployment/backend_entrypoint_health_audit.md
+#
+# Safety posture enforced by config.json and app/core/settings.py:
+#   autotrade=false  dry_run=true  read_only=true  live_orders_blocked=true
+#
+# Do NOT include secrets, broker credentials, or env var values in this
+# file. Set all env vars in the hosting platform dashboard only.
+#
+# Do not use the existing Dockerfile or Dockerfile.prod — those target the
+# scheduler/bot CLI, not the FastAPI backend.
+#
+# Start command: uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Port: 8000 default; overridden by PORT env var injected by Railway/Render.
+
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install dependencies before copying application code to maximise layer cache.
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
+
+# Copy application source. The .dockerignore at the repository root excludes
+# .git, __pycache__, .venv, docs/, and other non-runtime artefacts.
+COPY . .
+
+# Expose the default FastAPI port.
+EXPOSE 8000
+
+# Shell form is required so ${PORT:-8000} default substitution works.
+# Railway and Render inject PORT automatically at runtime.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

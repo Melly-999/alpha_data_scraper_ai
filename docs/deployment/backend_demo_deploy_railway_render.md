@@ -68,6 +68,10 @@ The safety posture (`autotrade=false`, `dry_run=true`, `read_only=true`, `live_o
   Verify this against the existing local scripts (`scripts/start_backend.ps1`, `scripts/smoke-test.sh`) before deploying. Railway injects `$PORT` automatically.
 
 - [ ] Do **not** use `--reload` in a hosted environment.
+- [ ] **Dockerfile (optional):** If Railway is configured to build from a Dockerfile rather than a
+  start command, use `Dockerfile.api` (added in DEPLOY-003B). Do **not** use the existing `Dockerfile`
+  or `Dockerfile.prod` — those target the scheduler/bot CLI. No image has been pushed and no deploy
+  has been performed as part of DEPLOY-003B.
 
 ### 4.3 Environment variables
 
@@ -144,6 +148,10 @@ The safety posture (`autotrade=false`, `dry_run=true`, `read_only=true`, `live_o
   ```
 
   Render injects `$PORT` automatically.
+
+- [ ] **Dockerfile (optional):** If Render is configured to build from a Dockerfile rather than a
+  start command, use `Dockerfile.api` (added in DEPLOY-003B). Do **not** use the existing `Dockerfile`
+  or `Dockerfile.prod`. No image has been pushed and no deploy has been performed as part of DEPLOY-003B.
 
 ### 5.3 Environment variables
 
