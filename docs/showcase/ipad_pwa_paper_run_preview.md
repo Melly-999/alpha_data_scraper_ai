@@ -83,6 +83,18 @@ Do not describe it as:
 - App Store release
 - TestFlight release
 
+## Melly Pet Workspace Companion
+
+The AI Workspace right rail includes Melly Pet, a lightweight brand mascot used during demos to reinforce the read-only and dry-run posture.
+
+- pure presentational React component — no API calls, no trading controls
+- inline SVG only — no binary assets, no external images
+- safety chips displayed: `READ ONLY` · `DRY RUN` · `LIVE ORDERS BLOCKED` · `EXECUTION OFF`
+- supports portfolio and demo storytelling
+- does not add trading or execution functionality
+
+Evidence: [DEMO-MASCOT-001 evidence and screenshot checklist](../demo/demo_mascot_001_melly_pet_evidence.md)
+
 ## Safety Note
 
 This showcase does not claim live trading capability, and it does not expose broker credentials, MT5 / IBKR account data, or public backend access.
