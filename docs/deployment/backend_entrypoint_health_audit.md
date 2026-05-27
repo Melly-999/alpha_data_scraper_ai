@@ -24,7 +24,7 @@ Follows: [DEPLOY-001 Backend Demo Deploy Guide](backend_demo_deploy_railway_rend
 | `requirements.txt` has uvicorn | `uvicorn==0.34.0` | CONFIRMED |
 | Dockerfile CMD for FastAPI | Not set — CMD runs scheduler, not FastAPI | GAP |
 | CORS env var | `MELLYTRADE_ALLOWED_ORIGINS` required for hosted frontend | ACTION NEEDED |
-| Python version declaration | No `runtime.txt` — version implied by local scripts (`py -3.11`) | GAP |
+| Python version declaration | `runtime.txt` added in DEPLOY-003A — pins `python-3.11` for Railway/Render | RESOLVED |
 | Startup with no API keys | Starts cleanly in fallback mode, all degradations are logged | VERIFIED |
 
 ---
@@ -69,12 +69,18 @@ startup will log a config warning but will not crash (defaults are applied).
 
 ### 3.4 Python version
 
-Local scripts use `py -3.11`. No `runtime.txt` is committed. Railway and Render
-default to their own Python versions unless a `runtime.txt` is present.
+Local scripts use `py -3.11`. A `runtime.txt` is now committed at the repository
+root (added in DEPLOY-003A) with the content:
 
-**Gap:** A `runtime.txt` with `python-3.11.x` (or `python-3.12.x`) should be
-added before any hosted deploy to lock the Python version. This is a DEPLOY-003
-action item, not a DEPLOY-002 scope change.
+```text
+python-3.11
+```
+
+This pins the Python runtime to 3.11 for Railway and Render hosted deploys.
+Railway and Render both detect `runtime.txt` automatically during the build phase.
+No patch version is specified; the platform resolves the latest available 3.11
+patch release. If a specific patch version is required by the platform at deploy
+time, update `runtime.txt` then — do not guess a patch version in advance.
 
 ---
 
@@ -468,7 +474,8 @@ the repository.
 
 | Task | Scope |
 |---|---|
-| DEPLOY-003 | Add `runtime.txt` for Python version; document `PUT /api/risk/config` demo caution; create `Dockerfile.api` if needed. (`GET /api/paper/run/preview` resolved by PAPER-RUN-API-001.) |
+| DEPLOY-003A | ✅ Add `runtime.txt` to pin Python 3.11 — resolved. `runtime.txt` committed at repo root. No deploy performed. |
+| DEPLOY-003 (remaining) | Document `PUT /api/risk/config` demo caution; create `Dockerfile.api` if needed. (`GET /api/paper/run/preview` resolved by PAPER-RUN-API-001. `runtime.txt` resolved by DEPLOY-003A.) |
 | DEPLOY-004 | Hosted backend smoke checklist — run after first successful Railway or Render deploy |
 | PWA-DEMO-002 | Hosted PWA smoke checklist — confirm PWA works against hosted backend URL |
 | DEMO-013 | Recruiter hosted demo walkthrough — full evidence pack for hosted demo |
