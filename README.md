@@ -115,6 +115,8 @@ The Playwright e2e suite also runs in GitHub Actions CI on every PR to main ([`.
 
 Screenshots were captured locally outside the repository and are intentionally not committed as binary assets.
 
+Hosted demo planning: see [docs/deployment/backend_demo_deploy_railway_render.md](docs/deployment/backend_demo_deploy_railway_render.md) for the Railway/Render backend demo path and PWA demo safety checklist.
+
 ## Beta rollout documentation
 
 For source-only beta operations, start here:
