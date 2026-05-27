@@ -17,6 +17,7 @@ import { PaperSandboxPreviewPanel } from "./PaperSandboxPreviewPanel";
 import { PaperTicketPreviewPanel } from "./PaperTicketPreviewPanel";
 import { SignalQualitySummaryCard } from "./SignalQualitySummaryCard";
 import { PortfolioRiskSummaryCard } from "./PortfolioRiskSummaryCard";
+import { MellyPetMascot } from "../branding/MellyPetMascot";
 
 type Agent = {
   name: string;
@@ -479,6 +480,18 @@ export function AIWorkspacePanel({ data }: { data: TerminalShellData }) {
                   </div>
                 ))}
               </div>
+            </section>
+
+            {/* UI-MASCOT-001 — MellyTrade AI workspace companion */}
+            <section
+              className="workspace-rail-section"
+              aria-label="Melly Pet — workspace companion"
+            >
+              <div className="workspace-section-head">
+                <span>Workspace Companion</span>
+                <span>branding</span>
+              </div>
+              <MellyPetMascot />
             </section>
           </aside>
         </div>
