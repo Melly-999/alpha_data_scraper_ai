@@ -53,6 +53,16 @@ This showcase is meant for portfolio and README use. It presents the operator da
 - [iPad PWA smoke test guide](../devices/ipad_pwa_smoke_test.md)
 - [DEMO-010 portfolio / LinkedIn copy pack](../demo/demo_010_portfolio_linkedin_copy_pack.md)
 
+## CI Coverage
+
+The Playwright e2e suite runs in GitHub Actions CI on every pull request to main:
+
+- 54 tests across three viewport sizes: iPad portrait 768×1024, iPad Air 834×1194, mobile narrow 390×844
+- viewport regression: panel render, safety chips visible, form controls visible, no horizontal overflow, forbidden controls absent
+- mocked interaction: allowed-state and blocked-state flows verified, GET-only request asserted, unsafe IDs absent from page text
+- no backend required — API responses are mocked at the browser level via `page.route()`
+- workflow: [`.github/workflows/frontend-e2e.yml`](../../.github/workflows/frontend-e2e.yml)
+
 ## Portfolio-Safe Wording
 
 Use this showcase as:

@@ -111,6 +111,8 @@ py -3.11 -m pytest tests/app/test_openapi_forbidden_paths.py tests/app/test_safe
 powershell -ExecutionPolicy Bypass -File scripts/demo_paper_sandbox_readonly_smoke.ps1 -BackendBaseUrl http://127.0.0.1:8001 -FrontendBaseUrl http://127.0.0.1:5173
 ```
 
+The Playwright e2e suite also runs in GitHub Actions CI on every PR to main ([`.github/workflows/frontend-e2e.yml`](.github/workflows/frontend-e2e.yml)) — 54 tests across iPad and mobile viewports, no backend required.
+
 Screenshots were captured locally outside the repository and are intentionally not committed as binary assets.
 
 ## Beta rollout documentation
