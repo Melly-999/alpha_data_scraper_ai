@@ -424,16 +424,29 @@ Neither existing Dockerfile targets the FastAPI backend:
 | `Dockerfile` | `python scheduler.py` | No |
 | `Dockerfile.prod` | `python main.py` (old trading bot CLI) | No |
 | `docker-compose.yml` | `python example_runner.py` | No |
+| `Dockerfile.api` | `uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}` | **Yes — added in DEPLOY-003B** |
 
-**For Railway or Render**, do not use any existing Dockerfile. Instead, specify
-the start command directly in the platform dashboard:
+**For Railway or Render**, the recommended path is to specify the start command
+directly in the platform dashboard (no Dockerfile required):
 
 ```text
 uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
-If a Dockerfile is required later, a new `Dockerfile.api` targeting only the
-FastAPI backend should be created. This is a DEPLOY-003 action item.
+If a container image is preferred, use `Dockerfile.api` (added in DEPLOY-003B).
+The existing `Dockerfile` and `Dockerfile.prod` must **not** be used for the
+FastAPI backend demo — their `CMD` targets the scheduler/bot CLI, not the API.
+
+### Dockerfile.api — usage notes
+
+- Base image: `python:3.11-slim` (matches `runtime.txt`)
+- Installs from `requirements.txt`; no secrets or env var values are embedded
+- Env vars (`MELLYTRADE_ALLOWED_ORIGINS`, etc.) must be set in the hosting
+  platform dashboard only — never committed to the repository
+- Run safety validation (`py -3.11 scripts/validate_safety_config.py`) before
+  any hosted deploy
+- No image has been pushed and no cloud deploy has been performed (DEPLOY-003B
+  is deploy-prep only)
 
 ---
 
@@ -475,7 +488,8 @@ the repository.
 | Task | Scope |
 |---|---|
 | DEPLOY-003A | ✅ Add `runtime.txt` to pin Python 3.11 — resolved. `runtime.txt` committed at repo root. No deploy performed. |
-| DEPLOY-003 (remaining) | Document `PUT /api/risk/config` demo caution; create `Dockerfile.api` if needed. (`GET /api/paper/run/preview` resolved by PAPER-RUN-API-001. `runtime.txt` resolved by DEPLOY-003A.) |
+| DEPLOY-003B | ✅ Add `Dockerfile.api` for FastAPI backend container target — resolved. `Dockerfile.api` committed at repo root. No image pushed. No deploy performed. |
+| DEPLOY-003 (remaining) | Document `PUT /api/risk/config` demo caution. (`GET /api/paper/run/preview` resolved by PAPER-RUN-API-001. `runtime.txt` resolved by DEPLOY-003A. `Dockerfile.api` resolved by DEPLOY-003B.) |
 | DEPLOY-004 | Hosted backend smoke checklist — run after first successful Railway or Render deploy |
 | PWA-DEMO-002 | Hosted PWA smoke checklist — confirm PWA works against hosted backend URL |
 | DEMO-013 | Recruiter hosted demo walkthrough — full evidence pack for hosted demo |
