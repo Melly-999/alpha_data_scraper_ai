@@ -57,6 +57,8 @@ The safety posture (`autotrade=false`, `dry_run=true`, `read_only=true`, `live_o
 
 - [ ] Select the repository root as the service directory (the FastAPI backend lives at the repo root under `app/`).
 - [ ] Set the Python runtime. Railway auto-detects Python from `requirements.txt` or `runtime.txt`.
+  `runtime.txt` is now committed at the repository root (added in DEPLOY-003A) with `python-3.11`.
+  No manual runtime configuration should be required — Railway will pick it up automatically.
 - [ ] Set the start command to:
 
   ```text
@@ -125,6 +127,8 @@ The safety posture (`autotrade=false`, `dry_run=true`, `read_only=true`, `live_o
 ### 5.2 Service configuration
 
 - [ ] Root directory: leave as repository root (or confirm based on existing backend run docs).
+- [ ] Python version: `runtime.txt` is committed at the repository root with `python-3.11` (added in
+  DEPLOY-003A). Render detects this automatically; no manual runtime selection should be required.
 - [ ] Build command:
 
   ```text
