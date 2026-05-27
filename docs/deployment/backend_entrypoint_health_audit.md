@@ -20,7 +20,7 @@ Follows: [DEPLOY-001 Backend Demo Deploy Guide](backend_demo_deploy_railway_rend
 | `GET /health` (root) | 200 OK, correct payload | VERIFIED LOCAL |
 | `GET /api/health` | 200 OK, correct payload | VERIFIED LOCAL |
 | `GET /api/safety/status` | 200 OK, safety posture confirmed | VERIFIED LOCAL |
-| `GET /api/paper/run/preview` | **404 Not Found** — not implemented in backend | BLOCKER |
+| `GET /api/paper/run/preview` | 200 OK — implemented in PAPER-RUN-API-001 | RESOLVED |
 | `requirements.txt` has uvicorn | `uvicorn==0.34.0` | CONFIRMED |
 | Dockerfile CMD for FastAPI | Not set — CMD runs scheduler, not FastAPI | GAP |
 | CORS env var | `MELLYTRADE_ALLOWED_ORIGINS` required for hosted frontend | ACTION NEEDED |
@@ -176,7 +176,9 @@ deploy, confirm all five pillars are present before sharing a demo URL.
 
 ---
 
-## 6. Critical Blocker: `GET /api/paper/run/preview` Not Implemented
+## 6. ~~Critical Blocker~~ RESOLVED: `GET /api/paper/run/preview` Implemented
+
+**Status: RESOLVED by PAPER-RUN-API-001.**
 
 The Paper Run Preview panel (`PaperRunPreviewPanel.tsx`) calls:
 
@@ -184,37 +186,28 @@ The Paper Run Preview panel (`PaperRunPreviewPanel.tsx`) calls:
 GET /api/paper/run/preview?symbol=...&side=...&...
 ```
 
-This endpoint **does not exist** in the backend. The local smoke confirmed:
+This endpoint is now implemented. Local smoke confirms:
 
 ```text
-GET /api/paper/run/preview  →  404 Not Found
+GET /api/paper/run/preview  →  200 OK (allowed)
+GET /api/paper/run/preview  →  200 OK (blocked — invalid geometry or risk cap)
 ```
 
-### Why e2e tests pass without this endpoint
+### Implementation summary
 
-The Playwright e2e suite (`frontend/e2e/paper-run-preview-interaction.spec.ts`)
-mocks the API at the browser level via `page.route()` before any network request
-reaches the backend. The test comment explicitly states:
+Files added in PAPER-RUN-API-001:
 
-> "Backend is NOT required. Route mocking intercepts the fetch before the
-> request reaches the network."
+- `app/schemas/paper_run_preview.py` — Pydantic v2 schemas with embedded safety flags
+- `app/services/paper_run_preview_service.py` — deterministic, local-only service; no broker calls, no network I/O, no DB writes
+- `app/api/routes/paper_run_preview.py` — GET-only router registered in `app/main.py`
+- `tests/app/test_paper_run_preview_endpoint.py` — 87 tests covering happy path, blocked geometry, risk cap, method safety, safety flags, forbidden fields, OpenAPI, broker-import scan, config mutation check
 
-This is correct test design — but it means the 54-test coverage does not verify
-a real backend response. The frontend panel will show an error state when pointed
-at a hosted backend that returns 404 for this path.
+### Endpoint contract (matches `paperRunPreviewApi.ts`)
 
-### Impact on hosted demo
+Query params: `symbol`, `side` (`BUY`|`SELL`), `quantity`, `entry_price`,
+`stop_loss`, `take_profit`, `confidence`, `max_risk_pct`.
 
-A hosted backend deploy will serve all 45 verified routes correctly. The Paper
-Run Preview panel specifically will fail at the API call and show its error state.
-All other terminal surfaces are unaffected.
-
-### Resolution path
-
-DEPLOY-003: Implement `GET /api/paper/run/preview` backend endpoint.
-
-The frontend schema (`paperRunPreviewApi.ts`) defines the full expected response
-shape, including safety flags:
+Response always includes:
 
 ```typescript
 type PaperPreviewSafetyFlags = {
@@ -227,11 +220,30 @@ type PaperPreviewSafetyFlags = {
 };
 ```
 
-The backend endpoint must enforce these invariants and never call a real broker.
+Validation rules:
+
+- `max_risk_pct > 1.0` → `allowed: false`, `paper_run: null` (HTTP 200)
+- BUY geometry violation (`stop_loss ≥ entry_price` or `entry_price ≥ take_profit`) → `allowed: false`, `paper_run: null` (HTTP 200)
+- SELL geometry violation (`stop_loss ≤ entry_price` or `entry_price ≤ take_profit`) → `allowed: false`, `paper_run: null` (HTTP 200)
+- All checks pass → `allowed: true`, `paper_run` with one order, fill, and position; all IDs use `paper-*` prefix
+
+### Safety invariants (never mutated)
+
+All six flags are embedded at every nesting level (response, run, order, fill,
+position) and enforced by Pydantic `Literal` types. The endpoint never calls any
+broker, never writes to any database, never returns `account_id`,
+`broker_order_id`, `execution_id`, `trade_id`, `secret`, `token`, `api_key`, or
+`password`.
+
+### Impact on hosted demo
+
+The 404 blocker is resolved. A hosted backend deploy will now serve
+`GET /api/paper/run/preview` correctly. The Paper Run Preview panel will display
+allowed and blocked states as designed.
 
 ---
 
-## 7. Full Route Inventory (45 routes, verified from OpenAPI)
+## 7. Full Route Inventory (46 routes — updated by PAPER-RUN-API-001)
 
 The following routes were confirmed from a live `GET /openapi.json` call against
 the local backend.
@@ -256,6 +268,7 @@ GET  /api/market/overview
 GET  /api/mt5/status
 GET  /api/news/sentiment
 GET  /api/orders
+GET  /api/paper/run/preview
 GET  /api/paper/sandbox/history
 GET  /api/paper/sandbox/preview
 GET  /api/portfolio/risk-summary
@@ -455,7 +468,7 @@ the repository.
 
 | Task | Scope |
 |---|---|
-| DEPLOY-003 | Add `runtime.txt` for Python version; implement `GET /api/paper/run/preview` backend endpoint; document `PUT /api/risk/config` demo caution; create `Dockerfile.api` if needed |
+| DEPLOY-003 | Add `runtime.txt` for Python version; document `PUT /api/risk/config` demo caution; create `Dockerfile.api` if needed. (`GET /api/paper/run/preview` resolved by PAPER-RUN-API-001.) |
 | DEPLOY-004 | Hosted backend smoke checklist — run after first successful Railway or Render deploy |
 | PWA-DEMO-002 | Hosted PWA smoke checklist — confirm PWA works against hosted backend URL |
 | DEMO-013 | Recruiter hosted demo walkthrough — full evidence pack for hosted demo |
@@ -473,3 +486,7 @@ the repository.
 - [Dependencies probe](../../app/core/dependencies.py)
 - [Paper Run Preview frontend API](../../frontend/src/lib/paperRunPreviewApi.ts)
 - [Paper Run Preview e2e spec](../../frontend/e2e/paper-run-preview-interaction.spec.ts)
+- [Paper Run Preview schemas](../../app/schemas/paper_run_preview.py)
+- [Paper Run Preview service](../../app/services/paper_run_preview_service.py)
+- [Paper Run Preview route](../../app/api/routes/paper_run_preview.py)
+- [Paper Run Preview tests](../../tests/app/test_paper_run_preview_endpoint.py)
