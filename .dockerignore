@@ -61,3 +61,8 @@ notebooks/
 service_logs/
 service_wrapper.ps1
 service_start.bat
+
+# Secrets and env files — must not enter Docker build context
+.env
+.env.*
+mellytrade_v3/
