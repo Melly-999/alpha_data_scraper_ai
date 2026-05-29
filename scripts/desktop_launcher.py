@@ -38,7 +38,6 @@ from __future__ import annotations
 
 import argparse
 import atexit
-import os
 import platform
 import signal
 import subprocess

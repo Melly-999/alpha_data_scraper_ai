@@ -19,7 +19,6 @@ import pytest
 from pydantic import ValidationError
 
 from app.services.paper_trading_service import (
-    RiskDecision,
     create_paper_fill,
     create_paper_order,
     create_paper_run,

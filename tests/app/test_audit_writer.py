@@ -32,8 +32,6 @@ from pydantic import ValidationError
 from app.schemas.audit_event import (
     AuditEventCreate,
     AuditEventRecord,
-    AuditEventSource,
-    AuditSeverity,
 )
 from app.services.audit_writer import _build_payload, write_audit_event
 

@@ -21,8 +21,6 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-import pytest
-
 from app.schemas.audit_event import AuditEventRecord
 from app.services.startup_audit import emit_startup_events
 

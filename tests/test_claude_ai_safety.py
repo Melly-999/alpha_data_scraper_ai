@@ -11,13 +11,10 @@ import json
 import os
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from claude_ai import (
     ClaudeAIClient,
     ClaudeAIIntegration,
     ClaudeSignal,
-    _clamp_conf,
 )
 
 # ---------------------------------------------------------------------------

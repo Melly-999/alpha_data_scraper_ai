@@ -351,7 +351,6 @@ def test_symbol_universe_item_has_no_forbidden_fields() -> None:
 def test_symbol_universe_item_source_has_no_forbidden_terms() -> None:
     import app.services.signal_universe as universe_module
 
-    source = inspect.getsource(universe_module)
     # Terms that must not appear as active code (outside of prohibition docs/comments).
     # We check the public API names specifically.
     public_names = [
