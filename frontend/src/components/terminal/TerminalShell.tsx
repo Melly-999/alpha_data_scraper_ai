@@ -186,7 +186,7 @@ export function TerminalShell({
   const healthyAgents = 9;
 
   return (
-    <div className="terminal-root">
+    <div className="terminal-root terminal-grid">
       <TopTickerBar markets={data.markets} />
       <div className="terminal-body">
         <LeftSidebar />

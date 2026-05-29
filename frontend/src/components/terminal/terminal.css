@@ -7,45 +7,60 @@
 /* ── Amber default (root) ───────────────────────────────────────────────────── */
 :root {
   /* Base surfaces */
-  --terminal-bg:             #07090c;
-  --terminal-surface:        #10141a;
-  --terminal-surface-2:      #151a21;
-  --terminal-surface-dim:    rgba(16, 20, 26, 0.72);   /* common panel bg */
-  --terminal-chrome-bg:      rgba(10, 13, 17, 0.96);   /* topbar / statusbar */
-  --terminal-sidebar-bg:     rgba(13, 16, 21, 0.92);   /* sidebar / rail */
+  --terminal-bg:             #070A0F;
+  --terminal-bg-soft:        #0B0F14;
+  --terminal-surface:        #10161F;
+  --terminal-surface-2:      #131B26;
+  --terminal-surface-dim:    rgba(16, 22, 31, 0.74);
+  --terminal-chrome-bg:      rgba(11, 15, 20, 0.96);
+  --terminal-sidebar-bg:     rgba(11, 15, 20, 0.92);
+  --terminal-panel-gradient: linear-gradient(180deg, rgba(19, 27, 38, 0.96), rgba(16, 22, 31, 0.92));
+  --terminal-radial-gradient: radial-gradient(circle at top right, rgba(245, 165, 36, 0.12), transparent 28%);
 
   /* Borders */
-  --terminal-border:         #2a3038;
-  --terminal-border-soft:    rgba(207, 158, 74, 0.24); /* amber-tinted border */
+  --terminal-border:         #263241;
+  --terminal-border-soft:    rgba(245, 165, 36, 0.24);
+  --terminal-radius:         14px;
+  --terminal-radius-lg:      18px;
 
   /* Text */
-  --terminal-text:           #eef2f6;
-  --terminal-muted:          #88919d;
+  --terminal-text:           #E6EDF3;
+  --terminal-muted:          #8B949E;
+  --terminal-dim:            #5F6B7A;
 
   /* Accent — institutional gold (Amber default) */
-  --terminal-amber:          #d6a44c;
-  --terminal-accent-bg:      rgba(214, 164, 76, 0.08); /* amber wash / hover */
-  --terminal-accent-bg-md:   rgba(214, 164, 76, 0.12); /* amber selected bg */
-  --terminal-accent-border:  rgba(214, 164, 76, 0.28); /* amber chip border */
+  --terminal-amber:          #F5A524;
+  --terminal-amber-soft:     #FFB84D;
+  --terminal-amber-dark:     #9A6100;
+  --terminal-cyan:           #4FD1C5;
+  --terminal-blue:           #58A6FF;
+  --terminal-purple:         #A78BFA;
+  --terminal-accent-bg:      rgba(245, 165, 36, 0.08);
+  --terminal-accent-bg-md:   rgba(245, 165, 36, 0.14);
+  --terminal-accent-border:  rgba(245, 165, 36, 0.30);
+  --terminal-amber-glow:     0 0 0 1px rgba(245, 165, 36, 0.18), 0 0 24px rgba(245, 165, 36, 0.14);
+  --terminal-cyan-glow:      0 0 0 1px rgba(79, 209, 197, 0.18), 0 0 24px rgba(79, 209, 197, 0.12);
+  --terminal-panel-shadow:   0 24px 60px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.02);
 
   /* Semantic severity ramp
      green = safe / posture-ok
      blue  = info / routine
      amber = warning / degraded (reuses --terminal-amber above)
      red   = critical / blocked / NO_TRADE                        */
-  --terminal-green:          #53d681;
-  --terminal-blue:           #76a9ff;
-  --terminal-red:            #ff6b6b;
+  --terminal-green:          #3FB950;
+  --terminal-red:            #FF6B6B;
 
   /* Paired severity backgrounds */
-  --terminal-safe-bg:        rgba(83, 214, 129, 0.08);
-  --terminal-safe-border:    rgba(83, 214, 129, 0.34);
+  --terminal-safe-bg:        rgba(63, 185, 80, 0.10);
+  --terminal-safe-border:    rgba(63, 185, 80, 0.34);
   --terminal-danger-bg:      rgba(255, 107, 107, 0.10);
   --terminal-danger-border:  rgba(255, 107, 107, 0.30);
   --terminal-danger-glow:    rgba(255, 107, 107, 0.12);
 
   /* Type */
-  --terminal-mono: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+  --terminal-ui: "Inter", "Segoe UI", system-ui, sans-serif;
+  --terminal-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --terminal-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
 
   /* Red-black frame accents */
   --mt-black:              #050507;
@@ -133,19 +148,17 @@
   isolation: isolate;
   color-scheme: dark;
   /* tokens inherited from :root — see token block above */
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: var(--terminal-ui);
   min-height: 100vh;
   color: var(--terminal-text);
   display: grid;
   grid-template-rows: auto 1fr auto;
   overflow-x: clip;
   background:
-    radial-gradient(circle at 50% 0%, rgba(127, 29, 29, 0.16), transparent 32%),
-    radial-gradient(circle at 50% 100%, rgba(220, 38, 38, 0.06), transparent 24%),
-    linear-gradient(180deg, rgba(10, 10, 13, 0.95), rgba(5, 5, 7, 0.98) 34%, rgba(5, 5, 7, 1));
-  box-shadow: inset 0 1px 0 rgba(239, 68, 68, 0.05);
+    radial-gradient(circle at 50% 0%, rgba(245, 165, 36, 0.14), transparent 32%),
+    radial-gradient(circle at 82% 18%, rgba(79, 209, 197, 0.06), transparent 18%),
+    linear-gradient(180deg, rgba(11, 15, 20, 0.95), rgba(7, 10, 15, 0.98) 34%, rgba(7, 10, 15, 1));
+  box-shadow: inset 0 1px 0 rgba(255, 184, 77, 0.05);
 }
 
 .terminal-root::before {
@@ -157,17 +170,17 @@
   background:
     linear-gradient(
       135deg,
-      rgba(239, 68, 68, 0.82),
-      rgba(5, 5, 7, 0.96) 26%,
-      rgba(127, 29, 29, 0.78) 52%,
-      rgba(5, 5, 7, 0.96) 76%,
-      rgba(220, 38, 38, 0.66)
+      rgba(245, 165, 36, 0.72),
+      rgba(7, 10, 15, 0.96) 24%,
+      rgba(79, 209, 197, 0.24) 52%,
+      rgba(7, 10, 15, 0.96) 76%,
+      rgba(255, 184, 77, 0.42)
     );
   pointer-events: none;
   z-index: 0;
   box-shadow:
-    0 0 0 1px rgba(220, 38, 38, 0.08),
-    0 0 34px rgba(127, 29, 29, 0.18),
+    0 0 0 1px rgba(245, 165, 36, 0.08),
+    0 0 34px rgba(245, 165, 36, 0.14),
     inset 0 0 24px rgba(0, 0, 0, 0.65);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -284,12 +297,33 @@
 }
 
 .safety-badge {
-  border: 1px solid rgba(83, 214, 129, 0.38);
-  color: var(--terminal-green);
-  background: var(--terminal-safe-bg);
+  border: 1px solid var(--terminal-accent-border);
+  color: var(--terminal-amber-soft);
+  background: var(--terminal-accent-bg);
   padding: 5px 8px;
   font: 700 10px var(--terminal-mono);
   letter-spacing: 0.08em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.safety-badge--read-only,
+.safety-badge--review {
+  border-color: rgba(245, 165, 36, 0.32);
+  color: var(--terminal-amber);
+  background: rgba(245, 165, 36, 0.10);
+}
+
+.safety-badge--dry-run {
+  border-color: rgba(79, 209, 197, 0.28);
+  color: var(--terminal-cyan);
+  background: rgba(79, 209, 197, 0.08);
+}
+
+.safety-badge--auto-trade,
+.safety-badge--blocked {
+  border-color: rgba(63, 185, 80, 0.30);
+  color: var(--terminal-green);
+  background: rgba(63, 185, 80, 0.08);
 }
 
 .terminal-body {
@@ -383,14 +417,15 @@
 }
 
 .terminal-main {
-  border: 1px solid rgba(127, 29, 29, 0.16);
+  border: 1px solid rgba(245, 165, 36, 0.14);
   border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(12, 13, 16, 0.84), rgba(5, 5, 7, 0.94));
+    radial-gradient(circle at top right, rgba(245, 165, 36, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(16, 22, 31, 0.88), rgba(7, 10, 15, 0.95));
   box-shadow:
-    inset 0 1px 0 rgba(239, 68, 68, 0.04),
-    inset 0 0 0 1px rgba(21, 21, 21, 0.56),
-    0 0 24px rgba(127, 29, 29, 0.08);
+    inset 0 1px 0 rgba(255, 184, 77, 0.04),
+    inset 0 0 0 1px rgba(19, 27, 38, 0.56),
+    0 0 24px rgba(245, 165, 36, 0.08);
   min-width: 0;
   padding: 16px;
   display: grid;
@@ -403,10 +438,12 @@
 .terminal-panel {
   border: 1px solid rgba(21, 21, 21, 0.94);
   background:
-    linear-gradient(180deg, rgba(17, 17, 20, 0.96), rgba(7, 7, 9, 0.98));
+    radial-gradient(circle at top right, rgba(245, 165, 36, 0.06), transparent 22%),
+    linear-gradient(180deg, rgba(19, 27, 38, 0.96), rgba(7, 10, 15, 0.98));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.02),
-    inset 0 0 0 1px rgba(127, 29, 29, 0.04);
+    inset 0 0 0 1px rgba(245, 165, 36, 0.04),
+    var(--terminal-panel-shadow);
 }
 
 .loading-screen {
@@ -2900,6 +2937,7 @@
   margin: 4px 0 0;
   font-size: clamp(22px, 2.4vw, 30px);
   letter-spacing: 0.02em;
+  font-family: var(--terminal-display);
 }
 
 .open-design-subtitle {
