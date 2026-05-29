@@ -313,7 +313,9 @@ class TestMetadataSafety:
         for _, payload in calls:
             metadata = payload.get("metadata", {})
             execution_found = _KNOWN_EXECUTION_KEYS & metadata.keys()
-            assert not execution_found, f"Execution-shaped keys found: {execution_found}"
+            assert (
+                not execution_found
+            ), f"Execution-shaped keys found: {execution_found}"
 
     def test_no_account_id_in_any_payload(self) -> None:
         fn, calls = _make_fake_insert_fn()

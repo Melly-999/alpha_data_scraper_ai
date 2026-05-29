@@ -102,7 +102,9 @@ def test_universes_xtb_cfd_has_required_symbols(client) -> None:
     xtb = next(u for u in payload["universes"] if u["name"] == "xtb_cfd_watchlist")
     symbols = set(xtb["symbols"])
     for expected in ("US100", "US500", "XAUUSD", "NATGAS", "EURUSD"):
-        assert expected in symbols, f"Expected {expected!r} in xtb_cfd_watchlist universe"
+        assert (
+            expected in symbols
+        ), f"Expected {expected!r} in xtb_cfd_watchlist universe"
 
 
 def test_universes_each_has_read_only_flags(client) -> None:
@@ -134,9 +136,9 @@ def test_universes_response_has_no_forbidden_keys(client) -> None:
 
     all_keys = _collect_keys(payload)
     for forbidden in FORBIDDEN_RESPONSE_KEYS:
-        assert forbidden not in all_keys, (
-            f"Forbidden key {forbidden!r} found in universes response"
-        )
+        assert (
+            forbidden not in all_keys
+        ), f"Forbidden key {forbidden!r} found in universes response"
 
 
 # ---------------------------------------------------------------------------
@@ -247,7 +249,14 @@ def test_preview_unknown_universe_falls_back_safely(client) -> None:
 
 
 def test_universes_openapi_path_has_no_forbidden_segments(client) -> None:
-    for forbidden in ("order", "execute", "trade", "broker_execute", "autotrade", "live"):
+    for forbidden in (
+        "order",
+        "execute",
+        "trade",
+        "broker_execute",
+        "autotrade",
+        "live",
+    ):
         assert forbidden not in UNIVERSES_PATH
 
 

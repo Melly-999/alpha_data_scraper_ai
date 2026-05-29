@@ -134,9 +134,7 @@ def broker_account(adapter_id: str, request: Request) -> BrokerAccountSnapshot:
 # ---------------------------------------------------------------------------
 # GET /api/brokers/{adapter_id}/positions
 # ---------------------------------------------------------------------------
-@router.get(
-    "/brokers/{adapter_id}/positions", response_model=list[BrokerPosition]
-)
+@router.get("/brokers/{adapter_id}/positions", response_model=list[BrokerPosition])
 def broker_positions(adapter_id: str, request: Request) -> list[BrokerPosition]:
     adapter = _resolve_adapter(_registry(request), adapter_id)
     return [BrokerPosition(**dict(p)) for p in adapter.positions()]

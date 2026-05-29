@@ -31,7 +31,6 @@ from app.services.signal_universe import (
     normalize_universe_name,
 )
 
-
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -92,9 +91,9 @@ def test_list_universes_values_are_tuples() -> None:
 def test_list_universes_items_are_symbol_universe_items() -> None:
     for name, items in list_universes().items():
         for item in items:
-            assert isinstance(item, SymbolUniverseItem), (
-                f"Item in '{name}' is not a SymbolUniverseItem"
-            )
+            assert isinstance(
+                item, SymbolUniverseItem
+            ), f"Item in '{name}' is not a SymbolUniverseItem"
 
 
 # ---------------------------------------------------------------------------
@@ -117,9 +116,9 @@ def test_ai_mega_caps_contains_extended_symbols() -> None:
 def test_ai_mega_caps_asset_class_equity() -> None:
     items = get_universe("ai_mega_caps")
     for item in items:
-        assert item.asset_class == "equity", (
-            f"Unexpected asset_class {item.asset_class!r} for {item.symbol}"
-        )
+        assert (
+            item.asset_class == "equity"
+        ), f"Unexpected asset_class {item.asset_class!r} for {item.symbol}"
 
 
 # ---------------------------------------------------------------------------
@@ -224,9 +223,9 @@ def test_default_demo_contains_key_symbols() -> None:
 def test_symbols_are_deduplicated(universe_name: str) -> None:
     symbols = list_symbols_for_universe(universe_name)
     upper_symbols = [s.upper() for s in symbols]
-    assert len(upper_symbols) == len(set(upper_symbols)), (
-        f"Duplicate symbols found in universe '{universe_name}'"
-    )
+    assert len(upper_symbols) == len(
+        set(upper_symbols)
+    ), f"Duplicate symbols found in universe '{universe_name}'"
 
 
 # ---------------------------------------------------------------------------
@@ -247,9 +246,9 @@ def test_symbols_are_deduplicated(universe_name: str) -> None:
 def test_no_empty_symbols(universe_name: str) -> None:
     symbols = list_symbols_for_universe(universe_name)
     for s in symbols:
-        assert s and s.strip(), (
-            f"Empty or blank symbol found in universe '{universe_name}'"
-        )
+        assert (
+            s and s.strip()
+        ), f"Empty or blank symbol found in universe '{universe_name}'"
 
 
 # ---------------------------------------------------------------------------
@@ -270,9 +269,9 @@ def test_no_empty_symbols(universe_name: str) -> None:
 def test_all_items_enabled_by_default(universe_name: str) -> None:
     items = get_universe(universe_name)
     for item in items:
-        assert item.enabled is True, (
-            f"Item {item.symbol!r} in '{universe_name}' has enabled=False"
-        )
+        assert (
+            item.enabled is True
+        ), f"Item {item.symbol!r} in '{universe_name}' has enabled=False"
 
 
 # ---------------------------------------------------------------------------
@@ -305,9 +304,7 @@ def test_symbol_items_are_frozen() -> None:
 def test_unknown_universe_name_returns_default_demo() -> None:
     result = get_universe("this_universe_does_not_exist")
     default = get_universe("default_demo")
-    assert result == default, (
-        "Unknown universe name should fall back to default_demo"
-    )
+    assert result == default, "Unknown universe name should fall back to default_demo"
 
 
 def test_list_symbols_unknown_universe_returns_default_demo_symbols() -> None:
@@ -346,9 +343,9 @@ def test_normalize_universe_name_already_canonical() -> None:
 def test_symbol_universe_item_has_no_forbidden_fields() -> None:
     item_fields = {f.name for f in SymbolUniverseItem.__dataclass_fields__.values()}
     for forbidden in FORBIDDEN_FIELD_NAMES:
-        assert forbidden not in item_fields, (
-            f"Forbidden field {forbidden!r} found in SymbolUniverseItem"
-        )
+        assert (
+            forbidden not in item_fields
+        ), f"Forbidden field {forbidden!r} found in SymbolUniverseItem"
 
 
 def test_symbol_universe_item_source_has_no_forbidden_terms() -> None:
@@ -371,9 +368,9 @@ def test_symbol_universe_item_source_has_no_forbidden_terms() -> None:
     ]
     for name in public_names:
         for segment in forbidden_function_segments:
-            assert segment not in name.lower(), (
-                f"Forbidden segment {segment!r} found in public name {name!r}"
-            )
+            assert (
+                segment not in name.lower()
+            ), f"Forbidden segment {segment!r} found in public name {name!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -398,9 +395,7 @@ print(json.dumps(present))
         text=True,
     )
     present = json.loads(completed.stdout.strip())
-    assert present == [], (
-        f"signal_universe imported forbidden libraries: {present}"
-    )
+    assert present == [], f"signal_universe imported forbidden libraries: {present}"
 
 
 # ---------------------------------------------------------------------------
@@ -414,8 +409,7 @@ def test_public_functions_are_limited_to_expected_set() -> None:
     public_functions = {
         name
         for name, obj in inspect.getmembers(universe_module, inspect.isfunction)
-        if not name.startswith("_")
-        and obj.__module__ == universe_module.__name__
+        if not name.startswith("_") and obj.__module__ == universe_module.__name__
     }
     expected = {
         "get_universe",

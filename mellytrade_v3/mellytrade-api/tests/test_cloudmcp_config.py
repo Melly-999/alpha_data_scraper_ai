@@ -40,9 +40,7 @@ def test_cloudmcp_enabled_requires_router_url(monkeypatch: pytest.MonkeyPatch):
 
 def test_cloudmcp_enabled_with_full_config(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("CLOUDMCP_ENABLED", "true")
-    monkeypatch.setenv(
-        "CLOUDMCP_ROUTER_URL", "https://example.router.cloudmcp.run/mcp"
-    )
+    monkeypatch.setenv("CLOUDMCP_ROUTER_URL", "https://example.router.cloudmcp.run/mcp")
     monkeypatch.setenv("CLOUDMCP_DEFAULT_SERVERS", " files , web,memory ")
     monkeypatch.setenv("CLOUDMCP_TIMEOUT_SECONDS", "45")
     monkeypatch.setenv("CLOUDMCP_CONNECT_TIMEOUT_SECONDS", "7.5")
@@ -60,9 +58,7 @@ def test_cloudmcp_enabled_with_full_config(monkeypatch: pytest.MonkeyPatch):
 def test_cloudmcp_legacy_vars_are_ignored(monkeypatch: pytest.MonkeyPatch):
     """Legacy per-server variables must not leak into the new config."""
     monkeypatch.setenv("CLOUDMCP_ENABLED", "true")
-    monkeypatch.setenv(
-        "CLOUDMCP_ROUTER_URL", "https://example.router.cloudmcp.run/mcp"
-    )
+    monkeypatch.setenv("CLOUDMCP_ROUTER_URL", "https://example.router.cloudmcp.run/mcp")
     # These are the retired variables — setting them must be a no-op.
     monkeypatch.setenv("CLOUDMCP_TOKEN", "legacy-token")
     monkeypatch.setenv("CLOUDMCP_FILES_URL", "https://legacy/files")
@@ -100,9 +96,7 @@ def test_build_client_requires_enabled(monkeypatch: pytest.MonkeyPatch):
 
 def test_build_client_returns_httpx_client(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("CLOUDMCP_ENABLED", "true")
-    monkeypatch.setenv(
-        "CLOUDMCP_ROUTER_URL", "https://example.router.cloudmcp.run/mcp"
-    )
+    monkeypatch.setenv("CLOUDMCP_ROUTER_URL", "https://example.router.cloudmcp.run/mcp")
     monkeypatch.setenv("CLOUDMCP_DEFAULT_SERVERS", "files,web")
 
     _reload_config(monkeypatch)
