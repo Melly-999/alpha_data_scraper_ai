@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -59,6 +58,7 @@ def _short_input(**overrides: Any) -> dict[str, Any]:
 # 1. Basic behaviour
 # ---------------------------------------------------------------------------
 
+
 def test_valid_long_input_returns_200(client) -> None:
     response = client.post(ENDPOINT, json=_long_input())
     assert response.status_code == 200, response.text
@@ -96,6 +96,7 @@ def test_response_includes_safety_contract(client) -> None:
 # ---------------------------------------------------------------------------
 # 2. Draft safety flags
 # ---------------------------------------------------------------------------
+
 
 def test_draft_paper_only_is_true(client) -> None:
     draft = client.post(ENDPOINT, json=_long_input()).json()["draft"]
@@ -141,6 +142,7 @@ def test_draft_execution_mode_is_paper_only_draft(client) -> None:
 # 3. Safety contract fields in response
 # ---------------------------------------------------------------------------
 
+
 def test_safety_contract_paper_only_is_true(client) -> None:
     sc = client.post(ENDPOINT, json=_long_input()).json()["safety_contract"]
     assert sc["paper_only"] is True
@@ -169,6 +171,7 @@ def test_safety_contract_execution_mode_is_paper_only_draft(client) -> None:
 # ---------------------------------------------------------------------------
 # 4. Rejection cases — all return 200 with accepted=false
 # ---------------------------------------------------------------------------
+
 
 def test_risk_pct_above_1_returns_accepted_false(client) -> None:
     response = client.post(ENDPOINT, json=_long_input(risk_pct=1.01))
@@ -211,6 +214,7 @@ def test_rejection_still_has_safety_contract(client) -> None:
 # 5. FastAPI / Pydantic 422 cases (missing required fields)
 # ---------------------------------------------------------------------------
 
+
 def test_missing_stop_loss_returns_422(client) -> None:
     data = _long_input()
     data.pop("stop_loss")
@@ -234,12 +238,13 @@ def test_empty_body_returns_422(client) -> None:
 # 6. Endpoint path and namespace safety
 # ---------------------------------------------------------------------------
 
+
 def test_endpoint_is_under_api_paper_namespace(client) -> None:
     """The path must be within /api/paper — required by PAPER-GUARD-001."""
     paths = client.app.openapi()["paths"]
-    assert "/api/paper/tickets/draft" in paths, (
-        "POST /api/paper/tickets/draft must appear in OpenAPI schema"
-    )
+    assert (
+        "/api/paper/tickets/draft" in paths
+    ), "POST /api/paper/tickets/draft must appear in OpenAPI schema"
 
 
 def test_endpoint_openapi_metadata_includes_paper_marker(client) -> None:
@@ -247,15 +252,17 @@ def test_endpoint_openapi_metadata_includes_paper_marker(client) -> None:
     paths = client.app.openapi()["paths"]
     path_item = paths.get("/api/paper/tickets/draft", {})
     post_op = path_item.get("post", {})
-    metadata = " ".join([
-        str(post_op.get("summary", "")),
-        str(post_op.get("description", "")),
-        str(post_op.get("operationId", "")),
-    ]).lower()
+    metadata = " ".join(
+        [
+            str(post_op.get("summary", "")),
+            str(post_op.get("description", "")),
+            str(post_op.get("operationId", "")),
+        ]
+    ).lower()
     paper_indicators = ("paper", "sandbox", "dry_run", "simulated")
-    assert any(ind in metadata for ind in paper_indicators), (
-        f"Endpoint metadata must contain a paper/sandbox indicator; got: {metadata!r}"
-    )
+    assert any(
+        ind in metadata for ind in paper_indicators
+    ), f"Endpoint metadata must contain a paper/sandbox indicator; got: {metadata!r}"
 
 
 def test_paper_endpoint_is_not_a_live_execution_path(client) -> None:
@@ -263,31 +270,43 @@ def test_paper_endpoint_is_not_a_live_execution_path(client) -> None:
     paths = client.app.openapi()["paths"]
     assert "/api/paper/tickets/draft" in paths
     # Must be in the paper namespace
-    assert "/api/paper/tickets/draft".startswith("/api/paper"), (
-        "Paper draft endpoint must live under /api/paper"
-    )
+    assert "/api/paper/tickets/draft".startswith(
+        "/api/paper"
+    ), "Paper draft endpoint must live under /api/paper"
     # Must NOT look like a live execution path
     live_fragments = (
-        "/api/orders", "/api/execute", "/api/execution",
-        "/api/broker/execute", "/api/broker/order",
-        "/api/mt5/order", "/api/ibkr/order", "/api/autotrade",
+        "/api/orders",
+        "/api/execute",
+        "/api/execution",
+        "/api/broker/execute",
+        "/api/broker/order",
+        "/api/mt5/order",
+        "/api/ibkr/order",
+        "/api/autotrade",
     )
     draft_path = "/api/paper/tickets/draft"
     for frag in live_fragments:
-        assert not draft_path.startswith(frag), (
-            f"Paper endpoint must not look like a live execution path: {frag}"
-        )
+        assert not draft_path.startswith(
+            frag
+        ), f"Paper endpoint must not look like a live execution path: {frag}"
 
 
 # ---------------------------------------------------------------------------
 # 7. No live execution fields in response
 # ---------------------------------------------------------------------------
 
+
 def test_no_live_execution_fields_in_response(client) -> None:
     body = client.post(ENDPOINT, json=_long_input()).json()
     forbidden = {
-        "order_id", "fill_id", "execution_id", "broker_order_id",
-        "account_id", "credential", "token", "secret",
+        "order_id",
+        "fill_id",
+        "execution_id",
+        "broker_order_id",
+        "account_id",
+        "credential",
+        "token",
+        "secret",
     }
     for key in forbidden:
         assert key not in body, f"Forbidden field found in response: {key}"
@@ -297,8 +316,14 @@ def test_no_live_execution_fields_in_draft(client) -> None:
     draft = client.post(ENDPOINT, json=_long_input()).json()["draft"]
     assert draft is not None
     forbidden = {
-        "order_id", "fill_id", "execution_id", "broker_order_id",
-        "account_id", "credential", "token", "secret",
+        "order_id",
+        "fill_id",
+        "execution_id",
+        "broker_order_id",
+        "account_id",
+        "credential",
+        "token",
+        "secret",
     }
     for key in forbidden:
         assert key not in draft, f"Forbidden field found in draft: {key}"
@@ -308,6 +333,7 @@ def test_no_live_execution_fields_in_draft(client) -> None:
 # 8. PAPER-GUARD-001 compatibility
 # ---------------------------------------------------------------------------
 
+
 def test_paper_sandbox_guardrails_still_pass(client) -> None:
     """The new endpoint satisfies PAPER-GUARD-001 paper namespace requirements."""
     paths = client.app.openapi()["paths"]
@@ -316,21 +342,25 @@ def test_paper_sandbox_guardrails_still_pass(client) -> None:
     assert paths, "OpenAPI schema returned no paths"
 
     # The new endpoint must be present in the paper namespace
-    assert "/api/paper/tickets/draft" in paths, (
-        "POST /api/paper/tickets/draft must appear in OpenAPI schema"
-    )
-    assert any(p.startswith("/api/paper") for p in paths), (
-        "No paper namespace paths found in OpenAPI schema"
-    )
+    assert (
+        "/api/paper/tickets/draft" in paths
+    ), "POST /api/paper/tickets/draft must appear in OpenAPI schema"
+    assert any(
+        p.startswith("/api/paper") for p in paths
+    ), "No paper namespace paths found in OpenAPI schema"
 
     # The paper endpoint itself must NOT be in a live execution shape
     draft_path = "/api/paper/tickets/draft"
     live_execution_shapes = (
-        "/api/execute", "/api/execution",
-        "/api/broker/execute", "/api/broker/order",
-        "/api/mt5/order", "/api/ibkr/order", "/api/autotrade",
+        "/api/execute",
+        "/api/execution",
+        "/api/broker/execute",
+        "/api/broker/order",
+        "/api/mt5/order",
+        "/api/ibkr/order",
+        "/api/autotrade",
     )
     for shape in live_execution_shapes:
-        assert not draft_path.startswith(shape), (
-            f"Paper endpoint must not match live execution shape: {shape}"
-        )
+        assert not draft_path.startswith(
+            shape
+        ), f"Paper endpoint must not match live execution shape: {shape}"

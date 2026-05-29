@@ -98,9 +98,7 @@ def test_safe_client_makes_status_connected() -> None:
 
 
 def test_safe_client_via_accessor_makes_status_connected() -> None:
-    adapter = IBKRPaperReadOnlyAdapter(
-        readonly_client=_SafePaperClientViaAccessor()
-    )
+    adapter = IBKRPaperReadOnlyAdapter(readonly_client=_SafePaperClientViaAccessor())
     status = adapter.status()
     assert status["connected"] is True
     assert status["degraded"] is False
@@ -148,9 +146,10 @@ def test_unsafe_client_degrades_safely(unsafe_kwargs: dict[str, object]) -> None
     assert status["read_only"] is True
     assert status["execution_enabled"] is False
     assert status["live_orders_blocked"] is True
-    assert "unsafe" in status["safety_note"].lower() or "violat" in (
-        status["degraded_reason"] or ""
-    ).lower()
+    assert (
+        "unsafe" in status["safety_note"].lower()
+        or "violat" in (status["degraded_reason"] or "").lower()
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -202,8 +201,7 @@ def test_adapter_has_no_forbidden_methods() -> None:
     surface = set(dir(adapter)) | set(dir(IBKRPaperReadOnlyAdapter))
     leaked = sorted(surface & set(_FORBIDDEN_METHOD_NAMES))
     assert not leaked, (
-        "IBKRPaperReadOnlyAdapter must not expose forbidden "
-        f"method(s): {leaked!r}"
+        "IBKRPaperReadOnlyAdapter must not expose forbidden " f"method(s): {leaked!r}"
     )
 
 

@@ -29,6 +29,7 @@ Backwards-compatibility guarantees
 * Confidence clamping ``[33, 85]`` is enforced at every return path of
   ``validate_signal()`` — this is a hard safety invariant.
 """
+
 from __future__ import annotations
 
 import json
@@ -176,9 +177,7 @@ class ClaudeAIClient:
         use_thinking: bool = False,
     ) -> None:
         self.api_key = (
-            api_key
-            or os.getenv("ANTHROPIC_API_KEY")
-            or os.getenv("CLAUDE_API_KEY")
+            api_key or os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
         )
         if not self.api_key:
             raise ValueError("Claude API key is required")
@@ -423,9 +422,7 @@ class ClaudeAIIntegration:
         use_thinking: bool = False,
     ) -> None:
         self.api_key = (
-            api_key
-            or os.getenv("ANTHROPIC_API_KEY")
-            or os.getenv("CLAUDE_API_KEY")
+            api_key or os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
         )
         self.enabled = enabled and (bool(self.api_key) or client is not None)
         self.client = client
@@ -535,9 +532,7 @@ class ClaudeAIIntegration:
             return engine_signal, engine_confidence, "Claude AI unavailable"
 
         if claude_signal.signal == engine_signal:
-            confidence = _clamp_conf(
-                (engine_confidence + claude_signal.confidence) / 2
-            )
+            confidence = _clamp_conf((engine_confidence + claude_signal.confidence) / 2)
             return engine_signal, confidence, claude_signal.reason
 
         if claude_signal.signal == "HOLD":

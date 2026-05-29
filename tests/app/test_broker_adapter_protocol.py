@@ -174,7 +174,9 @@ def test_fake_read_only_adapter_only_has_read_only_members() -> None:
         def positions(self) -> list[Mapping[str, Any]]:
             return []
 
-    public_attrs = {name for name in dir(FakeReadOnlyAdapter) if not name.startswith("_")}
+    public_attrs = {
+        name for name in dir(FakeReadOnlyAdapter) if not name.startswith("_")
+    }
     expected = set(EXPECTED_READ_ONLY_METHOD_NAMES)
     extra = public_attrs - expected
     assert not extra, (

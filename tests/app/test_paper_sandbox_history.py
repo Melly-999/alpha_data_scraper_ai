@@ -27,16 +27,12 @@ Proves:
 
 from __future__ import annotations
 
-import importlib
 import inspect
-import math
 from typing import Any
 
 import pytest
 
 from app.schemas.paper_sandbox_history import (
-    PaperAuditEvent,
-    PaperAuditHistory,
     VALID_EVENT_TYPES,
 )
 from app.services.paper_sandbox_history import (
@@ -53,10 +49,10 @@ from app.services.paper_sandbox_history import (
     record_paper_event,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _fresh() -> PaperAuditHistoryService:
     """Return a new, isolated PaperAuditHistoryService instance."""
@@ -66,6 +62,7 @@ def _fresh() -> PaperAuditHistoryService:
 # ---------------------------------------------------------------------------
 # 1. Empty state
 # ---------------------------------------------------------------------------
+
 
 class TestEmptyState:
     def test_starts_empty(self) -> None:
@@ -99,6 +96,7 @@ class TestEmptyState:
 # 2. Event ID format
 # ---------------------------------------------------------------------------
 
+
 class TestEventIds:
     def test_first_event_id(self) -> None:
         svc = _fresh()
@@ -107,8 +105,10 @@ class TestEventIds:
 
     def test_event_ids_are_sequential(self) -> None:
         svc = _fresh()
-        ids = [svc.append("sandbox_preview_requested", f"msg {i}").event_id
-               for i in range(5)]
+        ids = [
+            svc.append("sandbox_preview_requested", f"msg {i}").event_id
+            for i in range(5)
+        ]
         assert ids == [
             "paper_audit_000001",
             "paper_audit_000002",
@@ -121,7 +121,7 @@ class TestEventIds:
         svc = _fresh()
         ev = svc.append("sandbox_state_reset", "reset")
         assert ev.event_id.startswith("paper_audit_")
-        suffix = ev.event_id[len("paper_audit_"):]
+        suffix = ev.event_id[len("paper_audit_") :]
         assert suffix.isdigit()
         assert len(suffix) == 6
 
@@ -146,6 +146,7 @@ class TestEventIds:
 # ---------------------------------------------------------------------------
 # 3. Safety flags on every event
 # ---------------------------------------------------------------------------
+
 
 class TestEventSafetyFlags:
     def test_paper_only_is_true(self) -> None:
@@ -202,6 +203,7 @@ class TestEventSafetyFlags:
 # ---------------------------------------------------------------------------
 # 4. Append / list / reset
 # ---------------------------------------------------------------------------
+
 
 class TestAppendListReset:
     def test_append_increments_count(self) -> None:
@@ -274,6 +276,7 @@ class TestAppendListReset:
 # 5. Max history cap
 # ---------------------------------------------------------------------------
 
+
 class TestHistoryCap:
     def test_cap_at_max_history(self) -> None:
         svc = _fresh()
@@ -301,6 +304,7 @@ class TestHistoryCap:
 # ---------------------------------------------------------------------------
 # 6. Forbidden field sanitization
 # ---------------------------------------------------------------------------
+
 
 class TestForbiddenFieldSanitization:
     def _meta_with_forbidden(self) -> dict[str, Any]:
@@ -383,6 +387,7 @@ class TestForbiddenFieldSanitization:
 # 7. Non-finite numeric metadata
 # ---------------------------------------------------------------------------
 
+
 class TestNonFiniteMetadata:
     def test_nan_dropped(self) -> None:
         result = _sanitize_metadata({"confidence": float("nan")})
@@ -415,15 +420,22 @@ class TestNonFiniteMetadata:
 # 8. Event type normalization
 # ---------------------------------------------------------------------------
 
+
 class TestEventTypeNormalization:
     def test_valid_event_type_unchanged(self) -> None:
-        assert _normalize_event_type("sandbox_preview_requested") == "sandbox_preview_requested"
+        assert (
+            _normalize_event_type("sandbox_preview_requested")
+            == "sandbox_preview_requested"
+        )
 
     def test_valid_type_with_leading_whitespace(self) -> None:
         assert _normalize_event_type("  sandbox_state_reset  ") == "sandbox_state_reset"
 
     def test_valid_type_uppercase(self) -> None:
-        assert _normalize_event_type("SANDBOX_PREVIEW_REQUESTED") == "sandbox_preview_requested"
+        assert (
+            _normalize_event_type("SANDBOX_PREVIEW_REQUESTED")
+            == "sandbox_preview_requested"
+        )
 
     def test_valid_type_with_hyphens(self) -> None:
         assert _normalize_event_type("sandbox-state-reset") == "sandbox_state_reset"
@@ -448,6 +460,7 @@ class TestEventTypeNormalization:
 # 9. Severity coercion
 # ---------------------------------------------------------------------------
 
+
 class TestSeverityCoercion:
     @pytest.mark.parametrize("severity", ["info", "warning", "blocked"])
     def test_valid_severity_accepted(self, severity: str) -> None:
@@ -469,6 +482,7 @@ class TestSeverityCoercion:
 # ---------------------------------------------------------------------------
 # 10. Message and source length capping
 # ---------------------------------------------------------------------------
+
 
 class TestLengthCapping:
     def test_message_truncated(self) -> None:
@@ -494,6 +508,7 @@ class TestLengthCapping:
 # 11. Module-level convenience wrapper
 # ---------------------------------------------------------------------------
 
+
 class TestModuleLevelWrapper:
     def test_record_paper_event_returns_event(self) -> None:
         history = get_paper_sandbox_history()
@@ -513,9 +528,11 @@ class TestModuleLevelWrapper:
 # 12. No broker/MT5/IBKR imports in service and schema modules
 # ---------------------------------------------------------------------------
 
+
 class TestNoBrokerImports:
     def test_service_module_no_metatrader5(self) -> None:
         import app.services.paper_sandbox_history as svc_mod
+
         src = inspect.getsource(svc_mod)
         assert "MetaTrader5" not in src
         assert "import mt5" not in src
@@ -523,18 +540,21 @@ class TestNoBrokerImports:
 
     def test_service_module_no_ibkr(self) -> None:
         import app.services.paper_sandbox_history as svc_mod
+
         src = inspect.getsource(svc_mod)
         assert "ib_insync" not in src
         assert "ibkr" not in src.lower().split("ibkr_order_id")[0]
 
     def test_schema_module_no_metatrader5(self) -> None:
         import app.schemas.paper_sandbox_history as schema_mod
+
         src = inspect.getsource(schema_mod)
         assert "MetaTrader5" not in src
         assert "import mt5" not in src
 
     def test_service_module_no_broker_adapter(self) -> None:
         import app.services.paper_sandbox_history as svc_mod
+
         src = inspect.getsource(svc_mod)
         assert "broker_adapter" not in src
         assert "place_order" not in src
@@ -546,20 +566,24 @@ class TestNoBrokerImports:
 # 13. In-memory only — no route added
 # ---------------------------------------------------------------------------
 
+
 class TestInMemoryAndNoRoute:
     def test_service_has_no_fastapi_router(self) -> None:
         import app.services.paper_sandbox_history as svc_mod
+
         src = inspect.getsource(svc_mod)
         assert "APIRouter" not in src
         assert "router = " not in src
 
     def test_schema_has_no_fastapi_router(self) -> None:
         import app.schemas.paper_sandbox_history as schema_mod
+
         src = inspect.getsource(schema_mod)
         assert "APIRouter" not in src
 
     def test_service_no_database_imports(self) -> None:
         import app.services.paper_sandbox_history as svc_mod
+
         src = inspect.getsource(svc_mod)
         assert "supabase" not in src.lower()
         assert "sqlalchemy" not in src.lower()
@@ -568,6 +592,7 @@ class TestInMemoryAndNoRoute:
 
     def test_service_no_network_imports(self) -> None:
         import app.services.paper_sandbox_history as svc_mod
+
         src = inspect.getsource(svc_mod)
         assert "httpx" not in src
         assert "requests" not in src
@@ -585,6 +610,7 @@ class TestInMemoryAndNoRoute:
 # ---------------------------------------------------------------------------
 # 14. PaperAuditHistory safety flags
 # ---------------------------------------------------------------------------
+
 
 class TestPaperAuditHistorySafetyFlags:
     def test_history_paper_only(self) -> None:
@@ -628,16 +654,20 @@ class TestPaperAuditHistorySafetyFlags:
 # 15. All supported event types
 # ---------------------------------------------------------------------------
 
+
 class TestAllEventTypes:
-    @pytest.mark.parametrize("event_type", [
-        "sandbox_preview_requested",
-        "sandbox_state_created",
-        "sandbox_state_reset",
-        "ticket_draft_observed",
-        "safety_flags_checked",
-        "human_review_required",
-        "degraded_fallback_used",
-    ])
+    @pytest.mark.parametrize(
+        "event_type",
+        [
+            "sandbox_preview_requested",
+            "sandbox_state_created",
+            "sandbox_state_reset",
+            "ticket_draft_observed",
+            "safety_flags_checked",
+            "human_review_required",
+            "degraded_fallback_used",
+        ],
+    )
     def test_valid_event_type_accepted(self, event_type: str) -> None:
         svc = _fresh()
         ev = svc.append(event_type, f"Testing {event_type}")
@@ -670,6 +700,7 @@ class TestAllEventTypes:
 # 16. Timestamp format
 # ---------------------------------------------------------------------------
 
+
 class TestTimestamp:
     def test_timestamp_is_iso_string(self) -> None:
         svc = _fresh()
@@ -678,6 +709,7 @@ class TestTimestamp:
         assert len(ev.timestamp) > 0
         # Should parse as a valid ISO datetime
         from datetime import datetime
+
         dt = datetime.fromisoformat(ev.timestamp)
         assert dt is not None
 
@@ -685,4 +717,8 @@ class TestTimestamp:
         svc = _fresh()
         ev = svc.append("sandbox_preview_requested", "ts test")
         # datetime.now(timezone.utc).isoformat() produces "+00:00"
-        assert "+" in ev.timestamp or "Z" in ev.timestamp or ev.timestamp.endswith("+00:00")
+        assert (
+            "+" in ev.timestamp
+            or "Z" in ev.timestamp
+            or ev.timestamp.endswith("+00:00")
+        )

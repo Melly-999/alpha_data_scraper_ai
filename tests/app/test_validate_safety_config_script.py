@@ -87,8 +87,7 @@ def test_script_fails_when_autotrade_enabled_is_true(
     _write_config(cfg, base_safe_config)
     result = _run_script(cfg)
     assert result.returncode != 0, (
-        "script must reject autotrade.enabled=true; "
-        f"stdout:\n{result.stdout}"
+        "script must reject autotrade.enabled=true; " f"stdout:\n{result.stdout}"
     )
     assert "autotrade.enabled must be false" in result.stdout
     assert "OVERALL: FAIL" in result.stdout

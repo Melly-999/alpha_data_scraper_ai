@@ -90,9 +90,9 @@ def test_openapi_schema_is_readable_and_non_empty(client) -> None:
     paths = set(_all_openapi_paths(client))
     assert paths, "OpenAPI schema returned no paths — read-back is broken"
     # Two well-known paths from the safety surface; both have shipped on `main`.
-    assert "/api/health" in paths, (
-        f"expected /api/health in OpenAPI paths, got {sorted(paths)[:5]} ..."
-    )
+    assert (
+        "/api/health" in paths
+    ), f"expected /api/health in OpenAPI paths, got {sorted(paths)[:5]} ..."
     assert "/api/safety/status" in paths, (
         f"expected /api/safety/status (PR #57) in OpenAPI paths; "
         f"first few: {sorted(paths)[:5]}"

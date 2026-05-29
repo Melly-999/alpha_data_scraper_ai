@@ -19,7 +19,6 @@ from .config import Settings
 from .models import SignalRecord
 from .schemas import WatchlistItemOut
 
-
 _FALLBACK_MARKETS: tuple[dict[str, object], ...] = (
     {
         "symbol": "EURUSD",
