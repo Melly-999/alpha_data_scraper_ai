@@ -137,29 +137,17 @@ class TradeTicketDraft(BaseModel):
 
         if side == TradeSide.long:
             if sl >= entry:
-                raise ValueError(
-                    "long setup: stop_loss must be below entry_price"
-                )
+                raise ValueError("long setup: stop_loss must be below entry_price")
             if tp1 <= entry:
-                raise ValueError(
-                    "long setup: take_profit_1 must be above entry_price"
-                )
+                raise ValueError("long setup: take_profit_1 must be above entry_price")
             if tp2 is not None and tp2 <= entry:
-                raise ValueError(
-                    "long setup: take_profit_2 must be above entry_price"
-                )
+                raise ValueError("long setup: take_profit_2 must be above entry_price")
         else:  # short
             if sl <= entry:
-                raise ValueError(
-                    "short setup: stop_loss must be above entry_price"
-                )
+                raise ValueError("short setup: stop_loss must be above entry_price")
             if tp1 >= entry:
-                raise ValueError(
-                    "short setup: take_profit_1 must be below entry_price"
-                )
+                raise ValueError("short setup: take_profit_1 must be below entry_price")
             if tp2 is not None and tp2 >= entry:
-                raise ValueError(
-                    "short setup: take_profit_2 must be below entry_price"
-                )
+                raise ValueError("short setup: take_profit_2 must be below entry_price")
 
         return self

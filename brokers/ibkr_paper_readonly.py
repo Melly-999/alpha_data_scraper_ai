@@ -389,8 +389,7 @@ class IBKRPaperReadOnlyAdapter:
                     "connected": False,
                     "degraded": True,
                     "degraded_reason": (
-                        "Injected IBKR paper client violated read-only "
-                        "safety flags"
+                        "Injected IBKR paper client violated read-only " "safety flags"
                     ),
                     "read_only": True,
                     "execution_enabled": False,
@@ -442,9 +441,7 @@ class IBKRPaperReadOnlyAdapter:
         # a clear safety_note. We never surface a snapshot derived from
         # an unsafe client.
         if not _client_is_safe(client):
-            return self._safe_zero_account_snapshot(
-                _SAFETY_NOTE_ACCOUNT_UNSAFE_CLIENT
-            )
+            return self._safe_zero_account_snapshot(_SAFETY_NOTE_ACCOUNT_UNSAFE_CLIENT)
 
         # 3. Client present and safe — pull the read-only payload. The
         # helper returns None on missing / non-mapping / accessor-error
@@ -456,9 +453,7 @@ class IBKRPaperReadOnlyAdapter:
         coerced = _coerce_account_payload(payload)
         if coerced is None:
             # Malformed numeric data — refuse to surface it.
-            return self._safe_zero_account_snapshot(
-                _SAFETY_NOTE_ACCOUNT_MALFORMED
-            )
+            return self._safe_zero_account_snapshot(_SAFETY_NOTE_ACCOUNT_MALFORMED)
 
         return MappingProxyType(
             {

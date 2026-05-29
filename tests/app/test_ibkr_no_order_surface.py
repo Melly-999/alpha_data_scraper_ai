@@ -16,7 +16,6 @@ from typing import Any, Iterable, Mapping
 
 import pytest
 
-
 FORBIDDEN_METHOD_NAMES: tuple[str, ...] = (
     "place_order",
     "cancel_order",
@@ -210,9 +209,7 @@ def _every_adapter_state() -> list[tuple[str, Any]]:
         ),
         (
             "unsafe-paper-false",
-            IBKRPaperReadOnlyAdapter(
-                readonly_client=_UnsafePaperClient(paper=False)
-            ),
+            IBKRPaperReadOnlyAdapter(readonly_client=_UnsafePaperClient(paper=False)),
         ),
         (
             "unsafe-read-only-false",
@@ -271,15 +268,12 @@ def test_instance_has_no_forbidden_methods_in_every_state(
 ) -> None:
     leaked = _forbidden_methods_on(adapter)
     assert not leaked, (
-        f"adapter in state {state_name!r} exposes forbidden methods: "
-        f"{leaked!r}"
+        f"adapter in state {state_name!r} exposes forbidden methods: " f"{leaked!r}"
     )
 
 
 @STATE_PARAMS
-def test_capabilities_always_lock_safety_flags(
-    state_name: str, adapter: Any
-) -> None:
+def test_capabilities_always_lock_safety_flags(state_name: str, adapter: Any) -> None:
     caps = adapter.capabilities()
     assert caps["read_only"] is True, state_name
     assert caps["paper"] is True, state_name
@@ -291,9 +285,7 @@ def test_capabilities_always_lock_safety_flags(
 
 
 @STATE_PARAMS
-def test_status_always_forces_safety_flags(
-    state_name: str, adapter: Any
-) -> None:
+def test_status_always_forces_safety_flags(state_name: str, adapter: Any) -> None:
     status = adapter.status()
     assert status["read_only"] is True, state_name
     assert status["execution_enabled"] is False, state_name
@@ -308,9 +300,9 @@ def test_account_snapshot_never_leaks_sensitive_or_execution_keys(
     assert snapshot["read_only"] is True, state_name
 
     leaked = sorted(set(snapshot.keys()) & set(FORBIDDEN_OUTPUT_KEYS))
-    assert not leaked, (
-        f"account_snapshot in state {state_name!r} leaked keys: {leaked!r}"
-    )
+    assert (
+        not leaked
+    ), f"account_snapshot in state {state_name!r} leaked keys: {leaked!r}"
 
 
 @STATE_PARAMS
@@ -325,8 +317,7 @@ def test_positions_never_leak_sensitive_or_execution_keys(
         assert position["read_only"] is True, (state_name, index)
         leaked = sorted(set(position.keys()) & set(FORBIDDEN_OUTPUT_KEYS))
         assert not leaked, (
-            f"position {index} in state {state_name!r} leaked keys: "
-            f"{leaked!r}"
+            f"position {index} in state {state_name!r} leaked keys: " f"{leaked!r}"
         )
 
 
@@ -350,8 +341,7 @@ def test_module_import_pulls_no_broker_sdk_or_network_modules() -> None:
         )
     )
     assert not leaked, (
-        "IBKR read-only adapter import pulled forbidden modules: "
-        f"{leaked!r}"
+        "IBKR read-only adapter import pulled forbidden modules: " f"{leaked!r}"
     )
 
 
@@ -370,8 +360,7 @@ def test_openapi_forbidden_path_scan_still_passes(client) -> None:
                 offenders.append((path, pattern))
 
     assert not offenders, (
-        "OpenAPI schema contains order/execution-shaped paths: "
-        f"{offenders!r}"
+        "OpenAPI schema contains order/execution-shaped paths: " f"{offenders!r}"
     )
 
 

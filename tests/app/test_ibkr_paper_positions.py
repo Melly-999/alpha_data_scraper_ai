@@ -140,9 +140,7 @@ def test_safe_client_via_get_accessor_surfaces_positions() -> None:
 # Test 3 — optional numeric fields can be missing.
 # ---------------------------------------------------------------------------
 def test_optional_numeric_fields_can_be_missing() -> None:
-    client = _SafePaperPositionsClient(
-        items=[{"symbol": "AAPL", "quantity": 10}]
-    )
+    client = _SafePaperPositionsClient(items=[{"symbol": "AAPL", "quantity": 10}])
     adapter = IBKRPaperReadOnlyAdapter(readonly_client=client)
     raw = adapter.positions()
     pos = BrokerPosition(**dict(raw[0]))
@@ -383,14 +381,11 @@ _FORBIDDEN_METHOD_NAMES: tuple[str, ...] = (
 
 
 def test_adapter_has_no_forbidden_methods() -> None:
-    adapter = IBKRPaperReadOnlyAdapter(
-        readonly_client=_SafePaperPositionsClient()
-    )
+    adapter = IBKRPaperReadOnlyAdapter(readonly_client=_SafePaperPositionsClient())
     surface = set(dir(adapter)) | set(dir(IBKRPaperReadOnlyAdapter))
     leaked = sorted(surface & set(_FORBIDDEN_METHOD_NAMES))
     assert not leaked, (
-        "IBKRPaperReadOnlyAdapter must not expose forbidden "
-        f"method(s): {leaked!r}"
+        "IBKRPaperReadOnlyAdapter must not expose forbidden " f"method(s): {leaked!r}"
     )
 
 
@@ -443,9 +438,7 @@ def test_module_import_pulls_no_broker_or_network_modules() -> None:
 def test_account_snapshot_baseline_still_holds() -> None:
     from app.schemas.broker import BrokerAccountSnapshot
 
-    snap = BrokerAccountSnapshot(
-        **dict(IBKRPaperReadOnlyAdapter().account_snapshot())
-    )
+    snap = BrokerAccountSnapshot(**dict(IBKRPaperReadOnlyAdapter().account_snapshot()))
     assert snap.cash == 0.0
     assert snap.equity == 0.0
     assert snap.buying_power == 0.0

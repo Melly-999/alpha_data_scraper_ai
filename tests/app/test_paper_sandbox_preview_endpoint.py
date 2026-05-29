@@ -197,9 +197,9 @@ def test_response_requires_human_review_is_true(client) -> None:
 def test_top_level_response_has_no_forbidden_field(client, field: str) -> None:
     """No forbidden field may appear at the top level of the response."""
     body = client.get(ENDPOINT).json()
-    assert field not in body, (
-        f"Forbidden field '{field}' found at top level of preview response"
-    )
+    assert (
+        field not in body
+    ), f"Forbidden field '{field}' found at top level of preview response"
 
 
 def test_entries_contain_no_forbidden_fields_when_populated(client) -> None:
@@ -231,9 +231,9 @@ def test_entries_contain_no_forbidden_fields_when_populated(client) -> None:
 
     for entry in body["entries"]:
         for field in _FORBIDDEN_FIELDS:
-            assert field not in entry, (
-                f"Forbidden field '{field}' found in sandbox entry: {entry}"
-            )
+            assert (
+                field not in entry
+            ), f"Forbidden field '{field}' found in sandbox entry: {entry}"
 
 
 # ---------------------------------------------------------------------------
@@ -244,33 +244,33 @@ def test_entries_contain_no_forbidden_fields_when_populated(client) -> None:
 def test_post_to_preview_returns_405(client) -> None:
     """POST to the preview endpoint must return 405 Method Not Allowed."""
     response = client.post(ENDPOINT, json={})
-    assert response.status_code == 405, (
-        f"Expected 405 for POST, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 405
+    ), f"Expected 405 for POST, got {response.status_code}"
 
 
 def test_put_to_preview_returns_405(client) -> None:
     """PUT to the preview endpoint must return 405 Method Not Allowed."""
     response = client.put(ENDPOINT, json={})
-    assert response.status_code == 405, (
-        f"Expected 405 for PUT, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 405
+    ), f"Expected 405 for PUT, got {response.status_code}"
 
 
 def test_patch_to_preview_returns_405(client) -> None:
     """PATCH to the preview endpoint must return 405 Method Not Allowed."""
     response = client.patch(ENDPOINT, json={})
-    assert response.status_code == 405, (
-        f"Expected 405 for PATCH, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 405
+    ), f"Expected 405 for PATCH, got {response.status_code}"
 
 
 def test_delete_to_preview_returns_405(client) -> None:
     """DELETE to the preview endpoint must return 405 Method Not Allowed."""
     response = client.delete(ENDPOINT)
-    assert response.status_code == 405, (
-        f"Expected 405 for DELETE, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 405
+    ), f"Expected 405 for DELETE, got {response.status_code}"
 
 
 # ---------------------------------------------------------------------------
@@ -281,9 +281,9 @@ def test_delete_to_preview_returns_405(client) -> None:
 def test_openapi_schema_includes_preview_path(client) -> None:
     """The OpenAPI schema must list GET /api/paper/sandbox/preview."""
     paths = client.app.openapi().get("paths", {})
-    assert ENDPOINT in paths, (
-        f"Expected {ENDPOINT} in OpenAPI paths; found: {sorted(paths)[:10]}"
-    )
+    assert (
+        ENDPOINT in paths
+    ), f"Expected {ENDPOINT} in OpenAPI paths; found: {sorted(paths)[:10]}"
 
 
 def test_preview_openapi_path_has_only_get_method(client) -> None:
@@ -291,9 +291,9 @@ def test_preview_openapi_path_has_only_get_method(client) -> None:
     path_item = client.app.openapi().get("paths", {}).get(ENDPOINT, {})
     assert "get" in path_item, "GET method missing from OpenAPI for preview path"
     for method in ("post", "put", "patch", "delete"):
-        assert method not in path_item, (
-            f"Unexpected method '{method}' registered on preview path"
-        )
+        assert (
+            method not in path_item
+        ), f"Unexpected method '{method}' registered on preview path"
 
 
 def test_preview_openapi_tags_include_paper_sandbox(client) -> None:
@@ -301,18 +301,16 @@ def test_preview_openapi_tags_include_paper_sandbox(client) -> None:
     path_item = client.app.openapi().get("paths", {}).get(ENDPOINT, {})
     get_op = path_item.get("get", {})
     tags = get_op.get("tags", [])
-    assert "paper-sandbox" in tags, (
-        f"Expected 'paper-sandbox' tag on preview endpoint, got {tags}"
-    )
+    assert (
+        "paper-sandbox" in tags
+    ), f"Expected 'paper-sandbox' tag on preview endpoint, got {tags}"
 
 
 def test_openapi_preview_operation_id(client) -> None:
     """The preview endpoint must use operation_id='get_paper_sandbox_preview'."""
     path_item = client.app.openapi().get("paths", {}).get(ENDPOINT, {})
     op_id = path_item.get("get", {}).get("operationId", "")
-    assert op_id == "get_paper_sandbox_preview", (
-        f"Unexpected operationId: {op_id!r}"
-    )
+    assert op_id == "get_paper_sandbox_preview", f"Unexpected operationId: {op_id!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -326,9 +324,9 @@ def test_route_module_imports_no_broker_modules() -> None:
 
     src = inspect.getsource(mod)
     for forbidden in _FORBIDDEN_BROKER_MODULES:
-        assert forbidden not in src, (
-            f"Forbidden module reference '{forbidden}' found in route source"
-        )
+        assert (
+            forbidden not in src
+        ), f"Forbidden module reference '{forbidden}' found in route source"
 
 
 def test_route_module_imports_no_mt5() -> None:
@@ -488,9 +486,9 @@ def test_preview_does_not_mutate_config_json(client) -> None:
     client.get(ENDPOINT)
 
     config_after = json.loads(config_path.read_text())
-    assert config_before == config_after, (
-        "config.json was mutated by a GET to the preview endpoint"
-    )
+    assert (
+        config_before == config_after
+    ), "config.json was mutated by a GET to the preview endpoint"
 
 
 def test_config_autotrade_still_disabled_after_preview_call(client) -> None:

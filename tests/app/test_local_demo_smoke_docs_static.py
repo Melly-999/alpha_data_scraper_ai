@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 QA_SMOKE_DOC = REPO_ROOT / "docs" / "qa" / "local_demo_tester_smoke_checklist.md"
 QA_404_DOC = REPO_ROOT / "docs" / "qa" / "local_demo_404_regression_checklist.md"
@@ -119,4 +118,3 @@ class TestDesktopLauncherPlanUpdate:
     def test_plan_mentions_checklists(self, plan_text: str) -> None:
         assert "local_demo_tester_smoke_checklist.md" in plan_text
         assert "local_demo_404_regression_checklist.md" in plan_text
-
