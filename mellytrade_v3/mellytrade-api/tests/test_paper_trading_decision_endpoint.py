@@ -11,8 +11,6 @@ Covers:
 
 from __future__ import annotations
 
-import pytest
-
 _KEY = {"x-api-key": "test-key"}  # conftest sets FASTAPI_KEY=test-key
 _URL = "/paper/decision/preview"
 

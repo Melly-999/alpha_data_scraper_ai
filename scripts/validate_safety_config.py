@@ -243,8 +243,7 @@ def _check_risk_block(config: dict[str, Any], report: Report) -> None:
         else:
             if max_risk_f <= 1.0:
                 report.passed(
-                    f"config.risk.max_risk_per_trade_pct={max_risk_f} "
-                    f"(<= 1.0%)"
+                    f"config.risk.max_risk_per_trade_pct={max_risk_f} " f"(<= 1.0%)"
                 )
             else:
                 report.failed_check(

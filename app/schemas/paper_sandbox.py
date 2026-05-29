@@ -29,10 +29,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.trade_ticket import EntryType, TradeSide
 
-
 # ---------------------------------------------------------------------------
 # PaperSandboxEntry
 # ---------------------------------------------------------------------------
+
 
 class PaperSandboxEntry(BaseModel):
     """One paper-only ticket record stored in the in-memory sandbox.
@@ -79,6 +79,7 @@ class PaperSandboxEntry(BaseModel):
 # PaperSandboxSubmitResult
 # ---------------------------------------------------------------------------
 
+
 class PaperSandboxSubmitResult(BaseModel):
     """Result of submitting a validated TradeTicketDraft to the sandbox.
 
@@ -101,6 +102,7 @@ class PaperSandboxSubmitResult(BaseModel):
 # ---------------------------------------------------------------------------
 # PaperSandboxState
 # ---------------------------------------------------------------------------
+
 
 class PaperSandboxState(BaseModel):
     """Read-only snapshot of the current in-memory sandbox contents.

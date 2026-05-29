@@ -21,8 +21,6 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-import pytest
-
 from app.schemas.audit_event import AuditEventRecord
 from app.services.startup_audit import emit_startup_events
 
@@ -313,7 +311,9 @@ class TestMetadataSafety:
         for _, payload in calls:
             metadata = payload.get("metadata", {})
             execution_found = _KNOWN_EXECUTION_KEYS & metadata.keys()
-            assert not execution_found, f"Execution-shaped keys found: {execution_found}"
+            assert (
+                not execution_found
+            ), f"Execution-shaped keys found: {execution_found}"
 
     def test_no_account_id_in_any_payload(self) -> None:
         fn, calls = _make_fake_insert_fn()

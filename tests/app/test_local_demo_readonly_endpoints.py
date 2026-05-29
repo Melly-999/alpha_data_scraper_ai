@@ -4,7 +4,6 @@ from collections.abc import Iterable
 
 import pytest
 
-
 _PATHS: tuple[str, ...] = (
     "/api/backtest/summary",
     "/api/investment",

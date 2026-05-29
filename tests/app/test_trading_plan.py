@@ -7,7 +7,6 @@ that resembles an order ticket should fail one of these tests immediately.
 
 from __future__ import annotations
 
-
 VALID_BIAS = {"bullish", "bearish", "neutral", "wait"}
 VALID_QUALITY = {"low", "medium", "high"}
 VALID_RISK_TIER = {"low", "medium", "high"}

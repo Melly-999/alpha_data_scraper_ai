@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -91,7 +90,9 @@ class TestBetaDocsIndexStatic:
         assert "does not grant access, send invites" in combined
 
     def test_no_mutating_or_network_imports(self) -> None:
-        import_lines_text = import_lines(read("tests/app/test_beta_docs_index_static.py"))
+        import_lines_text = import_lines(
+            read("tests/app/test_beta_docs_index_static.py")
+        )
         banned = (
             "requests",
             "httpx",
@@ -109,7 +110,9 @@ class TestBetaDocsIndexStatic:
                 assert token not in line, f"unexpected import line: {line!r}"
 
     def test_tests_do_not_grant_access_or_send_messages(self) -> None:
-        import_lines_text = import_lines(read("tests/app/test_beta_docs_index_static.py"))
+        import_lines_text = import_lines(
+            read("tests/app/test_beta_docs_index_static.py")
+        )
         for line in import_lines_text:
             assert "grant" not in line
             assert "send" not in line

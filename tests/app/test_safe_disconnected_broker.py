@@ -174,9 +174,7 @@ def test_safe_disconnected_public_surface_is_read_only_only() -> None:
     from brokers.safe_disconnected import SafeDisconnectedBrokerAdapter
 
     public = {
-        name
-        for name in dir(SafeDisconnectedBrokerAdapter)
-        if not name.startswith("_")
+        name for name in dir(SafeDisconnectedBrokerAdapter) if not name.startswith("_")
     }
     expected = set(EXPECTED_READ_ONLY_METHOD_NAMES)
     extra = public - expected
