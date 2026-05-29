@@ -9,6 +9,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/terminal" replace />} />
       <Route path="/terminal" element={<TerminalPage />} />
+      <Route path="/terminal/open-design-tabs" element={<TerminalPage />} />
       <Route path="/terminal/paper-run-preview" element={<PaperRunPreviewPage />} />
       <Route path="/dashboard" element={<Navigate to="/terminal" replace />} />
       <Route path="/markets" element={<TerminalPage />} />

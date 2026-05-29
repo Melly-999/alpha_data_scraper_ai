@@ -1,4 +1,10 @@
-const badges = ["READ ONLY", "DRY RUN", "AUTO TRADE OFF", "LIVE ORDERS BLOCKED"];
+const badges = [
+  "READ ONLY",
+  "DRY RUN",
+  "AUTO TRADE OFF",
+  "LIVE ORDERS BLOCKED",
+  "HUMAN REVIEW REQUIRED",
+];
 
 export function SafetyBadges() {
   return (

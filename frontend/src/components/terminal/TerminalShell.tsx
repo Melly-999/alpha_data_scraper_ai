@@ -20,6 +20,7 @@ import { IBKRBrokerCard } from "./IBKRBrokerCard";
 import { LeftSidebar } from "./LeftSidebar";
 import { LoadingScreen } from "./LoadingScreen";
 import { MarketOverviewGrid } from "./MarketOverviewGrid";
+import { OpenDesignTabsPanel } from "./OpenDesignTabsPanel";
 import { PaperRunPreviewPanel } from "./PaperRunPreviewPanel";
 import { NewsRail } from "./NewsRail";
 import { RiskGuardrailsCard } from "./RiskGuardrailsCard";
@@ -62,6 +63,7 @@ function viewFromPath(pathname: string) {
   if (pathname.includes("portfolio") || pathname.includes("positions")) return "portfolio";
   if (pathname.includes("audit") || pathname.includes("reports")) return "audit";
   if (pathname.includes("settings")) return "settings";
+  if (pathname.includes("open-design-tabs")) return "open-design-tabs";
   return "dashboard";
 }
 
@@ -218,6 +220,7 @@ export function TerminalShell({
           {view === "watchlist" ? <WatchlistPanel markets={watchlist} /> : null}
           {view === "workspace" ? <AIWorkspacePanel data={data} /> : null}
           {view === "paper-preview" ? <PaperRunPreviewPanel /> : null}
+          {view === "open-design-tabs" ? <OpenDesignTabsPanel data={data} /> : null}
           {view === "signals" ? (
             <>
               <SignalThesisPanel signals={data.signals} />

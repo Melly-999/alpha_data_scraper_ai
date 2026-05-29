@@ -1,8 +1,9 @@
 interface MiniChartProps {
   points: Array<{ x: number; y: number }>;
+  stroke?: string;
 }
 
-export function MiniChart({ points }: MiniChartProps) {
+export function MiniChart({ points, stroke = "var(--blue)" }: MiniChartProps) {
   if (points.length < 2) {
     return null;
   }
@@ -23,7 +24,7 @@ export function MiniChart({ points }: MiniChartProps) {
 
   return (
     <svg className="mini-chart" width={width} height={height}>
-      <polyline points={polyline} fill="none" stroke="var(--blue)" strokeWidth="2" />
+      <polyline points={polyline} fill="none" stroke={stroke} strokeWidth="2" />
     </svg>
   );
 }
