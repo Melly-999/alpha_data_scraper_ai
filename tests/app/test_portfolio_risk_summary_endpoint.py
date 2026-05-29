@@ -214,9 +214,7 @@ def test_portfolio_risk_summary_no_secrets_in_response(client) -> None:
 
 
 @pytest.mark.parametrize("method", ["post", "put", "patch", "delete"])
-def test_portfolio_risk_summary_rejects_non_get_methods(
-    client, method: str
-) -> None:
+def test_portfolio_risk_summary_rejects_non_get_methods(client, method: str) -> None:
     response = getattr(client, method)(RISK_SUMMARY_PATH)
     assert response.status_code == 405
 
@@ -248,7 +246,14 @@ def test_portfolio_risk_summary_openapi_is_get_only(client) -> None:
 
 def test_portfolio_risk_summary_openapi_path_is_safe(client) -> None:
     assert RISK_SUMMARY_PATH == "/api/portfolio/risk-summary"
-    for forbidden in ("execute", "broker_execute", "autotrade", "live", "place", "order"):
+    for forbidden in (
+        "execute",
+        "broker_execute",
+        "autotrade",
+        "live",
+        "place",
+        "order",
+    ):
         assert forbidden not in RISK_SUMMARY_PATH
 
 

@@ -32,15 +32,13 @@ from pydantic import ValidationError
 from app.schemas.audit_event import (
     AuditEventCreate,
     AuditEventRecord,
-    AuditEventSource,
-    AuditSeverity,
 )
 from app.services.audit_writer import _build_payload, write_audit_event
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_event(**overrides: Any) -> AuditEventCreate:
     defaults: dict[str, Any] = {
@@ -55,6 +53,7 @@ def _make_event(**overrides: Any) -> AuditEventCreate:
 
 def _fake_insert_fn(row_id: str | None = "abc-123") -> Any:
     """Return an _insert_fn that yields a fake Supabase-like response."""
+
     def _fn(table: str, payload: dict[str, Any]) -> Any:
         response = MagicMock()
         if row_id is not None:
@@ -62,12 +61,14 @@ def _fake_insert_fn(row_id: str | None = "abc-123") -> Any:
         else:
             response.data = []
         return response
+
     return _fn
 
 
 # ---------------------------------------------------------------------------
 # 1. AuditEventCreate — valid construction
 # ---------------------------------------------------------------------------
+
 
 def test_audit_event_create_minimal() -> None:
     event = AuditEventCreate(event_type="startup", message="service started")
@@ -99,7 +100,14 @@ def test_audit_event_create_all_severities() -> None:
 
 
 def test_audit_event_create_all_sources() -> None:
-    for src in ("system", "scanner", "ai_workspace", "broker_registry", "supabase", "safety"):
+    for src in (
+        "system",
+        "scanner",
+        "ai_workspace",
+        "broker_registry",
+        "supabase",
+        "safety",
+    ):
         event = AuditEventCreate(event_type="e", source=src, message="m")  # type: ignore[arg-type]
         assert event.source == src
 
@@ -107,6 +115,7 @@ def test_audit_event_create_all_sources() -> None:
 # ---------------------------------------------------------------------------
 # 2. AuditEventCreate — forbidden metadata keys rejected
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize(
     "key",
@@ -132,6 +141,7 @@ def test_forbidden_metadata_key_rejected(key: str) -> None:
 # 3. AuditEventCreate — execution-shaped metadata keys rejected
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     "key",
     [
@@ -154,6 +164,7 @@ def test_execution_shaped_metadata_key_rejected(key: str) -> None:
 # 4. AuditEventCreate — safety invariants enforced
 # ---------------------------------------------------------------------------
 
+
 def test_read_only_must_be_true() -> None:
     with pytest.raises(ValidationError, match="read_only must always be True"):
         AuditEventCreate(event_type="e", message="m", read_only=False)
@@ -168,6 +179,7 @@ def test_dry_run_must_be_true() -> None:
 # 5. AuditEventCreate — extra fields forbidden
 # ---------------------------------------------------------------------------
 
+
 def test_extra_fields_forbidden() -> None:
     with pytest.raises(ValidationError):
         AuditEventCreate(event_type="e", message="m", unknown_field="x")  # type: ignore[call-arg]
@@ -176,6 +188,7 @@ def test_extra_fields_forbidden() -> None:
 # ---------------------------------------------------------------------------
 # 6. AuditEventRecord — valid construction
 # ---------------------------------------------------------------------------
+
 
 def test_audit_event_record_defaults() -> None:
     record = AuditEventRecord(
@@ -223,6 +236,7 @@ def test_audit_event_record_degraded() -> None:
 # 7. write_audit_event — degraded path (client=None)
 # ---------------------------------------------------------------------------
 
+
 def test_write_audit_event_no_client_returns_degraded() -> None:
     event = _make_event()
     record = write_audit_event(event, client=None)
@@ -241,6 +255,7 @@ def test_write_audit_event_no_client_does_not_raise() -> None:
 # ---------------------------------------------------------------------------
 # 8. write_audit_event — success path (fake _insert_fn)
 # ---------------------------------------------------------------------------
+
 
 def test_write_audit_event_success_returns_persisted() -> None:
     event = _make_event()
@@ -269,6 +284,7 @@ def test_write_audit_event_success_read_only_and_dry_run() -> None:
 # 9. write_audit_event — insert raises → degraded (no exception to caller)
 # ---------------------------------------------------------------------------
 
+
 def test_write_audit_event_insert_raises_returns_degraded() -> None:
     def _raising_insert(table: str, payload: dict[str, Any]) -> Any:
         raise RuntimeError("connection refused")
@@ -293,6 +309,7 @@ def test_write_audit_event_insert_raises_does_not_propagate() -> None:
 # 10. write_audit_event — response with empty data list → persisted=True, id=None
 # ---------------------------------------------------------------------------
 
+
 def test_write_audit_event_empty_data_response() -> None:
     record = write_audit_event(_make_event(), _insert_fn=_fake_insert_fn(row_id=None))
     assert record.persisted is True
@@ -302,6 +319,7 @@ def test_write_audit_event_empty_data_response() -> None:
 # ---------------------------------------------------------------------------
 # 11. write_audit_event — payload always includes read_only + dry_run
 # ---------------------------------------------------------------------------
+
 
 def test_build_payload_always_includes_safety_flags() -> None:
     event = _make_event()
@@ -343,6 +361,7 @@ def test_insert_fn_receives_correct_table_name() -> None:
 # 12. write_audit_event — service role key never in payload
 # ---------------------------------------------------------------------------
 
+
 def test_payload_does_not_contain_service_role_key() -> None:
     captured_payloads: list[dict[str, Any]] = []
 
@@ -364,6 +383,7 @@ def test_payload_does_not_contain_service_role_key() -> None:
 # 13. AuditSeverity — only allowed literals accepted
 # ---------------------------------------------------------------------------
 
+
 def test_invalid_severity_rejected() -> None:
     with pytest.raises(ValidationError):
         AuditEventCreate(event_type="e", message="m", severity="critical")  # type: ignore[arg-type]
@@ -378,6 +398,7 @@ def test_valid_severity_safety() -> None:
 # 14. AuditEventSource — only allowed literals accepted
 # ---------------------------------------------------------------------------
 
+
 def test_invalid_source_rejected() -> None:
     with pytest.raises(ValidationError):
         AuditEventCreate(event_type="e", message="m", source="frontend")  # type: ignore[arg-type]
@@ -391,6 +412,7 @@ def test_valid_source_broker_registry() -> None:
 # ---------------------------------------------------------------------------
 # 15. write_audit_event — empty metadata is safe
 # ---------------------------------------------------------------------------
+
 
 def test_write_audit_event_empty_metadata_is_safe() -> None:
     event = AuditEventCreate(event_type="e", message="m")
@@ -413,6 +435,7 @@ def test_write_audit_event_safe_metadata_keys_accepted() -> None:
 # ---------------------------------------------------------------------------
 # 16. AuditEventRecord — safety invariants enforced at schema level (Scope A)
 # ---------------------------------------------------------------------------
+
 
 def test_audit_event_record_rejects_read_only_false() -> None:
     with pytest.raises(ValidationError, match="read_only must always be True"):
@@ -439,6 +462,7 @@ def test_audit_event_record_rejects_dry_run_false() -> None:
 # ---------------------------------------------------------------------------
 # 17. write_audit_event — real client path (MagicMock, no _insert_fn)
 # ---------------------------------------------------------------------------
+
 
 def test_write_audit_event_real_client_path_calls_table_insert_execute() -> None:
     from unittest.mock import MagicMock
@@ -475,6 +499,7 @@ def test_write_audit_event_real_client_path_table_name_is_audit_events() -> None
 # ---------------------------------------------------------------------------
 # 18. AuditEventCreate — empty field boundary tests
 # ---------------------------------------------------------------------------
+
 
 def test_audit_event_create_empty_event_type_rejected() -> None:
     with pytest.raises(ValidationError):

@@ -90,7 +90,9 @@ class AuditEventCreate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    event_type: str = Field(..., min_length=1, description="Categorises the audit event.")
+    event_type: str = Field(
+        ..., min_length=1, description="Categorises the audit event."
+    )
     severity: AuditSeverity = Field(
         default="info",
         description="Matches SUPA-001 SQL CHECK constraint values.",
@@ -99,7 +101,9 @@ class AuditEventCreate(BaseModel):
         default="system",
         description="The backend component emitting the event.",
     )
-    message: str = Field(..., min_length=1, description="Human-readable event description.")
+    message: str = Field(
+        ..., min_length=1, description="Human-readable event description."
+    )
     metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Optional key/value context. Forbidden keys are rejected.",
@@ -149,7 +153,9 @@ class AuditEventRecord(BaseModel):
     read_only: bool = True
     dry_run: bool = True
 
-    id: str | None = Field(default=None, description="UUID assigned by Supabase on insert.")
+    id: str | None = Field(
+        default=None, description="UUID assigned by Supabase on insert."
+    )
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         description="Insert timestamp. Synthetic when persisted=False.",

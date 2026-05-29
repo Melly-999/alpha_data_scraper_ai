@@ -514,9 +514,7 @@ def test_status_model_dict_contains_no_sensitive_field_names() -> None:
         "service_role_key",
     }
     overlap = field_names & forbidden_field_names
-    assert not overlap, (
-        f"Status model contains forbidden field names: {overlap}"
-    )
+    assert not overlap, f"Status model contains forbidden field names: {overlap}"
 
 
 # ---------------------------------------------------------------------------
@@ -543,25 +541,29 @@ def test_service_module_has_no_write_method_names() -> None:
     public_names = {
         name
         for name, obj in inspect.getmembers(svc)
-        if not name.startswith("_") and callable(obj)
+        if not name.startswith("_")
+        and callable(obj)
         and inspect.getmodule(obj) is svc  # only functions defined in this module
     }
 
     overlap = public_names & forbidden_names
-    assert not overlap, (
-        f"Service module exposes forbidden write/execution method names: {overlap}"
-    )
+    assert (
+        not overlap
+    ), f"Service module exposes forbidden write/execution method names: {overlap}"
 
 
 def test_service_public_api_is_read_only_named() -> None:
     import app.services.supabase_client as svc
 
-    expected_public = {"get_supabase_status", "is_supabase_configured", "get_safe_supabase_client"}
+    expected_public = {
+        "get_supabase_status",
+        "is_supabase_configured",
+        "get_safe_supabase_client",
+    }
     actual_public = {
         name
         for name, obj in inspect.getmembers(svc)
-        if not name.startswith("_") and callable(obj)
-        and inspect.getmodule(obj) is svc
+        if not name.startswith("_") and callable(obj) and inspect.getmodule(obj) is svc
     }
     # All expected public functions must be present
     for name in expected_public:
@@ -587,9 +589,9 @@ def test_supabase_client_module_has_no_frontend_imports() -> None:
             elif isinstance(node, ast.ImportFrom) and node.module:
                 names = [node.module]
             for name in names:
-                assert not name.startswith("frontend"), (
-                    f"supabase_client.py imports from frontend: {name}"
-                )
+                assert not name.startswith(
+                    "frontend"
+                ), f"supabase_client.py imports from frontend: {name}"
 
 
 def test_schema_module_has_no_frontend_imports() -> None:
@@ -606,9 +608,9 @@ def test_schema_module_has_no_frontend_imports() -> None:
             elif isinstance(node, ast.ImportFrom) and node.module:
                 names = [node.module]
             for name in names:
-                assert not name.startswith("frontend"), (
-                    f"supabase_status.py imports from frontend: {name}"
-                )
+                assert not name.startswith(
+                    "frontend"
+                ), f"supabase_status.py imports from frontend: {name}"
 
 
 # ---------------------------------------------------------------------------
@@ -645,9 +647,9 @@ def test_safety_flags_always_true_across_modes(
     assert status.read_only is True, "read_only must always be True"
     assert status.dry_run is True, "dry_run must always be True"
     assert status.writes_enabled is False, "writes_enabled must always be False"
-    assert status.frontend_service_key_exposed is False, (
-        "frontend_service_key_exposed must always be False"
-    )
+    assert (
+        status.frontend_service_key_exposed is False
+    ), "frontend_service_key_exposed must always be False"
 
 
 # ---------------------------------------------------------------------------
@@ -704,7 +706,9 @@ def test_get_safe_supabase_write_client_does_not_expose_service_key_in_failure_o
     _clear_supabase_env(monkeypatch)
     monkeypatch.setenv(_ENV_URL, "https://example.supabase.co")
     monkeypatch.setenv(_ENV_SVC_KEY, "super-secret-svc-key-xyz-abc")
-    _patch_importable(monkeypatch, available=False)  # package unavailable → returns None
+    _patch_importable(
+        monkeypatch, available=False
+    )  # package unavailable → returns None
 
     with caplog.at_level(logging.DEBUG):
         result = get_safe_supabase_write_client()

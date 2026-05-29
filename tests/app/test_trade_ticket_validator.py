@@ -14,10 +14,10 @@ from app.services.trade_ticket_validator import (
     validate_trade_ticket,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_long(**overrides: Any) -> TradeTicketDraft:
     base: dict[str, Any] = dict(
@@ -61,6 +61,7 @@ def _make_short(**overrides: Any) -> TradeTicketDraft:
 # Accepted cases
 # ---------------------------------------------------------------------------
 
+
 def test_accepted_true_for_valid_long():
     result = validate_trade_ticket(_make_long())
     assert result.accepted is True
@@ -78,6 +79,7 @@ def test_accepted_true_for_valid_short():
 # ---------------------------------------------------------------------------
 # Risk rejection
 # ---------------------------------------------------------------------------
+
 
 def test_rejected_when_risk_above_1_pct():
     # The schema itself enforces risk_pct <= 1.0, so we build a ticket with
@@ -104,6 +106,7 @@ def test_accepted_at_exactly_1_pct_risk():
 # Geometry rejection
 # ---------------------------------------------------------------------------
 
+
 def test_rejected_when_long_geometry_invalid():
     ticket = _make_long()
     # Flip SL above entry to simulate bad geometry post-construction
@@ -127,6 +130,7 @@ def test_rejected_when_short_geometry_invalid():
 # ---------------------------------------------------------------------------
 # Safety flag rejection
 # ---------------------------------------------------------------------------
+
 
 def test_rejected_when_paper_only_false():
     ticket = _make_long()
@@ -180,6 +184,7 @@ def test_rejected_when_broker_execution_allowed_true():
 # Warnings
 # ---------------------------------------------------------------------------
 
+
 def test_warning_when_confidence_below_70():
     ticket = _make_long(confidence=65.0, take_profit_2=1.1200)
     result = validate_trade_ticket(ticket)
@@ -218,6 +223,7 @@ def test_no_warning_when_confidence_exactly_70():
 # Safety invariants on accepted result
 # ---------------------------------------------------------------------------
 
+
 def test_accepted_result_never_flips_risk_allowed_to_true():
     result = validate_trade_ticket(_make_long())
     assert result.accepted is True
@@ -251,14 +257,22 @@ def test_safety_contract_execution_mode_is_paper_only_draft():
 # Validator has no network/broker side effects (import check)
 # ---------------------------------------------------------------------------
 
+
 def test_validator_has_no_network_imports():
     import app.services.trade_ticket_validator as mod
     import sys
 
     network_modules = {
-        "requests", "httpx", "aiohttp", "urllib3",
-        "MetaTrader5", "mt5", "ibapi", "ib_insync",
-        "supabase", "postgrest",
+        "requests",
+        "httpx",
+        "aiohttp",
+        "urllib3",
+        "MetaTrader5",
+        "mt5",
+        "ibapi",
+        "ib_insync",
+        "supabase",
+        "postgrest",
     }
     loaded = set(sys.modules.keys())
     # None of the network/broker modules should be imported as a side effect
@@ -273,6 +287,7 @@ def test_validator_has_no_network_imports():
 # Module-level convenience function
 # ---------------------------------------------------------------------------
 
+
 def test_validate_trade_ticket_function_returns_result():
     result = validate_trade_ticket(_make_short())
     assert isinstance(result, TradeTicketValidationResult)
@@ -282,6 +297,7 @@ def test_validate_trade_ticket_function_returns_result():
 # ---------------------------------------------------------------------------
 # Validator instance is reusable
 # ---------------------------------------------------------------------------
+
 
 def test_validator_is_reusable():
     validator = TradeTicketValidator()

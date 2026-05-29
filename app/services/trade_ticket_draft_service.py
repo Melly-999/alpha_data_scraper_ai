@@ -186,9 +186,11 @@ def _flatten_validation_error(exc: Exception) -> list[str]:
     """Extract human-readable rejection reasons without leaking internals."""
     if isinstance(exc, ValidationError):
         return [
-            f"{' -> '.join(str(loc) for loc in e['loc'])}: {e['msg']}"
-            if e.get("loc")
-            else e["msg"]
+            (
+                f"{' -> '.join(str(loc) for loc in e['loc'])}: {e['msg']}"
+                if e.get("loc")
+                else e["msg"]
+            )
             for e in exc.errors()
         ]
     return [str(exc)]

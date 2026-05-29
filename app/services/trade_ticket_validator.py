@@ -40,9 +40,7 @@ class TradeTicketValidator:
     MAX_RISK_PCT: float = 1.0
     MIN_CONFIDENCE_WARN: float = 70.0
 
-    def validate(
-        self, ticket: TradeTicketDraft
-    ) -> TradeTicketValidationResult:
+    def validate(self, ticket: TradeTicketDraft) -> TradeTicketValidationResult:
         rejection_reasons: list[str] = []
         warnings: list[str] = []
 
@@ -58,9 +56,7 @@ class TradeTicketValidator:
         if not ticket.requires_human_review:
             rejection_reasons.append("requires_human_review must be True")
         if ticket.broker_execution_allowed:
-            rejection_reasons.append(
-                "broker_execution_allowed must be False"
-            )
+            rejection_reasons.append("broker_execution_allowed must be False")
 
         # --- risk percentage ---
         if ticket.risk_pct > self.MAX_RISK_PCT:
@@ -94,9 +90,7 @@ class TradeTicketValidator:
                 f"threshold of {self.MIN_CONFIDENCE_WARN}"
             )
         if ticket.take_profit_2 is None:
-            warnings.append(
-                "take_profit_2 is not set; consider adding a second target"
-            )
+            warnings.append("take_profit_2 is not set; consider adding a second target")
 
         accepted = len(rejection_reasons) == 0
 
@@ -115,9 +109,7 @@ class TradeTicketValidator:
         }
 
         status = (
-            RiskValidationStatus.passed
-            if accepted
-            else RiskValidationStatus.failed
+            RiskValidationStatus.passed if accepted else RiskValidationStatus.failed
         )
 
         return TradeTicketValidationResult(

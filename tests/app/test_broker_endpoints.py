@@ -172,9 +172,9 @@ _GET_ONLY_PATHS: tuple[str, ...] = (
 @pytest.mark.parametrize("method", ["post", "put", "patch", "delete"])
 def test_non_get_methods_return_405(client, path: str, method: str) -> None:
     response = getattr(client, method)(path)
-    assert response.status_code == 405, (
-        f"{method.upper()} {path} -> {response.status_code} (expected 405)"
-    )
+    assert (
+        response.status_code == 405
+    ), f"{method.upper()} {path} -> {response.status_code} (expected 405)"
 
 
 # ---------------------------------------------------------------------------
@@ -214,9 +214,9 @@ def test_new_broker_endpoint_paths_have_no_forbidden_segments(client) -> None:
     for path in broker_get_paths:
         parts = path.split("/")
         leaked = sorted(set(parts) & set(_FORBIDDEN_SEGMENTS))
-        assert not leaked, (
-            f"Broker path {path!r} contains forbidden segment(s) {leaked!r}"
-        )
+        assert (
+            not leaked
+        ), f"Broker path {path!r} contains forbidden segment(s) {leaked!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -235,6 +235,6 @@ def test_new_broker_endpoints_are_get_only_in_openapi(client) -> None:
     ):
         assert path in paths, f"missing OpenAPI path: {path}"
         methods = set(paths[path].keys())
-        assert methods == {"get"}, (
-            f"{path} advertises methods {methods!r}; expected only 'get'"
-        )
+        assert methods == {
+            "get"
+        }, f"{path} advertises methods {methods!r}; expected only 'get'"

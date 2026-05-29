@@ -4,10 +4,13 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-EXPANSION_GATE_DOC = REPO_ROOT / "docs" / "beta" / "second_source_only_tester_expansion_gate.md"
-PRE_ACCESS_DOC = REPO_ROOT / "docs" / "qa" / "second_source_only_tester_pre_access_checklist.md"
+EXPANSION_GATE_DOC = (
+    REPO_ROOT / "docs" / "beta" / "second_source_only_tester_expansion_gate.md"
+)
+PRE_ACCESS_DOC = (
+    REPO_ROOT / "docs" / "qa" / "second_source_only_tester_pre_access_checklist.md"
+)
 PLAN_DOC = REPO_ROOT / "docs" / "tasks" / "desktop_launcher_exe_plan.md"
 
 
@@ -103,7 +106,10 @@ class TestExpansionGateContent:
         assert "investment advice" in gate_text.lower()
 
     def test_gate_says_no_guaranteed_profit(self, gate_text: str) -> None:
-        assert "guaranteed profits" in gate_text.lower() or "guaranteed profit" in gate_text.lower()
+        assert (
+            "guaranteed profits" in gate_text.lower()
+            or "guaranteed profit" in gate_text.lower()
+        )
 
 
 class TestPreAccessChecklistContent:
@@ -163,11 +169,24 @@ class TestThisFileIsReadOnly:
                 assert token not in lower, f"unexpected network import line: {line!r}"
 
     def test_no_access_or_message_imports(self) -> None:
-        banned = ("github", "pygithub", "ghapi", "discord", "slack", "oauth", "sendgrid", "mailgun", "smtplib", "twilio")
+        banned = (
+            "github",
+            "pygithub",
+            "ghapi",
+            "discord",
+            "slack",
+            "oauth",
+            "sendgrid",
+            "mailgun",
+            "smtplib",
+            "twilio",
+        )
         for line in _import_lines():
             lower = line.lower()
             for token in banned:
-                assert token not in lower, f"unexpected access/message import line: {line!r}"
+                assert (
+                    token not in lower
+                ), f"unexpected access/message import line: {line!r}"
 
     def test_no_artifact_creation_imports(self) -> None:
         banned = ("zipfile", "tarfile", "shutil", "tempfile")
@@ -182,4 +201,3 @@ class TestThisFileIsReadOnly:
         imports_blob = "\n".join(_import_lines()).lower()
         assert "write_text" not in imports_blob
         assert "subprocess" not in imports_blob
-

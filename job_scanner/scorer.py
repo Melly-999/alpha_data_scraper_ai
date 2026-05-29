@@ -58,8 +58,13 @@ _TARGET_TITLES: list[str] = [
 # Domain keywords — give a role-fit bonus
 # ---------------------------------------------------------------------------
 _DOMAIN_KEYWORDS: list[str] = [
-    "fintech", "saas", "artificial intelligence", "automation",
-    "technical support", "customer success", "operations",
+    "fintech",
+    "saas",
+    "artificial intelligence",
+    "automation",
+    "technical support",
+    "customer success",
+    "operations",
 ]
 
 # ---------------------------------------------------------------------------
@@ -67,29 +72,66 @@ _DOMAIN_KEYWORDS: list[str] = [
 # ---------------------------------------------------------------------------
 _BRIDGE_BUCKETS: dict[str, list[str]] = {
     "support_communication": [
-        "customer support", "client communication", "stakeholder management",
-        "customer service", "client relations", "end user support",
-        "tier 1", "tier 2", "level 1", "level 2", "helpdesk", "help desk",
+        "customer support",
+        "client communication",
+        "stakeholder management",
+        "customer service",
+        "client relations",
+        "end user support",
+        "tier 1",
+        "tier 2",
+        "level 1",
+        "level 2",
+        "helpdesk",
+        "help desk",
         "user support",
     ],
     "fintech_saas_domain": [
-        "fintech", "financial technology", "saas", "trading",
-        "financial services", "brokerage", "payments", "banking",
-        "investment", "capital markets",
+        "fintech",
+        "financial technology",
+        "saas",
+        "trading",
+        "financial services",
+        "brokerage",
+        "payments",
+        "banking",
+        "investment",
+        "capital markets",
     ],
     "support_titles": [
-        "support", "operations", "technical account", "customer success",
-        "helpdesk", "help desk", "service desk",
+        "support",
+        "operations",
+        "technical account",
+        "customer success",
+        "helpdesk",
+        "help desk",
+        "service desk",
     ],
     "crm_ticketing": [
-        "crm", "ticketing", "zendesk", "jira", "salesforce",
-        "escalation", "intercom", "freshdesk", "hubspot", "servicenow",
+        "crm",
+        "ticketing",
+        "zendesk",
+        "jira",
+        "salesforce",
+        "escalation",
+        "intercom",
+        "freshdesk",
+        "hubspot",
+        "servicenow",
         "customer relationship",
     ],
     "ai_automation": [
-        "ai tools", "automation", "llm", "artificial intelligence",
-        "machine learning", "process improvement", "workflow automation",
-        "ai-assisted", "chatgpt", "copilot", "claude",
+        "ai tools",
+        "automation",
+        "llm",
+        "artificial intelligence",
+        "machine learning",
+        "process improvement",
+        "workflow automation",
+        "ai-assisted",
+        "chatgpt",
+        "copilot",
+        "claude",
     ],
     # Criterion 5 ("no degree required") is checked via degree_requirement field
 }
@@ -159,21 +201,50 @@ _GAP_TO_TASK: dict[str, str] = {
     "c#": "C# is not on the current roadmap — defer",
 }
 
-_POLAND_CITIES: frozenset[str] = frozenset({
-    "warsaw", "krakow", "gdansk", "wroclaw", "poznan", "lodz",
-    "katowice", "szczecin", "bydgoszcz", "lublin", "torun", "poland",
-})
+_POLAND_CITIES: frozenset[str] = frozenset(
+    {
+        "warsaw",
+        "krakow",
+        "gdansk",
+        "wroclaw",
+        "poznan",
+        "lodz",
+        "katowice",
+        "szczecin",
+        "bydgoszcz",
+        "lublin",
+        "torun",
+        "poland",
+    }
+)
 
-_EU_TERMS: frozenset[str] = frozenset({
-    "eu", "europe", "european union", "germany", "france", "netherlands",
-    "ireland", "sweden", "denmark", "finland", "spain", "italy",
-    "portugal", "belgium", "austria", "czech republic", "slovakia",
-})
+_EU_TERMS: frozenset[str] = frozenset(
+    {
+        "eu",
+        "europe",
+        "european union",
+        "germany",
+        "france",
+        "netherlands",
+        "ireland",
+        "sweden",
+        "denmark",
+        "finland",
+        "spain",
+        "italy",
+        "portugal",
+        "belgium",
+        "austria",
+        "czech republic",
+        "slovakia",
+    }
+)
 
 
 # ===========================================================================
 # Public API
 # ===========================================================================
+
 
 def load_rules(path: str | Path | None = None) -> dict:
     """Load scoring rules from JSON. Falls back to built-in defaults."""
@@ -212,11 +283,17 @@ def score_job(
     evidence_score, evidence_labels = _score_project_evidence(job_posting, weights)
     bridge_score, bridge_signals = _score_bridge_role(job_posting, weights)
     location_score = _score_location(job_posting, weights)
-    lang_score = _score_language_seniority_education(candidate_profile, job_posting, weights)
+    lang_score = _score_language_seniority_education(
+        candidate_profile, job_posting, weights
+    )
 
     base = (
-        role_score + skill_score + evidence_score
-        + bridge_score + location_score + lang_score
+        role_score
+        + skill_score
+        + evidence_score
+        + bridge_score
+        + location_score
+        + lang_score
     )
 
     penalty_total, penalty_breakdown, red_flags = _compute_penalties(
@@ -230,11 +307,7 @@ def score_job(
 
     tag = _assign_tag(raw, rules)
 
-    suggested_tasks = {
-        gap: task
-        for gap in blocking
-        if (task := _gap_to_task(gap))
-    }
+    suggested_tasks = {gap: task for gap in blocking if (task := _gap_to_task(gap))}
 
     return {
         "score": raw,
@@ -276,14 +349,20 @@ def score_job(
 # Candidate skill extraction
 # ===========================================================================
 
+
 def _flatten_candidate_skills(profile: dict) -> set[str]:
     """Return a flat set of normalised skill names from the candidate profile."""
     skills: set[str] = set()
     skill_sections = profile.get("skills", {})
 
     for section in (
-        "programming_languages", "frameworks", "testing",
-        "tooling", "ai_tools", "databases", "monitoring",
+        "programming_languages",
+        "frameworks",
+        "testing",
+        "tooling",
+        "ai_tools",
+        "databases",
+        "monitoring",
     ):
         for item in skill_sections.get(section, []):
             if isinstance(item, dict):
@@ -309,9 +388,8 @@ def _flatten_candidate_skills(profile: dict) -> set[str]:
 # Category scorers
 # ===========================================================================
 
-def _score_role_fit(
-    profile: dict, job: dict, weights: dict
-) -> tuple[int, list[str]]:
+
+def _score_role_fit(profile: dict, job: dict, weights: dict) -> tuple[int, list[str]]:
     max_pts = weights.get("role_fit", 25)
     title = _norm(job.get("title", ""))
     all_text = _norm(_all_job_text(job))
@@ -331,7 +409,9 @@ def _score_role_fit(
             candidate = max(title_score, 14)
             if candidate > title_score:
                 title_score = candidate
-                notes.append(f"Partial title overlap ({len(common)} words): {sorted(common)}")
+                notes.append(
+                    f"Partial title overlap ({len(common)} words): {sorted(common)}"
+                )
         elif len(common) == 1 and any(len(w) > 4 for w in common):
             candidate = max(title_score, 8)
             if candidate > title_score:
@@ -346,13 +426,21 @@ def _score_role_fit(
 
     resp_bonus = 0
     candidate_concepts = {
-        _norm(c) for c in profile.get("skills", {}).get("concepts", [])
+        _norm(c)
+        for c in profile.get("skills", {}).get("concepts", [])
         if isinstance(c, str)
     }
-    candidate_concepts.update({
-        "customer service", "technical support", "documentation",
-        "process", "python", "api", "fastapi",
-    })
+    candidate_concepts.update(
+        {
+            "customer service",
+            "technical support",
+            "documentation",
+            "process",
+            "python",
+            "api",
+            "fastapi",
+        }
+    )
     for concept in sorted(candidate_concepts):
         if len(concept) > 3 and concept in resp_text:
             resp_bonus = 3
@@ -512,9 +600,7 @@ def _score_location(job: dict, weights: dict) -> int:
     return min(max_pts, 3)
 
 
-def _score_language_seniority_education(
-    profile: dict, job: dict, weights: dict
-) -> int:
+def _score_language_seniority_education(profile: dict, job: dict, weights: dict) -> int:
     max_pts = weights.get("language_seniority_education_fit", 10)
     score = 0
 
@@ -550,6 +636,7 @@ def _score_language_seniority_education(
 # Penalties and hard-skip detection
 # ===========================================================================
 
+
 def _compute_penalties(
     candidate_profile: dict,
     job: dict,
@@ -566,8 +653,12 @@ def _compute_penalties(
 
     # Senior-only
     senior_signals = [
-        "senior", "5+ years", "5 years experience", "lead developer",
-        "staff engineer", "principal engineer",
+        "senior",
+        "5+ years",
+        "5 years experience",
+        "lead developer",
+        "staff engineer",
+        "principal engineer",
     ]
     if seniority == "senior" or any(s in all_text for s in senior_signals):
         pts = penalty_rules.get("senior_only_role", -30)
@@ -577,12 +668,15 @@ def _compute_penalties(
     # Mandatory degree
     degree_required_terms = {"required", "mandatory", "ba", "bs", "ma", "msc"}
     degree_text_signals = [
-        "bachelor", "master degree", "university degree",
-        "ba/bs", "bs/ms", "tertiary education required",
+        "bachelor",
+        "master degree",
+        "university degree",
+        "ba/bs",
+        "bs/ms",
+        "tertiary education required",
     ]
-    if (
-        degree_req in degree_required_terms
-        or any(kw in all_text for kw in degree_text_signals)
+    if degree_req in degree_required_terms or any(
+        kw in all_text for kw in degree_text_signals
     ):
         pts = penalty_rules.get("mandatory_degree_if_not_confirmed", -25)
         breakdown["mandatory_degree_if_not_confirmed"] = pts
@@ -596,9 +690,15 @@ def _compute_penalties(
 
     # Live trading / financial advice
     live_kws = [
-        "live trading", "live order", "trade execution",
-        "financial advisor licence", "cfa required", "knf required",
-        "broker execution", "autonomous trading", "financial advice required",
+        "live trading",
+        "live order",
+        "trade execution",
+        "financial advisor licence",
+        "cfa required",
+        "knf required",
+        "broker execution",
+        "autonomous trading",
+        "financial advice required",
         "financial advice licence",
     ]
     if (
@@ -607,7 +707,9 @@ def _compute_penalties(
     ):
         pts = penalty_rules.get("live_trading_or_financial_advice_required", -50)
         breakdown["live_trading_or_financial_advice_required"] = pts
-        red_flags.append("Live trading execution or financial advice licence required — hard skip")
+        red_flags.append(
+            "Live trading execution or financial advice licence required — hard skip"
+        )
 
     # Commercial IT required (no portfolio accepted)
     commercial_kws = [
@@ -623,7 +725,9 @@ def _compute_penalties(
     ):
         pts = penalty_rules.get("commercial_it_required_if_missing", -20)
         breakdown["commercial_it_required_if_missing"] = pts
-        red_flags.append("Commercial IT employment required — candidate has portfolio only")
+        red_flags.append(
+            "Commercial IT employment required — candidate has portfolio only"
+        )
 
     # Auto-apply / spam
     if "auto_apply_or_spam_requirement" in job_flags:
@@ -652,9 +756,13 @@ def _check_hard_skips(job: dict, rules: dict) -> tuple[bool, list[str]]:
     # Text-based detection for live trading (catches cases without explicit flags)
     all_text = _norm(_all_job_text(job))
     live_kws = [
-        "live trading", "trade execution", "broker execution",
-        "financial advisor licence", "autonomous trading",
-        "cfa required", "financial advice required",
+        "live trading",
+        "trade execution",
+        "broker execution",
+        "financial advisor licence",
+        "autonomous trading",
+        "cfa required",
+        "financial advice required",
     ]
     if any(kw in all_text for kw in live_kws):
         flag = "live_trading_or_financial_advice_required"
@@ -667,6 +775,7 @@ def _check_hard_skips(job: dict, rules: dict) -> tuple[bool, list[str]]:
 # ===========================================================================
 # Tag assignment
 # ===========================================================================
+
 
 def _assign_tag(score: int, rules: dict) -> str:
     tags = rules.get("score_tags", _default_rules()["score_tags"])
@@ -683,6 +792,7 @@ def _assign_tag(score: int, rules: dict) -> str:
 # Portfolio task suggestion
 # ===========================================================================
 
+
 def _gap_to_task(gap: str) -> str | None:
     g = _norm(gap)
     for kw, task in _GAP_TO_TASK.items():
@@ -694,6 +804,7 @@ def _gap_to_task(gap: str) -> str | None:
 # ===========================================================================
 # Helpers
 # ===========================================================================
+
 
 def _all_job_text(job: dict) -> str:
     parts = [

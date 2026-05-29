@@ -35,9 +35,7 @@ from app.services.paper_sandbox_history import get_paper_sandbox_history
 
 router = APIRouter(tags=["paper-sandbox"])
 
-_SUMMARY = (
-    "Paper sandbox state preview — read-only, dry-run, simulation-only"
-)
+_SUMMARY = "Paper sandbox state preview — read-only, dry-run, simulation-only"
 
 _DESCRIPTION = (
     "PAPER-001B — GET-only paper sandbox preview endpoint. "

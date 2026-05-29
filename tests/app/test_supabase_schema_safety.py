@@ -99,6 +99,7 @@ EXECUTION_RISK_TERMS = [
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _sql_text() -> str:
     assert SCHEMA_SQL.exists(), f"Schema SQL not found: {SCHEMA_SQL}"
     return SCHEMA_SQL.read_text(encoding="utf-8")
@@ -133,6 +134,7 @@ def _column_names_in_sql(sql: str) -> list[str]:
 # Tests — schema file existence
 # ---------------------------------------------------------------------------
 
+
 def test_schema_sql_file_exists() -> None:
     assert SCHEMA_SQL.exists(), f"Missing: {SCHEMA_SQL}"
 
@@ -144,6 +146,7 @@ def test_schema_md_file_exists() -> None:
 # ---------------------------------------------------------------------------
 # Tests — forbidden tables
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("table_name", FORBIDDEN_TABLES)
 def test_forbidden_table_not_in_sql(table_name: str) -> None:
@@ -165,14 +168,15 @@ def test_forbidden_table_not_in_md(table_name: str) -> None:
         rf"(?:create|alter)\s+table\s+(?:\w+\.)?{re.escape(table_name)}\b",
         re.IGNORECASE,
     )
-    assert not pattern.search(md), (
-        f"Forbidden table '{table_name}' appears as an active table in the MD doc."
-    )
+    assert not pattern.search(
+        md
+    ), f"Forbidden table '{table_name}' appears as an active table in the MD doc."
 
 
 # ---------------------------------------------------------------------------
 # Tests — forbidden columns
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("col_name", FORBIDDEN_COLUMNS)
 def test_forbidden_column_not_as_column_definition(col_name: str) -> None:
@@ -195,6 +199,7 @@ def test_forbidden_column_not_as_column_definition(col_name: str) -> None:
 # Tests — required safety defaults
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("kw", REQUIRED_SAFETY_TOKENS)
 def test_required_safety_token_in_sql(kw: str) -> None:
     sql = _sql_text()
@@ -208,18 +213,20 @@ def test_required_safety_token_in_sql(kw: str) -> None:
 # Tests — required tables present
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("table_name", REQUIRED_TABLES)
 def test_required_table_in_sql(table_name: str) -> None:
     sql = _sql_text()
     created = [t.lower() for t in _create_table_names(sql)]
-    assert table_name.lower() in created, (
-        f"Required table '{table_name}' not found in CREATE TABLE statements."
-    )
+    assert (
+        table_name.lower() in created
+    ), f"Required table '{table_name}' not found in CREATE TABLE statements."
 
 
 # ---------------------------------------------------------------------------
 # Tests — no active execution-risk terms
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("term", EXECUTION_RISK_TERMS)
 def test_no_active_execution_term_in_sql(term: str) -> None:
@@ -236,6 +243,7 @@ def test_no_active_execution_term_in_sql(term: str) -> None:
 # ---------------------------------------------------------------------------
 # Tests — RLS is enabled
 # ---------------------------------------------------------------------------
+
 
 def test_rls_enabled_for_all_required_tables() -> None:
     sql = _sql_text()
@@ -254,11 +262,12 @@ def test_rls_enabled_for_all_required_tables() -> None:
 # Tests — safety CHECK constraints present
 # ---------------------------------------------------------------------------
 
+
 def test_read_only_check_constraint_present() -> None:
     sql = _sql_text()
-    assert "CHECK (read_only = true)" in sql, (
-        "read_only CHECK constraint missing. Must enforce read_only = true."
-    )
+    assert (
+        "CHECK (read_only = true)" in sql
+    ), "read_only CHECK constraint missing. Must enforce read_only = true."
 
 
 def test_dry_run_only_check_constraint_present() -> None:
@@ -271,9 +280,9 @@ def test_dry_run_only_check_constraint_present() -> None:
 
 def test_risk_allowed_false_check_constraint_present() -> None:
     sql = _sql_text()
-    assert "CHECK (risk_allowed = false)" in sql, (
-        "risk_allowed CHECK constraint missing. Must enforce risk_allowed = false."
-    )
+    assert (
+        "CHECK (risk_allowed = false)" in sql
+    ), "risk_allowed CHECK constraint missing. Must enforce risk_allowed = false."
 
 
 def test_requires_human_review_check_constraint_present() -> None:
@@ -287,6 +296,7 @@ def test_requires_human_review_check_constraint_present() -> None:
 # ---------------------------------------------------------------------------
 # Tests — no service_role key in schema text
 # ---------------------------------------------------------------------------
+
 
 def test_no_service_role_key_in_sql() -> None:
     sql = _sql_text()
