@@ -182,7 +182,10 @@ class TestBuildDecisionPayload:
 
     def test_payload_blocked_reason_when_set(self) -> None:
         record = _make_record(blocked_reason="Confidence below threshold.")
-        assert _build_decision_payload(record)["blocked_reason"] == "Confidence below threshold."
+        assert (
+            _build_decision_payload(record)["blocked_reason"]
+            == "Confidence below threshold."
+        )
 
     def test_payload_audit_event_id_when_none(self) -> None:
         record = _make_record(audit_event_id=None)
@@ -463,10 +466,14 @@ class TestNoRaiseBehavior:
 
 
 class TestWriteAuditEventUsage:
-    def test_write_audit_event_called_on_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_write_audit_event_called_on_success(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         calls: list[Any] = []
 
-        def _mock_write_audit(event: Any, *, client: Any = None, _insert_fn: Any = None) -> AuditEventRecord:
+        def _mock_write_audit(
+            event: Any, *, client: Any = None, _insert_fn: Any = None
+        ) -> AuditEventRecord:
             calls.append(event)
             return AuditEventRecord(
                 event_type=event.event_type,
@@ -488,10 +495,14 @@ class TestWriteAuditEventUsage:
         write_signal_decision(_make_record(), _insert_fn=lambda t, p: None)
         assert len(calls) == 1
 
-    def test_audit_event_has_correct_event_type(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_audit_event_has_correct_event_type(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         calls: list[Any] = []
 
-        def _mock_write_audit(event: Any, *, client: Any = None, _insert_fn: Any = None) -> AuditEventRecord:
+        def _mock_write_audit(
+            event: Any, *, client: Any = None, _insert_fn: Any = None
+        ) -> AuditEventRecord:
             calls.append(event)
             return AuditEventRecord(
                 event_type=event.event_type,
@@ -513,10 +524,14 @@ class TestWriteAuditEventUsage:
         write_signal_decision(_make_record(), _insert_fn=lambda t, p: None)
         assert calls[0].event_type == "signal_decision_persisted"
 
-    def test_audit_event_metadata_has_no_execution_keys(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_audit_event_metadata_has_no_execution_keys(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         calls: list[Any] = []
 
-        def _mock_write_audit(event: Any, *, client: Any = None, _insert_fn: Any = None) -> AuditEventRecord:
+        def _mock_write_audit(
+            event: Any, *, client: Any = None, _insert_fn: Any = None
+        ) -> AuditEventRecord:
             calls.append(event)
             return AuditEventRecord(
                 event_type=event.event_type,

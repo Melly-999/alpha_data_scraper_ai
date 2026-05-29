@@ -26,9 +26,7 @@ class SignalScannerResult(BaseModel):
     execution_mode: Literal["dry_run_only"] = "dry_run_only"
     requires_human_review: Literal[True] = True
     source: Literal["scanner"] = "scanner"
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @field_validator("symbol", "reason")
     @classmethod
@@ -42,9 +40,7 @@ class SignalScannerResult(BaseModel):
 class SignalScannerBatch(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    generated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     results: list[SignalScannerResult] = Field(default_factory=list)
     read_only: Literal[True] = True
     execution_mode: Literal["dry_run_only"] = "dry_run_only"

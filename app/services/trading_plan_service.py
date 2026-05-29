@@ -23,7 +23,6 @@ from datetime import datetime, timezone
 
 from app.schemas.terminal import TradingPlanItem, TradingPlanResponse
 
-
 # Module-level static plan. Editable as a content-only change by an analyst;
 # no code change required. Keep entries terse and observation-shaped — never
 # imperative ("BUY X") and never with execution parameters.

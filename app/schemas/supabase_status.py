@@ -118,13 +118,9 @@ class SupabaseClientStatus(BaseModel):
     @model_validator(mode="after")
     def _enforce_safety_invariants(self) -> "SupabaseClientStatus":
         if self.read_only is not True:
-            raise ValueError(
-                "read_only must always be True for SupabaseClientStatus"
-            )
+            raise ValueError("read_only must always be True for SupabaseClientStatus")
         if self.dry_run is not True:
-            raise ValueError(
-                "dry_run must always be True for SupabaseClientStatus"
-            )
+            raise ValueError("dry_run must always be True for SupabaseClientStatus")
         if self.writes_enabled is not False:
             raise ValueError(
                 "writes_enabled must always be False in SUPA-002 — "

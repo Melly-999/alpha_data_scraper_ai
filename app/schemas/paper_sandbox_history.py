@@ -28,26 +28,28 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ---------------------------------------------------------------------------
 # Valid event types
 # ---------------------------------------------------------------------------
 
-VALID_EVENT_TYPES: frozenset[str] = frozenset({
-    "sandbox_preview_requested",
-    "sandbox_state_created",
-    "sandbox_state_reset",
-    "ticket_draft_observed",
-    "safety_flags_checked",
-    "human_review_required",
-    "degraded_fallback_used",
-    "unknown_paper_event",
-})
+VALID_EVENT_TYPES: frozenset[str] = frozenset(
+    {
+        "sandbox_preview_requested",
+        "sandbox_state_created",
+        "sandbox_state_reset",
+        "ticket_draft_observed",
+        "safety_flags_checked",
+        "human_review_required",
+        "degraded_fallback_used",
+        "unknown_paper_event",
+    }
+)
 
 
 # ---------------------------------------------------------------------------
 # PaperAuditEvent
 # ---------------------------------------------------------------------------
+
 
 class PaperAuditEvent(BaseModel):
     """One paper-only sandbox audit/activity event.
@@ -65,7 +67,7 @@ class PaperAuditEvent(BaseModel):
 
     # --- local paper-scoped identity (no broker/execution IDs) ---
     event_id: str = Field(min_length=1, max_length=64)
-    timestamp: str = Field(min_length=1, max_length=64)   # ISO 8601 UTC
+    timestamp: str = Field(min_length=1, max_length=64)  # ISO 8601 UTC
 
     # --- event classification ---
     event_type: Literal[
@@ -99,6 +101,7 @@ class PaperAuditEvent(BaseModel):
 # ---------------------------------------------------------------------------
 # PaperAuditHistory
 # ---------------------------------------------------------------------------
+
 
 class PaperAuditHistory(BaseModel):
     """Read-only snapshot of the current in-memory audit/activity history.
