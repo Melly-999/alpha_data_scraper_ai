@@ -26,7 +26,6 @@ from app.services.signal_decision_reader import (
     read_signal_decisions,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -70,8 +69,11 @@ def _make_response(rows: list[dict[str, Any]]) -> SimpleNamespace:
 
 
 def _select_returning(rows: list[dict[str, Any]]):
-    def _fn(table: str, symbol: str | None, limit: int, **kwargs: Any) -> SimpleNamespace:
+    def _fn(
+        table: str, symbol: str | None, limit: int, **kwargs: Any
+    ) -> SimpleNamespace:
         return _make_response(rows)
+
     return _fn
 
 
@@ -288,13 +290,19 @@ class TestReadFnRaises:
 
 class TestReadSuccessPath:
     def test_returns_list_of_records(self) -> None:
-        rows = [_make_row(symbol="AAPL"), _make_row(symbol="NVDA", row_id="550e8400-e29b-41d4-a716-446655440001")]
+        rows = [
+            _make_row(symbol="AAPL"),
+            _make_row(symbol="NVDA", row_id="550e8400-e29b-41d4-a716-446655440001"),
+        ]
         result = read_signal_decisions(_select_fn=_select_returning(rows))
         assert len(result) == 2
         assert all(isinstance(r, SignalDecisionRecord) for r in result)
 
     def test_records_have_correct_symbols(self) -> None:
-        rows = [_make_row(symbol="AAPL"), _make_row(symbol="NVDA", row_id="550e8400-e29b-41d4-a716-446655440001")]
+        rows = [
+            _make_row(symbol="AAPL"),
+            _make_row(symbol="NVDA", row_id="550e8400-e29b-41d4-a716-446655440001"),
+        ]
         result = read_signal_decisions(_select_fn=_select_returning(rows))
         symbols = {r.symbol for r in result}
         assert symbols == {"AAPL", "NVDA"}
@@ -387,7 +395,9 @@ class TestInvalidRowsSkipped:
     def test_invalid_row_skipped_valid_row_returned(self) -> None:
         invalid_row = {"id": None, "symbol": "AAPL"}  # missing required fields
         valid_row = _make_row(symbol="NVDA")
-        result = read_signal_decisions(_select_fn=_select_returning([invalid_row, valid_row]))
+        result = read_signal_decisions(
+            _select_fn=_select_returning([invalid_row, valid_row])
+        )
         assert len(result) == 1
         assert result[0].symbol == "NVDA"
 
@@ -534,9 +544,7 @@ class TestSupa014DateFilters:
         assert result == []
 
     def test_select_fn_raises_with_date_filter_returns_empty(self) -> None:
-        def _raise(
-            table: str, symbol: Any, limit: int, **kwargs: Any
-        ) -> Any:
+        def _raise(table: str, symbol: Any, limit: int, **kwargs: Any) -> Any:
             raise RuntimeError("DB unreachable")
 
         result = read_signal_decisions(
@@ -559,9 +567,7 @@ class TestSupa014DateFilters:
     def test_date_filter_returns_records_when_data_present(self) -> None:
         rows = [_make_row(symbol="AAPL")]
 
-        def _fn(
-            table: str, symbol: Any, limit: int, **kwargs: Any
-        ) -> SimpleNamespace:
+        def _fn(table: str, symbol: Any, limit: int, **kwargs: Any) -> SimpleNamespace:
             return _make_response(rows)
 
         result = read_signal_decisions(

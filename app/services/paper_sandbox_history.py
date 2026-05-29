@@ -55,33 +55,37 @@ _MAX_MESSAGE_LEN: int = 512
 # Forbidden metadata keys — dropped silently during sanitization.
 # This set mirrors the forbidden-field list in the schema docstring and the
 # safety contract document.
-_FORBIDDEN_META_KEYS: frozenset[str] = frozenset({
-    "account_id",
-    "broker_account_id",
-    "order_id",
-    "execution_id",
-    "trade_id",
-    "broker_order_id",
-    "ibkr_order_id",
-    "mt5_ticket",
-    "credential",
-    "secret",
-    "token",
-    "api_key",
-    "password",
-})
+_FORBIDDEN_META_KEYS: frozenset[str] = frozenset(
+    {
+        "account_id",
+        "broker_account_id",
+        "order_id",
+        "execution_id",
+        "trade_id",
+        "broker_order_id",
+        "ibkr_order_id",
+        "mt5_ticket",
+        "credential",
+        "secret",
+        "token",
+        "api_key",
+        "password",
+    }
+)
 
 # Valid event type set — mirrors the Literal in PaperAuditEvent.
-_VALID_EVENT_TYPES: frozenset[str] = frozenset({
-    "sandbox_preview_requested",
-    "sandbox_state_created",
-    "sandbox_state_reset",
-    "ticket_draft_observed",
-    "safety_flags_checked",
-    "human_review_required",
-    "degraded_fallback_used",
-    "unknown_paper_event",
-})
+_VALID_EVENT_TYPES: frozenset[str] = frozenset(
+    {
+        "sandbox_preview_requested",
+        "sandbox_state_created",
+        "sandbox_state_reset",
+        "ticket_draft_observed",
+        "safety_flags_checked",
+        "human_review_required",
+        "degraded_fallback_used",
+        "unknown_paper_event",
+    }
+)
 
 _VALID_SEVERITIES: frozenset[str] = frozenset({"info", "warning", "blocked"})
 
@@ -89,6 +93,7 @@ _VALID_SEVERITIES: frozenset[str] = frozenset({"info", "warning", "blocked"})
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _normalize_event_type(raw: str) -> str:
     """Normalize and validate an event type string.
@@ -133,6 +138,7 @@ def _sanitize_metadata(raw: dict[str, Any] | None) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # PaperAuditHistoryService
 # ---------------------------------------------------------------------------
+
 
 class PaperAuditHistoryService:
     """In-memory paper-only sandbox audit/activity history service.

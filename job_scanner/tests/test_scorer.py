@@ -228,6 +228,7 @@ RULES = load_rules()
 # TC-01: Safety invariants always present
 # ---------------------------------------------------------------------------
 
+
 def test_safety_invariants_always_present():
     result = score_job(CANDIDATE, JUNIOR_FINTECH_JOB, RULES)
     assert result["manual_review_required"] is True
@@ -239,6 +240,7 @@ def test_safety_invariants_always_present():
 # ---------------------------------------------------------------------------
 # TC-02: Deterministic — 5 identical calls return identical output
 # ---------------------------------------------------------------------------
+
 
 def test_deterministic_repeated_calls():
     results = [score_job(CANDIDATE, JUNIOR_FINTECH_JOB, RULES) for _ in range(5)]
@@ -252,6 +254,7 @@ def test_deterministic_repeated_calls():
 # TC-03: Apply-now tag for strong junior FinTech bridge fit
 # ---------------------------------------------------------------------------
 
+
 def test_apply_now_for_junior_fintech_bridge_fit():
     result = score_job(CANDIDATE, JUNIOR_FINTECH_JOB, RULES)
     assert result["score"] >= 65, f"Expected apply_now (>=65), got {result['score']}"
@@ -263,11 +266,12 @@ def test_apply_now_for_junior_fintech_bridge_fit():
 # TC-04: Stretch tag for partial fit (mid seniority, some skill gaps)
 # ---------------------------------------------------------------------------
 
+
 def test_stretch_tag_for_partial_fit():
     result = score_job(CANDIDATE, PARTIAL_FIT_JOB, RULES)
-    assert 45 <= result["score"] <= 64, (
-        f"Expected stretch (45-64), got {result['score']} / tag={result['tag']}"
-    )
+    assert (
+        45 <= result["score"] <= 64
+    ), f"Expected stretch (45-64), got {result['score']} / tag={result['tag']}"
     assert result["tag"] == "stretch"
 
 
@@ -275,17 +279,19 @@ def test_stretch_tag_for_partial_fit():
 # TC-05: Learn-first or skip tag for weak fit (senior Java, Japan, degree req)
 # ---------------------------------------------------------------------------
 
+
 def test_low_score_for_weak_fit():
     result = score_job(CANDIDATE, WEAK_FIT_JOB, RULES)
-    assert result["score"] <= 44, (
-        f"Expected learn_first or skip (<=44), got {result['score']}"
-    )
+    assert (
+        result["score"] <= 44
+    ), f"Expected learn_first or skip (<=44), got {result['score']}"
     assert result["tag"] in ("learn_first", "skip")
 
 
 # ---------------------------------------------------------------------------
 # TC-06: Skip tag for hard-skip (live trading flag)
 # ---------------------------------------------------------------------------
+
 
 def test_skip_tag_for_live_trading_hard_skip():
     result = score_job(CANDIDATE, LIVE_TRADING_JOB, RULES)
@@ -298,6 +304,7 @@ def test_skip_tag_for_live_trading_hard_skip():
 # TC-07: Skip tag for auto-apply/spam requirement
 # ---------------------------------------------------------------------------
 
+
 def test_skip_tag_for_auto_apply_requirement():
     result = score_job(CANDIDATE, AUTO_APPLY_JOB, RULES)
     assert result["hard_skip"] is True
@@ -308,6 +315,7 @@ def test_skip_tag_for_auto_apply_requirement():
 # ---------------------------------------------------------------------------
 # TC-08: Skip tag for fabricated claims required
 # ---------------------------------------------------------------------------
+
 
 def test_skip_tag_for_fabrication_requirement():
     result = score_job(CANDIDATE, FABRICATION_JOB, RULES)
@@ -320,11 +328,12 @@ def test_skip_tag_for_fabrication_requirement():
 # TC-09: Senior-only penalty is applied
 # ---------------------------------------------------------------------------
 
+
 def test_senior_only_penalty_applied():
     result = score_job(CANDIDATE, SENIOR_ONLY_JOB, RULES)
-    assert result["penalties"].get("senior_only_role", 0) == -30, (
-        f"Expected -30 senior penalty, got {result['penalties']}"
-    )
+    assert (
+        result["penalties"].get("senior_only_role", 0) == -30
+    ), f"Expected -30 senior penalty, got {result['penalties']}"
     assert "senior_only_role" in result["penalties"]
 
 
@@ -332,11 +341,12 @@ def test_senior_only_penalty_applied():
 # TC-10: Mandatory degree penalty when candidate has no confirmed degree
 # ---------------------------------------------------------------------------
 
+
 def test_mandatory_degree_penalty_applied():
     result = score_job(CANDIDATE, DEGREE_REQUIRED_JOB, RULES)
-    assert result["penalties"].get("mandatory_degree_if_not_confirmed", 0) == -25, (
-        f"Expected -25 degree penalty, got {result['penalties']}"
-    )
+    assert (
+        result["penalties"].get("mandatory_degree_if_not_confirmed", 0) == -25
+    ), f"Expected -25 degree penalty, got {result['penalties']}"
     assert "mandatory_degree_if_not_confirmed" in result["penalties"]
 
 
@@ -344,11 +354,12 @@ def test_mandatory_degree_penalty_applied():
 # TC-11: Mandatory matura penalty when matura is in_progress (not confirmed)
 # ---------------------------------------------------------------------------
 
+
 def test_mandatory_matura_penalty_applied():
     result = score_job(CANDIDATE, MATURA_REQUIRED_JOB, RULES)
-    assert result["penalties"].get("mandatory_matura_if_not_confirmed", 0) == -20, (
-        f"Expected -20 matura penalty, got {result['penalties']}"
-    )
+    assert (
+        result["penalties"].get("mandatory_matura_if_not_confirmed", 0) == -20
+    ), f"Expected -20 matura penalty, got {result['penalties']}"
     assert "mandatory_matura_if_not_confirmed" in result["penalties"]
 
 
@@ -356,17 +367,19 @@ def test_mandatory_matura_penalty_applied():
 # TC-12: Bridge-role detection produces signals for qualifying role
 # ---------------------------------------------------------------------------
 
+
 def test_bridge_role_detected_for_qualifying_role():
     result = score_job(CANDIDATE, BRIDGE_ROLE_JOB, RULES)
-    assert result["categories"]["bridge_role_fit"] == 10, (
-        f"Expected bridge bonus 10, got {result['categories']['bridge_role_fit']}"
-    )
+    assert (
+        result["categories"]["bridge_role_fit"] == 10
+    ), f"Expected bridge bonus 10, got {result['categories']['bridge_role_fit']}"
     assert len(result["bridge_role_signals"]) >= 2
 
 
 # ---------------------------------------------------------------------------
 # TC-13: Bridge-role bonus NOT awarded for non-qualifying role
 # ---------------------------------------------------------------------------
+
 
 def test_bridge_role_not_awarded_for_weak_fit():
     result = score_job(CANDIDATE, WEAK_FIT_JOB, RULES)
@@ -377,20 +390,22 @@ def test_bridge_role_not_awarded_for_weak_fit():
 # TC-14: Blocking skill gaps are reported
 # ---------------------------------------------------------------------------
 
+
 def test_blocking_skill_gaps_reported():
     result = score_job(CANDIDATE, PARTIAL_FIT_JOB, RULES)
     blocking = result["missing_skills"]["blocking"]
     assert len(blocking) > 0, "Expected at least one blocking gap for partial_fit_job"
     # Candidate lacks PostgreSQL and CI/CD
     blocking_lower = [g.lower() for g in blocking]
-    assert any("postgresql" in g or "postgres" in g or "ci" in g for g in blocking_lower), (
-        f"Expected postgres or CI/CD in blocking gaps, got {blocking}"
-    )
+    assert any(
+        "postgresql" in g or "postgres" in g or "ci" in g for g in blocking_lower
+    ), f"Expected postgres or CI/CD in blocking gaps, got {blocking}"
 
 
 # ---------------------------------------------------------------------------
 # TC-15: Private contact fields are NOT required for scoring
 # ---------------------------------------------------------------------------
+
 
 def test_no_private_contact_data_required():
     # Candidate profile with no phone/email/address — scoring must succeed
@@ -418,22 +433,29 @@ def test_no_private_contact_data_required():
 # TC-16: Score is always within 0–100 range
 # ---------------------------------------------------------------------------
 
+
 def test_score_clamped_to_0_100():
     jobs = [
-        JUNIOR_FINTECH_JOB, PARTIAL_FIT_JOB, WEAK_FIT_JOB,
-        LIVE_TRADING_JOB, AUTO_APPLY_JOB, SENIOR_ONLY_JOB,
-        BRIDGE_ROLE_JOB, MINIMAL_JOB,
+        JUNIOR_FINTECH_JOB,
+        PARTIAL_FIT_JOB,
+        WEAK_FIT_JOB,
+        LIVE_TRADING_JOB,
+        AUTO_APPLY_JOB,
+        SENIOR_ONLY_JOB,
+        BRIDGE_ROLE_JOB,
+        MINIMAL_JOB,
     ]
     for job in jobs:
         result = score_job(CANDIDATE, job, RULES)
-        assert 0 <= result["score"] <= 100, (
-            f"Score out of range: {result['score']} for job '{job.get('title')}'"
-        )
+        assert (
+            0 <= result["score"] <= 100
+        ), f"Score out of range: {result['score']} for job '{job.get('title')}'"
 
 
 # ---------------------------------------------------------------------------
 # TC-17: Suggested portfolio tasks emitted for known blocking gaps
 # ---------------------------------------------------------------------------
+
 
 def test_suggested_portfolio_tasks_for_blocking_gaps():
     result = score_job(CANDIDATE, PARTIAL_FIT_JOB, RULES)
@@ -447,6 +469,7 @@ def test_suggested_portfolio_tasks_for_blocking_gaps():
 # TC-18: load_rules returns dict with expected keys
 # ---------------------------------------------------------------------------
 
+
 def test_load_rules_returns_expected_shape():
     rules = load_rules()
     assert "category_weights" in rules
@@ -459,6 +482,7 @@ def test_load_rules_returns_expected_shape():
 # ---------------------------------------------------------------------------
 # TC-19: Multiple stacking penalties do not produce negative score
 # ---------------------------------------------------------------------------
+
 
 def test_stacking_penalties_floor_at_zero():
     # Job with several penalties stacking
@@ -486,8 +510,9 @@ def test_stacking_penalties_floor_at_zero():
 # TC-20: Remote job scores maximum on location category
 # ---------------------------------------------------------------------------
 
+
 def test_remote_job_scores_max_location():
     result = score_job(CANDIDATE, BRIDGE_ROLE_JOB, RULES)
-    assert result["categories"]["location_work_mode_fit"] == 10, (
-        f"Expected 10 for remote, got {result['categories']['location_work_mode_fit']}"
-    )
+    assert (
+        result["categories"]["location_work_mode_fit"] == 10
+    ), f"Expected 10 for remote, got {result['categories']['location_work_mode_fit']}"

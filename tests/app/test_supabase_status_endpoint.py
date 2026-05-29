@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import pytest
 
-
 _STATUS_PATH = "/api/supabase/status"
 
 # ---------------------------------------------------------------------------
@@ -126,7 +125,7 @@ def test_supabase_status_frontend_service_key_exposed_always_false(client) -> No
 # ---------------------------------------------------------------------------
 
 _CREDENTIAL_PATTERNS = [
-    "eyJ",          # JWT prefix (anon / service_role key values start with this)
+    "eyJ",  # JWT prefix (anon / service_role key values start with this)
     "service_role_key",
     "SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -259,17 +258,15 @@ def test_supabase_status_configured_when_all_vars_and_package_available(
 def test_supabase_status_appears_in_openapi_schema(client) -> None:
     schema = client.get("/openapi.json").json()
     paths = schema.get("paths", {})
-    assert _STATUS_PATH in paths, (
-        f"{_STATUS_PATH} not found in OpenAPI schema paths: {list(paths.keys())}"
-    )
+    assert (
+        _STATUS_PATH in paths
+    ), f"{_STATUS_PATH} not found in OpenAPI schema paths: {list(paths.keys())}"
 
 
 def test_supabase_status_openapi_entry_is_get_only(client) -> None:
     schema = client.get("/openapi.json").json()
     methods = set(schema["paths"].get(_STATUS_PATH, {}).keys())
-    assert methods == {"get"}, (
-        f"Expected only GET on {_STATUS_PATH}, found: {methods}"
-    )
+    assert methods == {"get"}, f"Expected only GET on {_STATUS_PATH}, found: {methods}"
 
 
 def test_supabase_status_path_contains_no_forbidden_execution_segment(
@@ -289,6 +286,4 @@ def test_supabase_status_path_contains_no_forbidden_execution_segment(
     }
     path_segments = set(_STATUS_PATH.strip("/").split("/"))
     overlap = forbidden_segments & path_segments
-    assert overlap == set(), (
-        f"Route path contains forbidden segment(s): {overlap}"
-    )
+    assert overlap == set(), f"Route path contains forbidden segment(s): {overlap}"

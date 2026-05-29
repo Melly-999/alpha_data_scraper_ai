@@ -41,10 +41,10 @@ from app.services.paper_sandbox import (
     submit_to_paper_sandbox,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _long_draft(**overrides: Any) -> TradeTicketDraft:
     base: dict[str, Any] = dict(
@@ -88,6 +88,7 @@ def _short_draft(**overrides: Any) -> TradeTicketDraft:
 # Fixture — fresh sandbox per test
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def sandbox() -> PaperBrokerSandbox:
     sb = PaperBrokerSandbox()
@@ -98,6 +99,7 @@ def sandbox() -> PaperBrokerSandbox:
 # ---------------------------------------------------------------------------
 # 1. Lifecycle: empty → submit → stored
 # ---------------------------------------------------------------------------
+
 
 def test_sandbox_starts_empty(sandbox: PaperBrokerSandbox) -> None:
     assert len(sandbox) == 0
@@ -177,6 +179,7 @@ def test_duplicate_submission_overwrites(sandbox: PaperBrokerSandbox) -> None:
 # 2. Safety flags — always canonical values
 # ---------------------------------------------------------------------------
 
+
 def test_entry_paper_only_is_true(sandbox: PaperBrokerSandbox) -> None:
     result = sandbox.submit(_long_draft())
     assert result.entry is not None
@@ -238,6 +241,7 @@ def test_state_safety_flags(sandbox: PaperBrokerSandbox) -> None:
 # 3. Safety contract is always present
 # ---------------------------------------------------------------------------
 
+
 def test_accepted_result_has_safety_contract(sandbox: PaperBrokerSandbox) -> None:
     result = sandbox.submit(_long_draft())
     sc = result.safety_contract
@@ -289,6 +293,7 @@ def test_rejected_result_has_safety_contract(sandbox: PaperBrokerSandbox) -> Non
 # 4. Risk rejection (service-level after schema, via sandbox._MAX_RISK_PCT)
 # ---------------------------------------------------------------------------
 
+
 def test_service_rejects_exactly_at_risk_ceiling_exceeded(
     sandbox: PaperBrokerSandbox,
 ) -> None:
@@ -297,6 +302,7 @@ def test_service_rejects_exactly_at_risk_ceiling_exceeded(
     # We test the service-level guard by submitting a valid draft and then
     # checking that the sandbox's own _MAX_RISK_PCT constant is 1.0.
     from app.services.paper_sandbox import _MAX_RISK_PCT
+
     assert _MAX_RISK_PCT == 1.0
 
 
@@ -334,49 +340,58 @@ FORBIDDEN_FIELDS = {
 def test_paper_sandbox_entry_has_no_forbidden_fields() -> None:
     entry_fields = set(PaperSandboxEntry.model_fields.keys())
     overlap = FORBIDDEN_FIELDS & entry_fields
-    assert not overlap, (
-        f"PaperSandboxEntry must not contain forbidden fields: {overlap}"
-    )
+    assert (
+        not overlap
+    ), f"PaperSandboxEntry must not contain forbidden fields: {overlap}"
 
 
 def test_paper_sandbox_submit_result_has_no_forbidden_fields() -> None:
     result_fields = set(PaperSandboxSubmitResult.model_fields.keys())
     overlap = FORBIDDEN_FIELDS & result_fields
-    assert not overlap, (
-        f"PaperSandboxSubmitResult must not contain forbidden fields: {overlap}"
-    )
+    assert (
+        not overlap
+    ), f"PaperSandboxSubmitResult must not contain forbidden fields: {overlap}"
 
 
 def test_paper_sandbox_state_has_no_forbidden_fields() -> None:
     state_fields = set(PaperSandboxState.model_fields.keys())
     overlap = FORBIDDEN_FIELDS & state_fields
-    assert not overlap, (
-        f"PaperSandboxState must not contain forbidden fields: {overlap}"
-    )
+    assert (
+        not overlap
+    ), f"PaperSandboxState must not contain forbidden fields: {overlap}"
 
 
 # ---------------------------------------------------------------------------
 # 6. No broker/MT5/IBKR imports in the service module
 # ---------------------------------------------------------------------------
 
+
 def test_service_has_no_broker_network_side_effects() -> None:
     import app.services.paper_sandbox as mod
 
     forbidden_modules = {
-        "requests", "httpx", "aiohttp", "urllib3",
-        "MetaTrader5", "ibapi", "ib_insync",
-        "supabase", "postgrest",
-        "websocket", "socket",
+        "requests",
+        "httpx",
+        "aiohttp",
+        "urllib3",
+        "MetaTrader5",
+        "ibapi",
+        "ib_insync",
+        "supabase",
+        "postgrest",
+        "websocket",
+        "socket",
     }
     for net_mod in forbidden_modules:
-        assert net_mod not in dir(mod), (
-            f"Unexpected network/broker module reference in paper sandbox service: {net_mod}"
-        )
+        assert net_mod not in dir(
+            mod
+        ), f"Unexpected network/broker module reference in paper sandbox service: {net_mod}"
 
 
 # ---------------------------------------------------------------------------
 # 7. Sandbox_entry_id is paper-scoped, deterministic, not a broker ID
 # ---------------------------------------------------------------------------
+
 
 def test_sandbox_entry_id_has_paper_prefix(sandbox: PaperBrokerSandbox) -> None:
     result = sandbox.submit(_long_draft())
@@ -407,6 +422,7 @@ def test_different_ticket_ids_produce_different_entry_ids(
 # ---------------------------------------------------------------------------
 # 8. Entry data matches the submitted draft
 # ---------------------------------------------------------------------------
+
 
 def test_entry_symbol_matches_draft(sandbox: PaperBrokerSandbox) -> None:
     result = sandbox.submit(_long_draft())
@@ -452,6 +468,7 @@ def test_entry_ticket_id_matches_draft(sandbox: PaperBrokerSandbox) -> None:
 # 9. Module-level convenience functions
 # ---------------------------------------------------------------------------
 
+
 def test_get_paper_sandbox_returns_singleton() -> None:
     sb1 = get_paper_sandbox()
     sb2 = get_paper_sandbox()
@@ -471,8 +488,10 @@ def test_submit_to_paper_sandbox_convenience_function() -> None:
 # 10. Schema construction rejects bad inputs
 # ---------------------------------------------------------------------------
 
+
 def test_entry_schema_rejects_risk_pct_above_1() -> None:
     from pydantic import ValidationError
+
     with pytest.raises(ValidationError):
         PaperSandboxEntry(
             sandbox_entry_id="paper-sandbox-entry-abc",
@@ -494,6 +513,7 @@ def test_entry_schema_rejects_risk_pct_above_1() -> None:
 
 def test_entry_schema_rejects_zero_entry_price() -> None:
     from pydantic import ValidationError
+
     with pytest.raises(ValidationError):
         PaperSandboxEntry(
             sandbox_entry_id="paper-sandbox-entry-abc",
@@ -515,6 +535,7 @@ def test_entry_schema_rejects_zero_entry_price() -> None:
 
 def test_entry_schema_rejects_empty_symbol() -> None:
     from pydantic import ValidationError
+
     with pytest.raises(ValidationError):
         PaperSandboxEntry(
             sandbox_entry_id="paper-sandbox-entry-abc",
@@ -536,6 +557,7 @@ def test_entry_schema_rejects_empty_symbol() -> None:
 
 def test_entry_schema_rejects_extra_fields() -> None:
     from pydantic import ValidationError
+
     with pytest.raises(ValidationError):
         PaperSandboxEntry(
             sandbox_entry_id="paper-sandbox-entry-abc",
@@ -560,6 +582,7 @@ def test_entry_schema_rejects_extra_fields() -> None:
 # 11. Model dump contains no forbidden fields
 # ---------------------------------------------------------------------------
 
+
 def test_submitted_entry_model_dump_has_no_forbidden_fields(
     sandbox: PaperBrokerSandbox,
 ) -> None:
@@ -583,8 +606,10 @@ def test_submit_result_model_dump_has_no_forbidden_fields(
 # 12. Malformed/non-finite numeric inputs are rejected at schema level
 # ---------------------------------------------------------------------------
 
+
 def test_draft_schema_rejects_nan_entry_price() -> None:
     from pydantic import ValidationError
+
     with pytest.raises((ValidationError, ValueError)):
         TradeTicketDraft(
             ticket_id="test",
@@ -604,6 +629,7 @@ def test_draft_schema_rejects_nan_entry_price() -> None:
 # ---------------------------------------------------------------------------
 # 13. List entries returns a copy, not the internal store
 # ---------------------------------------------------------------------------
+
 
 def test_list_entries_is_snapshot(sandbox: PaperBrokerSandbox) -> None:
     sandbox.submit(_long_draft())

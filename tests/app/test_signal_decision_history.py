@@ -313,7 +313,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_fallback_true_when_reader_returns_empty(self, monkeypatch) -> None:
         """When read_signal_decisions returns [], fallback must be True."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
         import app.services.signal_decision_reader as rdr
 
         monkeypatch.setattr(rdr, "read_signal_decisions", lambda **kw: [])
@@ -324,7 +326,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_fallback_false_when_reader_returns_records(self, monkeypatch) -> None:
         """When read_signal_decisions returns real rows, fallback must be False."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
         real_records = [_make_real_record(record_id="real-001")]
 
@@ -338,7 +342,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_real_records_appear_in_response(self, monkeypatch) -> None:
         """Real records returned by reader should appear in the response."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
         real_records = [_make_real_record(symbol="TSLA", decision="dry_run_allowed")]
 
@@ -353,7 +359,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_fallback_true_when_reader_raises(self, monkeypatch) -> None:
         """When read_signal_decisions raises, fallback must be True."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
         import app.services.signal_decision_reader as rdr
 
@@ -368,7 +376,10 @@ class TestSupa011FallbackBehaviour:
 
     def test_seed_data_used_when_reader_returns_empty(self, monkeypatch) -> None:
         """When reader returns [], seed decisions are served."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService, _SEED_DECISIONS
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+            _SEED_DECISIONS,
+        )
 
         import app.services.signal_decision_reader as rdr
 
@@ -381,7 +392,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_existing_api_shape_preserved_with_real_records(self, monkeypatch) -> None:
         """Response schema is unchanged when real records are served."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
         real_records = [_make_real_record()]
 
@@ -403,7 +416,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_safety_flags_preserved_with_real_records(self, monkeypatch) -> None:
         """dry_run/auto_trade/read_only always True/False/True with real records."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
         real_records = [_make_real_record()]
 
@@ -419,7 +434,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_decision_filter_applied_to_real_records(self, monkeypatch) -> None:
         """decision filter works correctly when real records are returned."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
         real_records = [
             _make_real_record(record_id="r1", decision="dry_run_allowed"),
@@ -436,7 +453,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_risk_status_filter_applied_to_real_records(self, monkeypatch) -> None:
         """risk_status filter works correctly when real records are returned."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
         real_records = [
             _make_real_record(record_id="r1", risk_status="pass"),
@@ -453,7 +472,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_direction_filter_applied_to_real_records(self, monkeypatch) -> None:
         """direction filter works correctly when real records are returned."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
         real_records = [
             _make_real_record(record_id="r1", direction="BUY"),
@@ -470,11 +491,11 @@ class TestSupa011FallbackBehaviour:
 
     def test_limit_respected_with_real_records(self, monkeypatch) -> None:
         """limit is applied correctly when real records are returned."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
-        real_records = [
-            _make_real_record(record_id=f"r{i}") for i in range(10)
-        ]
+        real_records = [_make_real_record(record_id=f"r{i}") for i in range(10)]
 
         import app.services.signal_decision_reader as rdr
 
@@ -486,7 +507,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_total_matches_decisions_with_real_records(self, monkeypatch) -> None:
         """total always equals len(decisions)."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
         real_records = [_make_real_record(record_id=f"r{i}") for i in range(5)]
 
@@ -500,7 +523,9 @@ class TestSupa011FallbackBehaviour:
 
     def test_all_real_records_have_safety_invariants(self, monkeypatch) -> None:
         """Every record returned has dry_run=True, auto_trade=False, read_only=True."""
-        from app.services.signal_decision_history_service import SignalDecisionHistoryService
+        from app.services.signal_decision_history_service import (
+            SignalDecisionHistoryService,
+        )
 
         real_records = [_make_real_record(record_id=f"r{i}") for i in range(4)]
 
@@ -670,9 +695,7 @@ class TestSupa014DateFiltersRouteLevel:
     """HTTP-level coverage for GET /api/signals/decisions date filters."""
 
     def test_from_date_only_returns_200(self, client) -> None:
-        response = client.get(
-            "/api/signals/decisions?from_date=2020-01-01T00:00:00Z"
-        )
+        response = client.get("/api/signals/decisions?from_date=2020-01-01T00:00:00Z")
         assert response.status_code == 200
         payload = response.json()
         assert payload["dry_run"] is True
@@ -680,9 +703,7 @@ class TestSupa014DateFiltersRouteLevel:
         assert payload["read_only"] is True
 
     def test_to_date_only_returns_200(self, client) -> None:
-        response = client.get(
-            "/api/signals/decisions?to_date=2099-01-01T00:00:00Z"
-        )
+        response = client.get("/api/signals/decisions?to_date=2099-01-01T00:00:00Z")
         assert response.status_code == 200
         payload = response.json()
         assert payload["dry_run"] is True
@@ -722,16 +743,13 @@ class TestSupa014DateFiltersRouteLevel:
                 assert getattr(route, "methods", set()) == {"GET"}
 
     def test_no_secrets_in_filtered_response(self, client) -> None:
-        response = client.get(
-            "/api/signals/decisions?from_date=2020-01-01T00:00:00Z"
-        )
+        response = client.get("/api/signals/decisions?from_date=2020-01-01T00:00:00Z")
         raw = response.text
         for pattern in SECRET_PATTERNS:
             assert pattern not in raw
 
     def test_existing_limit_still_clamped(self, client) -> None:
         response = client.get(
-            "/api/signals/decisions"
-            "?from_date=2020-01-01T00:00:00Z&limit=500"
+            "/api/signals/decisions" "?from_date=2020-01-01T00:00:00Z&limit=500"
         )
         assert response.status_code == 422  # limit ge=1 le=200 unchanged

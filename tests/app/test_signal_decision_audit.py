@@ -328,7 +328,8 @@ class TestInsertFailure:
         )
         assert result.degraded_reason is not None
         assert (
-            "simulated Supabase signal decision insert failure" in result.degraded_reason
+            "simulated Supabase signal decision insert failure"
+            in result.degraded_reason
         )
 
     def test_read_only_preserved_on_insert_failure(self) -> None:
@@ -555,9 +556,7 @@ class TestEndpointResilience:
         response = client.get("/api/signals/decisions")
         assert response.status_code == 200
 
-    def test_decisions_returns_200_if_emit_fn_raises(
-        self, client, monkeypatch
-    ) -> None:
+    def test_decisions_returns_200_if_emit_fn_raises(self, client, monkeypatch) -> None:
         """Endpoint must still return 200 if emit_signal_decision_event raises.
 
         The import is local inside the route function, so we patch it at the
@@ -613,9 +612,7 @@ class TestSymbolFilterThreading:
         emit_signal_decision_event(3, "TSLA", _insert_fn=fn)
         payload = calls[0][1]
         # symbol_filter must be inside metadata only, not at the top level.
-        assert "symbol_filter" not in {
-            k for k in payload if k != "metadata"
-        }
+        assert "symbol_filter" not in {k for k in payload if k != "metadata"}
 
     def test_message_references_decision_count(self) -> None:
         fn, calls = _make_fake_insert_fn()
@@ -661,9 +658,9 @@ class TestSignalDecisionsWriteClient:
 
         response = client.get("/api/signals/decisions")
         assert response.status_code == 200
-        assert len(write_client_calls) >= 1, (
-            "get_safe_supabase_write_client must be called for the audit emit path"
-        )
+        assert (
+            len(write_client_calls) >= 1
+        ), "get_safe_supabase_write_client must be called for the audit emit path"
 
     def test_signal_decisions_route_response_unaffected_by_write_client_none(
         self, client, monkeypatch

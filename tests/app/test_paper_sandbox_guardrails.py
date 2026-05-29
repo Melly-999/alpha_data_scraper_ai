@@ -68,9 +68,7 @@ PAPER_INDICATORS: tuple[str, ...] = (
 )
 
 # HTTP methods that could mutate state.
-MUTATING_METHODS: frozenset[str] = frozenset(
-    {"post", "put", "patch", "delete"}
-)
+MUTATING_METHODS: frozenset[str] = frozenset({"post", "put", "patch", "delete"})
 
 # Path substrings that — when combined with a mutating method and appearing
 # outside the paper namespace — are forbidden.
@@ -89,9 +87,11 @@ MUTATING_TRADING_FRAGMENTS: tuple[str, ...] = (
 # Pre-existing, reviewed admin/dry-run routes that contain a trading-adjacent
 # path fragment but are NOT live execution surfaces.  Mirrored from
 # ADMIN_NON_GET_ALLOWLIST in test_safety_invariants.py.
-SAFE_ADMIN_NON_EXECUTION_PATHS: frozenset[str] = frozenset({
-    "/api/broker/dry-run-report",  # dry-run only, no live broker calls
-})
+SAFE_ADMIN_NON_EXECUTION_PATHS: frozenset[str] = frozenset(
+    {
+        "/api/broker/dry-run-report",  # dry-run only, no live broker calls
+    }
+)
 
 
 def _openapi_paths(client) -> dict:
@@ -127,9 +127,9 @@ def _path_metadata_text(path_item: dict) -> str:
 def test_openapi_schema_is_readable(client) -> None:
     """The schema must be non-empty — guards against vacuous passes."""
     paths = _openapi_paths(client)
-    assert paths, (
-        "OpenAPI schema returned no paths; guardrail tests would pass vacuously"
-    )
+    assert (
+        paths
+    ), "OpenAPI schema returned no paths; guardrail tests would pass vacuously"
 
 
 # ---------------------------------------------------------------------------
@@ -138,9 +138,7 @@ def test_openapi_schema_is_readable(client) -> None:
 
 
 @pytest.mark.parametrize("fragment", LIVE_EXECUTION_FRAGMENTS)
-def test_no_live_execution_route_outside_paper_namespace(
-    client, fragment: str
-) -> None:
+def test_no_live_execution_route_outside_paper_namespace(client, fragment: str) -> None:
     """No path containing ``fragment`` should exist outside /api/paper or /paper."""
     paths = _openapi_paths(client)
     offenders: list[str] = []
@@ -197,8 +195,7 @@ def test_paper_namespace_endpoints_are_paper_only(client) -> None:
 
     assert not offenders, (
         "Paper-namespace endpoint(s) missing paper/sandbox indicator or "
-        "containing live-broker wording:\n"
-        + "\n".join(f"  {o}" for o in offenders)
+        "containing live-broker wording:\n" + "\n".join(f"  {o}" for o in offenders)
     )
 
 
@@ -263,9 +260,10 @@ def test_no_autotrade_enable_route_in_openapi(client) -> None:
         if bad_methods:
             offenders.append(f"{path!r} (methods: {sorted(bad_methods)})")
 
-    assert not offenders, (
-        "Autotrade-enable route found in OpenAPI schema:\n"
-        + "\n".join(f"  {o}" for o in offenders)
+    assert (
+        not offenders
+    ), "Autotrade-enable route found in OpenAPI schema:\n" + "\n".join(
+        f"  {o}" for o in offenders
     )
 
 
@@ -288,9 +286,10 @@ def test_no_autotrade_enable_in_metadata(client) -> None:
             if pattern in metadata:
                 offenders.append(f"{path!r} contains {pattern!r}")
 
-    assert not offenders, (
-        "OpenAPI path metadata implies autotrade enablement:\n"
-        + "\n".join(f"  {o}" for o in offenders)
+    assert (
+        not offenders
+    ), "OpenAPI path metadata implies autotrade enablement:\n" + "\n".join(
+        f"  {o}" for o in offenders
     )
 
 
@@ -375,12 +374,12 @@ def test_paper_validator_never_flips_risk_allowed() -> None:
         reason="Validator risk_allowed guardrail",
     )
     result = TradeTicketValidator().validate(ticket)
-    assert result.safety_contract["risk_allowed"] is False, (
-        "Validator safety_contract must never set risk_allowed=True"
-    )
-    assert result.safety_contract["broker_execution_allowed"] is False, (
-        "Validator safety_contract must never set broker_execution_allowed=True"
-    )
+    assert (
+        result.safety_contract["risk_allowed"] is False
+    ), "Validator safety_contract must never set risk_allowed=True"
+    assert (
+        result.safety_contract["broker_execution_allowed"] is False
+    ), "Validator safety_contract must never set broker_execution_allowed=True"
 
 
 def test_draft_service_never_flips_safety_fields() -> None:
@@ -443,9 +442,9 @@ def test_paper_ticket_draft_has_no_live_execution_fields() -> None:
     }
     model_fields = set(TradeTicketDraft.model_fields.keys())
     overlap = forbidden_fields & model_fields
-    assert not overlap, (
-        f"TradeTicketDraft must not contain live execution fields: {overlap}"
-    )
+    assert (
+        not overlap
+    ), f"TradeTicketDraft must not contain live execution fields: {overlap}"
 
 
 def test_paper_ticket_draft_result_has_no_live_execution_fields() -> None:
@@ -464,6 +463,6 @@ def test_paper_ticket_draft_result_has_no_live_execution_fields() -> None:
     }
     model_fields = set(TradeTicketDraftResult.model_fields.keys())
     overlap = forbidden_fields & model_fields
-    assert not overlap, (
-        f"TradeTicketDraftResult must not contain live execution fields: {overlap}"
-    )
+    assert (
+        not overlap
+    ), f"TradeTicketDraftResult must not contain live execution fields: {overlap}"

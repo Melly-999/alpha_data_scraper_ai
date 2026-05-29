@@ -12,10 +12,10 @@ from app.schemas.trade_ticket import (
     TradeTicketDraft,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _long_ticket(**overrides) -> dict:
     base = dict(
@@ -57,6 +57,7 @@ def _short_ticket(**overrides) -> dict:
 # Valid drafts
 # ---------------------------------------------------------------------------
 
+
 def test_valid_long_draft_passes():
     ticket = TradeTicketDraft(**_long_ticket())
     assert ticket.side == TradeSide.long
@@ -75,6 +76,7 @@ def test_valid_short_draft_passes():
 # ---------------------------------------------------------------------------
 # Symbol normalisation
 # ---------------------------------------------------------------------------
+
 
 def test_symbol_normalised_to_uppercase():
     ticket = TradeTicketDraft(**_long_ticket(symbol="eurusd"))
@@ -100,6 +102,7 @@ def test_rejects_blank_symbol():
 # Risk percentage
 # ---------------------------------------------------------------------------
 
+
 def test_rejects_risk_pct_above_1():
     with pytest.raises(ValidationError):
         TradeTicketDraft(**_long_ticket(risk_pct=1.01))
@@ -118,6 +121,7 @@ def test_accepts_risk_pct_exactly_1():
 # ---------------------------------------------------------------------------
 # Confidence
 # ---------------------------------------------------------------------------
+
 
 def test_rejects_confidence_above_100():
     with pytest.raises(ValidationError):
@@ -140,6 +144,7 @@ def test_accepts_confidence_at_boundaries():
 # Reason
 # ---------------------------------------------------------------------------
 
+
 def test_rejects_missing_reason():
     with pytest.raises(ValidationError):
         TradeTicketDraft(**_long_ticket(reason=""))
@@ -153,6 +158,7 @@ def test_rejects_blank_reason():
 # ---------------------------------------------------------------------------
 # Long geometry
 # ---------------------------------------------------------------------------
+
 
 def test_rejects_long_sl_above_entry():
     with pytest.raises(ValidationError):
@@ -176,14 +182,13 @@ def test_rejects_long_tp1_equal_entry():
 
 def test_rejects_long_tp2_below_entry():
     with pytest.raises(ValidationError):
-        TradeTicketDraft(
-            **_long_ticket(take_profit_1=1.1100, take_profit_2=1.0800)
-        )
+        TradeTicketDraft(**_long_ticket(take_profit_1=1.1100, take_profit_2=1.0800))
 
 
 # ---------------------------------------------------------------------------
 # Short geometry
 # ---------------------------------------------------------------------------
+
 
 def test_rejects_short_sl_below_entry():
     with pytest.raises(ValidationError):
@@ -207,14 +212,13 @@ def test_rejects_short_tp1_equal_entry():
 
 def test_rejects_short_tp2_above_entry():
     with pytest.raises(ValidationError):
-        TradeTicketDraft(
-            **_short_ticket(take_profit_1=1.2900, take_profit_2=1.3100)
-        )
+        TradeTicketDraft(**_short_ticket(take_profit_1=1.2900, take_profit_2=1.3100))
 
 
 # ---------------------------------------------------------------------------
 # Immutable safety fields
 # ---------------------------------------------------------------------------
+
 
 def test_rejects_paper_only_false():
     with pytest.raises(ValidationError):
@@ -249,6 +253,7 @@ def test_rejects_broker_execution_allowed_true():
 # ---------------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------------
+
 
 def test_default_risk_allowed_is_false():
     ticket = TradeTicketDraft(**_long_ticket())

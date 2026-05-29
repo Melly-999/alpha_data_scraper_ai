@@ -33,8 +33,7 @@ _STARTUP_EVENT_SPECS: list[dict[str, str]] = [
         "event_type": "backend_started",
         "severity": "success",
         "message": (
-            "MellyTrade Phase 1 backend started. "
-            "read_only=True, dry_run=True."
+            "MellyTrade Phase 1 backend started. " "read_only=True, dry_run=True."
         ),
     },
     {

@@ -4,6 +4,7 @@ Five targeted tests that verify the hard safety requirements from CLAUDE.md:
 confidence stays in [33, 85], get_full_analysis() survives, client injection
 works, and both env-var lookup paths are honoured.
 """
+
 from __future__ import annotations
 
 import json
@@ -32,7 +33,9 @@ _MARKET_DATA: dict = {
 
 
 def _raw(signal: str = "BUY", confidence: int = 85, risk: str = "MEDIUM") -> str:
-    return json.dumps({"signal": signal, "confidence": confidence, "risk": risk, "reason": "test"})
+    return json.dumps(
+        {"signal": signal, "confidence": confidence, "risk": risk, "reason": "test"}
+    )
 
 
 def _make_client(api_key: str = "sk-test") -> ClaudeAIClient:
@@ -112,7 +115,9 @@ def test_claude_ai_integration_accepts_client_injection():
         os.environ.pop("CLAUDE_API_KEY", None)
         integration = ClaudeAIIntegration(api_key=None, client=mock_client)
 
-    assert integration.enabled is True, "Integration must be enabled when client is injected"
+    assert (
+        integration.enabled is True
+    ), "Integration must be enabled when client is injected"
     assert integration.client is mock_client
 
 
