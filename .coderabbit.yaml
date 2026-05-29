@@ -1,0 +1,106 @@
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+  path_filters:
+    - "!**/.git/**"
+    - "!**/__pycache__/**"
+    - "!**/.mypy_cache/**"
+    - "!**/.pytest_cache/**"
+    - "!**/.ruff_cache/**"
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/coverage/**"
+    - "!**/results/**"
+    - "!**/test-results/**"
+    - "!**/*.pyc"
+    - "!**/*.pyo"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+    - "!**/*.zip"
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.jpeg"
+    - "!**/*.gif"
+    - "!**/*.pdf"
+  path_instructions:
+    - path: "app/api/routes/**/*.py"
+      instructions: >
+        Treat these files as safety-critical API surface. Preserve the
+        read-only / paper-trading posture, reject any POST/PUT/PATCH/DELETE
+        trading routes, and flag any attempt to add order execution, broker
+        credentials, or live-order side effects.
+    - path: "app/services/**/*.py"
+      instructions: >
+        Review service boundaries for safe async I/O, timeout handling, and
+        error isolation. Flag blocking network calls in request paths and any
+        code that could enable autotrade, live execution, or secret leakage.
+    - path: "brokers/**/*.py"
+      instructions: >
+        Broker integrations must remain read-only in this repository. Flag any
+        order placement, execution, credential handling, account lookup, or
+        broker-session code that could reach a live trading path.
+    - path: "frontend/src/**/*.tsx"
+      instructions: >
+        The UI must stay audit-first and read-only. Reject buy/sell/execute
+        controls, connect-live flows, broker account widgets, and any UI that
+        suggests live trading is available.
+    - path: "frontend/src/**/*.ts"
+      instructions: >
+        Keep frontend logic aligned with the read-only terminal posture. No
+        secrets, no live-trading routes, no execution helpers, and no state
+        that implies broker connectivity or order submission.
+    - path: ".github/workflows/**/*.yml"
+      instructions: >
+        Review workflows for safety. Do not allow live-deploy automation,
+        secret exposure, broker credential usage, or automation that could push
+        trading actions to production. Preserve the no-direct-push policy.
+    - path: "docs/**/*.md"
+      instructions: >
+        Documentation must describe safety posture accurately. If forbidden
+        terms appear, they must be clearly in negative or safety context only,
+        with no implication that live trading, secret storage, or execution is
+        supported.
+    - path: "docker-compose*.yml"
+      instructions: >
+        Compose changes must remain optional and non-mandatory for Datadog or
+        any other observability tooling. Do not add broker services, execution
+        services, or secret-mounted runtime dependencies.
+    - path: "Dockerfile*"
+      instructions: >
+        Preserve a safe, optional runtime. Do not introduce live-trading
+        requirements, broker credentials, or mandatory observability services
+        into the application image.
+  tools:
+    ruff:
+      enabled: true
+    eslint:
+      enabled: true
+    markdownlint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    hadolint:
+      enabled: true
+    yamllint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: true
+    checkov:
+      enabled: true
+pre_merge_checks:
+  custom_checks:
+    - name: "MellyTrade safety invariants"
+      mode: warning
+      instructions: >
+        Warn on any diff that regresses the safe read-only posture. Flag
+        exact or equivalent changes that set autotrade=true, dry_run=false,
+        read_only=false, live_orders_blocked=false, or execution_enabled=true;
+        add broker execution or order placement; add buy/sell/execute buttons;
+        introduce real broker credentials or account IDs; or raise risk above
+        1% per trade. This check must warn on first pass and must not block by
+        default.
