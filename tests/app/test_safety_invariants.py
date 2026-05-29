@@ -149,9 +149,7 @@ def test_terminal_v1_prefixes_are_get_only(client) -> None:
     """Every registered route under a Terminal V1 prefix uses GET only."""
     offenders: list[str] = []
     for methods, path in _registered_routes(client):
-        if not any(
-            path.startswith(prefix) for prefix in TERMINAL_V1_GET_ONLY_PREFIXES
-        ):
+        if not any(path.startswith(prefix) for prefix in TERMINAL_V1_GET_ONLY_PREFIXES):
             continue
         non_get = methods - {"GET"}
         if non_get:
@@ -186,8 +184,7 @@ def test_no_route_path_suggests_order_placement(client) -> None:
             if danger in segments:
                 offenders.append((danger, path))
     assert not offenders, (
-        "Route path looks like an order-execution endpoint; "
-        f"offenders: {offenders}"
+        "Route path looks like an order-execution endpoint; " f"offenders: {offenders}"
     )
 
 
@@ -212,21 +209,19 @@ def test_config_json_autotrade_disabled(runtime_config: dict) -> None:
 
 def test_config_json_dry_run_true(runtime_config: dict) -> None:
     autotrade = runtime_config.get("autotrade", {})
-    assert autotrade.get("dry_run") is True, (
-        "config.json autotrade.dry_run must remain true."
-    )
+    assert (
+        autotrade.get("dry_run") is True
+    ), "config.json autotrade.dry_run must remain true."
 
 
 def test_config_json_min_confidence_at_or_above_70(runtime_config: dict) -> None:
     autotrade = runtime_config.get("autotrade", {})
     min_conf = autotrade.get("min_confidence")
-    assert min_conf is not None, (
-        "autotrade.min_confidence must be set in config.json"
-    )
+    assert min_conf is not None, "autotrade.min_confidence must be set in config.json"
     # Stored as a percentage (e.g. 70 or 75.0).
-    assert float(min_conf) >= 70.0, (
-        f"autotrade.min_confidence must remain >= 70 (got {min_conf})."
-    )
+    assert (
+        float(min_conf) >= 70.0
+    ), f"autotrade.min_confidence must remain >= 70 (got {min_conf})."
 
 
 # ---------------------------------------------------------------------------
@@ -238,17 +233,15 @@ def test_risk_config_endpoint_keeps_max_risk_at_or_below_1pct(client) -> None:
     response = client.get("/api/risk/config")
     assert response.status_code == 200
     payload = response.json()
-    assert payload.get("dry_run") is True, (
-        "/risk/config dry_run must remain true"
-    )
-    assert payload.get("auto_trade") is False, (
-        "/risk/config auto_trade must remain false"
-    )
+    assert payload.get("dry_run") is True, "/risk/config dry_run must remain true"
+    assert (
+        payload.get("auto_trade") is False
+    ), "/risk/config auto_trade must remain false"
     max_risk = payload.get("max_risk_per_trade")
     assert max_risk is not None, "max_risk_per_trade must be present"
-    assert float(max_risk) <= 1.0, (
-        f"max_risk_per_trade must remain <= 1% (got {max_risk}%)."
-    )
+    assert (
+        float(max_risk) <= 1.0
+    ), f"max_risk_per_trade must remain <= 1% (got {max_risk}%)."
 
 
 # ---------------------------------------------------------------------------
@@ -259,17 +252,17 @@ def test_risk_config_endpoint_keeps_max_risk_at_or_below_1pct(client) -> None:
 def test_audit_feed_includes_live_orders_blocked(client) -> None:
     payload = client.get("/api/terminal/events").json()
     types = [e["type"] for e in payload["events"]]
-    assert "live_orders_blocked" in types, (
-        "Terminal audit feed must always emit a live_orders_blocked event"
-    )
+    assert (
+        "live_orders_blocked" in types
+    ), "Terminal audit feed must always emit a live_orders_blocked event"
 
 
 def test_audit_feed_every_event_is_read_only(client) -> None:
     payload = client.get("/api/terminal/events").json()
     for event in payload["events"]:
-        assert event.get("read_only") is True, (
-            f"Audit event {event['id']} ({event['type']}) is not read_only"
-        )
+        assert (
+            event.get("read_only") is True
+        ), f"Audit event {event['id']} ({event['type']}) is not read_only"
 
 
 def test_audit_feed_safety_severity_events_carry_safety_note(client) -> None:
@@ -356,11 +349,7 @@ def test_terminal_pages_do_not_import_mutating_api_helpers(
         pytest.skip(f"{relpath} not present in this branch")
     source = path.read_text(encoding="utf-8")
     code = _strip_line_comments(source)
-    found = [
-        sym
-        for sym in FRONTEND_MUTATING_SYMBOLS
-        if re.search(rf"\b{sym}\b", code)
-    ]
+    found = [sym for sym in FRONTEND_MUTATING_SYMBOLS if re.search(rf"\b{sym}\b", code)]
     assert not found, (
         f"{relpath} imports/uses mutating API helper(s) {found}; "
         "Terminal V1 pages must remain read-only. If this is admin UX, "
@@ -376,9 +365,7 @@ def test_terminal_pages_have_no_order_placement_calls(relpath: str) -> None:
         pytest.skip(f"{relpath} not present in this branch")
     code = _strip_line_comments(path.read_text(encoding="utf-8"))
     hits = [p.pattern for p in ORDER_PLACEMENT_PATTERNS if p.search(code)]
-    assert not hits, (
-        f"{relpath} contains an order-placement-shaped call: {hits}"
-    )
+    assert not hits, f"{relpath} contains an order-placement-shaped call: {hits}"
 
 
 @pytest.mark.parametrize("relpath", TERMINAL_V1_FRONTEND_GLOBS)
@@ -389,6 +376,4 @@ def test_terminal_pages_have_no_order_button_text(relpath: str) -> None:
         pytest.skip(f"{relpath} not present in this branch")
     code = _strip_line_comments(path.read_text(encoding="utf-8"))
     hits = [p.pattern for p in ORDER_BUTTON_TEXT_PATTERNS if p.search(code)]
-    assert not hits, (
-        f"{relpath} contains order-button-shaped JSX text: {hits}"
-    )
+    assert not hits, f"{relpath} contains order-button-shaped JSX text: {hits}"

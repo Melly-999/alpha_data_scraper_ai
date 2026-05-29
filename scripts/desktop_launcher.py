@@ -38,7 +38,6 @@ from __future__ import annotations
 
 import argparse
 import atexit
-import os
 import platform
 import signal
 import subprocess
@@ -50,10 +49,10 @@ import webbrowser
 from pathlib import Path
 from typing import List, Optional
 
-
 # ---------------------------------------------------------------------------
 # Logging helpers
 # ---------------------------------------------------------------------------
+
 
 def _tag(level: str, msg: str) -> str:
     return f"[{level}] {msg}"
@@ -75,6 +74,7 @@ def error(msg: str) -> None:
 # Safety banner
 # ---------------------------------------------------------------------------
 
+
 def print_safety_banner() -> None:
     banner = """
 ======================================================
@@ -95,6 +95,7 @@ def print_safety_banner() -> None:
 # ---------------------------------------------------------------------------
 # Repo root resolution
 # ---------------------------------------------------------------------------
+
 
 def resolve_repo_root(override: Optional[str] = None) -> Path:
     """Return the repo root directory.
@@ -130,6 +131,7 @@ def resolve_repo_root(override: Optional[str] = None) -> Path:
 # File existence guard
 # ---------------------------------------------------------------------------
 
+
 def ensure_file(path: Path, description: str) -> None:
     """Raise FileNotFoundError with a clear message if *path* is missing."""
     if not path.is_file():
@@ -158,9 +160,7 @@ def start_powershell_script(
     stdout/stderr are inherited so the helper's output appears in the console.
     """
     if platform.system() != "Windows":
-        warn(
-            f"Not running on Windows — skipping PowerShell helper: {script_path.name}"
-        )
+        warn(f"Not running on Windows — skipping PowerShell helper: {script_path.name}")
         raise OSError("PowerShell helpers require Windows.")
 
     cmd: List[str] = [
@@ -221,6 +221,7 @@ def stop_started_processes() -> None:
 # HTTP readiness check — GET only
 # ---------------------------------------------------------------------------
 
+
 def wait_for_http_ok(
     url: str,
     timeout_seconds: int,
@@ -241,7 +242,9 @@ def wait_for_http_ok(
             req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req, timeout=4) as resp:
                 if resp.status < 300:
-                    info(f"{description} ready after {attempt} attempt(s) — HTTP {resp.status}")
+                    info(
+                        f"{description} ready after {attempt} attempt(s) — HTTP {resp.status}"
+                    )
                     return True
         except (urllib.error.URLError, OSError):
             pass  # Not ready yet — keep polling
@@ -266,6 +269,7 @@ def wait_for_http_ok(
 # Browser
 # ---------------------------------------------------------------------------
 
+
 def open_terminal(terminal_url: str) -> None:
     """Open *terminal_url* in the default browser."""
     info(f"Opening browser to: {terminal_url}")
@@ -279,6 +283,7 @@ def open_terminal(terminal_url: str) -> None:
 # ---------------------------------------------------------------------------
 # Argument parsing
 # ---------------------------------------------------------------------------
+
 
 def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -348,6 +353,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
 # Signal / atexit cleanup
 # ---------------------------------------------------------------------------
 
+
 def _handle_signal(signum: int, frame: object) -> None:  # noqa: ARG001
     print("\n", flush=True)
     info(f"Signal {signum} received — shutting down launcher …")
@@ -368,6 +374,7 @@ def _register_cleanup() -> None:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main() -> int:
     parser = _build_arg_parser()
@@ -409,7 +416,9 @@ def main() -> int:
     # 3. Start backend
     if not args.skip_backend:
         if platform.system() != "Windows":
-            warn("Not running on Windows — backend PowerShell helper cannot be started.")
+            warn(
+                "Not running on Windows — backend PowerShell helper cannot be started."
+            )
             warn("Start the backend manually and re-run with --skip-backend.")
         else:
             try:
@@ -445,7 +454,9 @@ def main() -> int:
     # 5. Start frontend
     if not args.skip_frontend:
         if platform.system() != "Windows":
-            warn("Not running on Windows — frontend PowerShell helper cannot be started.")
+            warn(
+                "Not running on Windows — frontend PowerShell helper cannot be started."
+            )
             warn("Start the frontend manually and re-run with --skip-frontend.")
         else:
             try:
@@ -478,7 +489,9 @@ def main() -> int:
 
     # 8. Keep running
     info("Launcher is running. Press Ctrl+C to stop.")
-    info("Safety posture: autotrade=false | dry_run=true | read_only=true | live_orders_blocked=true")
+    info(
+        "Safety posture: autotrade=false | dry_run=true | read_only=true | live_orders_blocked=true"
+    )
     try:
         while True:
             # Check child processes are still alive

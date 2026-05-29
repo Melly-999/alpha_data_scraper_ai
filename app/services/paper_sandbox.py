@@ -59,6 +59,7 @@ _MAX_RISK_PCT: float = 1.0
 # ID generation — deterministic, paper-scoped, not broker IDs
 # ---------------------------------------------------------------------------
 
+
 def _make_sandbox_entry_id(ticket_id: str) -> str:
     """Return a deterministic paper-scoped entry ID for the given ticket_id.
 
@@ -73,6 +74,7 @@ def _make_sandbox_entry_id(ticket_id: str) -> str:
 # ---------------------------------------------------------------------------
 # PaperBrokerSandbox
 # ---------------------------------------------------------------------------
+
 
 class PaperBrokerSandbox:
     """In-memory paper-only broker sandbox.

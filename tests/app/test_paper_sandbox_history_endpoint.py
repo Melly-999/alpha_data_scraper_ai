@@ -173,9 +173,9 @@ def test_response_requires_human_review_is_true(client) -> None:
 def test_top_level_response_has_no_forbidden_field(client, field: str) -> None:
     """No forbidden field may appear at the top level of the response."""
     body = client.get(ENDPOINT).json()
-    assert field not in body, (
-        f"Forbidden field '{field}' found at top level of history response"
-    )
+    assert (
+        field not in body
+    ), f"Forbidden field '{field}' found at top level of history response"
 
 
 def test_events_contain_no_forbidden_fields_when_populated(client) -> None:
@@ -195,9 +195,9 @@ def test_events_contain_no_forbidden_fields_when_populated(client) -> None:
 
     for event in body["events"]:
         for field in _FORBIDDEN_FIELDS:
-            assert field not in event, (
-                f"Forbidden field '{field}' found in audit event: {event}"
-            )
+            assert (
+                field not in event
+            ), f"Forbidden field '{field}' found in audit event: {event}"
 
 
 # ---------------------------------------------------------------------------
@@ -350,7 +350,6 @@ def test_forbidden_metadata_key_sanitized_in_response(client) -> None:
 
 def test_non_finite_metadata_values_absent_in_response(client) -> None:
     """Non-finite float metadata values must be absent from event in response."""
-    import math
     from app.services.paper_sandbox_history import get_paper_sandbox_history
 
     svc = get_paper_sandbox_history()
@@ -381,33 +380,33 @@ def test_non_finite_metadata_values_absent_in_response(client) -> None:
 def test_post_to_history_returns_405(client) -> None:
     """POST to the history endpoint must return 405 Method Not Allowed."""
     response = client.post(ENDPOINT, json={})
-    assert response.status_code == 405, (
-        f"Expected 405 for POST, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 405
+    ), f"Expected 405 for POST, got {response.status_code}"
 
 
 def test_put_to_history_returns_405(client) -> None:
     """PUT to the history endpoint must return 405 Method Not Allowed."""
     response = client.put(ENDPOINT, json={})
-    assert response.status_code == 405, (
-        f"Expected 405 for PUT, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 405
+    ), f"Expected 405 for PUT, got {response.status_code}"
 
 
 def test_patch_to_history_returns_405(client) -> None:
     """PATCH to the history endpoint must return 405 Method Not Allowed."""
     response = client.patch(ENDPOINT, json={})
-    assert response.status_code == 405, (
-        f"Expected PATCH to return 405, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 405
+    ), f"Expected PATCH to return 405, got {response.status_code}"
 
 
 def test_delete_to_history_returns_405(client) -> None:
     """DELETE to the history endpoint must return 405 Method Not Allowed."""
     response = client.delete(ENDPOINT)
-    assert response.status_code == 405, (
-        f"Expected DELETE to return 405, got {response.status_code}"
-    )
+    assert (
+        response.status_code == 405
+    ), f"Expected DELETE to return 405, got {response.status_code}"
 
 
 # ---------------------------------------------------------------------------
@@ -418,9 +417,9 @@ def test_delete_to_history_returns_405(client) -> None:
 def test_openapi_schema_includes_history_path(client) -> None:
     """The OpenAPI schema must list GET /api/paper/sandbox/history."""
     paths = client.app.openapi().get("paths", {})
-    assert ENDPOINT in paths, (
-        f"Expected {ENDPOINT} in OpenAPI paths; found: {sorted(paths)[:10]}"
-    )
+    assert (
+        ENDPOINT in paths
+    ), f"Expected {ENDPOINT} in OpenAPI paths; found: {sorted(paths)[:10]}"
 
 
 def test_history_openapi_path_has_only_get_method(client) -> None:
@@ -428,9 +427,9 @@ def test_history_openapi_path_has_only_get_method(client) -> None:
     path_item = client.app.openapi().get("paths", {}).get(ENDPOINT, {})
     assert "get" in path_item, "GET method missing from OpenAPI for history path"
     for method in ("post", "put", "patch", "delete"):
-        assert method not in path_item, (
-            f"Unexpected method '{method}' registered on history path"
-        )
+        assert (
+            method not in path_item
+        ), f"Unexpected method '{method}' registered on history path"
 
 
 def test_history_openapi_tags_include_paper_sandbox(client) -> None:
@@ -438,18 +437,16 @@ def test_history_openapi_tags_include_paper_sandbox(client) -> None:
     path_item = client.app.openapi().get("paths", {}).get(ENDPOINT, {})
     get_op = path_item.get("get", {})
     tags = get_op.get("tags", [])
-    assert "paper-sandbox" in tags, (
-        f"Expected 'paper-sandbox' tag on history endpoint, got {tags}"
-    )
+    assert (
+        "paper-sandbox" in tags
+    ), f"Expected 'paper-sandbox' tag on history endpoint, got {tags}"
 
 
 def test_history_openapi_operation_id(client) -> None:
     """The history endpoint must use operation_id='get_paper_sandbox_history'."""
     path_item = client.app.openapi().get("paths", {}).get(ENDPOINT, {})
     op_id = path_item.get("get", {}).get("operationId", "")
-    assert op_id == "get_paper_sandbox_history", (
-        f"Unexpected operationId: {op_id!r}"
-    )
+    assert op_id == "get_paper_sandbox_history", f"Unexpected operationId: {op_id!r}"
 
 
 def test_history_openapi_summary_no_execution_language(client) -> None:
@@ -475,9 +472,9 @@ def test_route_module_imports_no_broker_modules() -> None:
 
     src = inspect.getsource(mod)
     for forbidden in _FORBIDDEN_BROKER_MODULES:
-        assert forbidden not in src, (
-            f"Forbidden module reference '{forbidden}' found in route source"
-        )
+        assert (
+            forbidden not in src
+        ), f"Forbidden module reference '{forbidden}' found in route source"
 
 
 def test_route_module_no_metatrader5() -> None:
@@ -505,9 +502,9 @@ def test_history_does_not_mutate_config_json(client) -> None:
     client.get(ENDPOINT)
 
     config_after = json.loads(config_path.read_text())
-    assert config_before == config_after, (
-        "config.json was mutated by a GET to the history endpoint"
-    )
+    assert (
+        config_before == config_after
+    ), "config.json was mutated by a GET to the history endpoint"
 
 
 def test_config_autotrade_still_disabled_after_history_call(client) -> None:
@@ -585,9 +582,9 @@ def test_history_response_event_has_expected_keys(client) -> None:
 def test_preview_endpoint_still_returns_200_after_history_wiring(client) -> None:
     """The preview endpoint must not be broken by adding the history endpoint."""
     response = client.get("/api/paper/sandbox/preview")
-    assert response.status_code == 200, (
-        f"Preview endpoint broke after history wiring: {response.status_code}"
-    )
+    assert (
+        response.status_code == 200
+    ), f"Preview endpoint broke after history wiring: {response.status_code}"
 
 
 def test_preview_safety_flags_unchanged_after_history_wiring(client) -> None:

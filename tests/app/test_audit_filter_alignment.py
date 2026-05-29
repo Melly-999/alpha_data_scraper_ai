@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_AUDIT_SOURCE = REPO_ROOT / "mellytrade_v3/mellytrade-api/app/audit.py"
 FRONTEND_AUDIT_FILTER_SOURCE = REPO_ROOT / "frontend/src/pages/AuditTrailPage.tsx"

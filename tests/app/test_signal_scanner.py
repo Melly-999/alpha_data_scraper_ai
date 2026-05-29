@@ -15,7 +15,6 @@ from app.schemas.signal_scanner import (
 )
 from app.services.signal_scanner import scan_symbols
 
-
 FORBIDDEN_FIELDS = [
     "order_id",
     "account_id",

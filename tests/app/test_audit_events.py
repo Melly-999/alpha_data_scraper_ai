@@ -204,9 +204,9 @@ def test_terminal_events_safety_note_field_present_on_safety_severity(
     for event in safety_events:
         assert "safety_note" in event
         note = event["safety_note"]
-        assert isinstance(note, str) and len(note) > 0, (
-            f"safety event {event['id']} has empty safety_note"
-        )
+        assert (
+            isinstance(note, str) and len(note) > 0
+        ), f"safety event {event['id']} has empty safety_note"
 
 
 def test_terminal_events_safety_note_no_secret_leakage(client) -> None:
@@ -216,9 +216,9 @@ def test_terminal_events_safety_note_no_secret_leakage(client) -> None:
         e["safety_note"] for e in payload["events"] if e.get("safety_note")
     )
     for pattern in SECRET_PATTERNS:
-        assert pattern not in notes, (
-            f"Possible secret pattern {pattern!r} found in safety_note copy"
-        )
+        assert (
+            pattern not in notes
+        ), f"Possible secret pattern {pattern!r} found in safety_note copy"
 
 
 def test_audit_service_smoke_passed_path_emits_success() -> None:

@@ -4,10 +4,13 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-TRACKER_DOC = REPO_ROOT / "docs" / "beta" / "first_source_only_tester_feedback_tracker.md"
-REVIEW_GATE_DOC = REPO_ROOT / "docs" / "qa" / "first_source_only_tester_feedback_review_gate.md"
+TRACKER_DOC = (
+    REPO_ROOT / "docs" / "beta" / "first_source_only_tester_feedback_tracker.md"
+)
+REVIEW_GATE_DOC = (
+    REPO_ROOT / "docs" / "qa" / "first_source_only_tester_feedback_review_gate.md"
+)
 PLAN_DOC = REPO_ROOT / "docs" / "tasks" / "desktop_launcher_exe_plan.md"
 
 
@@ -55,9 +58,14 @@ class TestFeedbackTrackerDoc:
     def test_tracker_mentions_no_live_trading(self, tracker_text: str) -> None:
         assert "no live trading" in tracker_text.lower()
 
-    def test_tracker_mentions_no_order_execution_controls(self, tracker_text: str) -> None:
+    def test_tracker_mentions_no_order_execution_controls(
+        self, tracker_text: str
+    ) -> None:
         lower = tracker_text.lower()
-        assert "no order/execution controls" in lower or "no order execution controls" in lower
+        assert (
+            "no order/execution controls" in lower
+            or "no order execution controls" in lower
+        )
 
     def test_tracker_has_severity_definitions(self, tracker_text: str) -> None:
         for token in ("P0", "P1", "P2", "P3"):
@@ -105,13 +113,17 @@ class TestFeedbackReviewGateDoc:
         assert "hold" in lower
         assert "blocked" in lower
 
-    def test_review_gate_blocks_second_tester_on_p0(self, review_gate_text: str) -> None:
+    def test_review_gate_blocks_second_tester_on_p0(
+        self, review_gate_text: str
+    ) -> None:
         lower = review_gate_text.lower()
         assert "p0" in lower
         assert "second tester" in lower
         assert "blocked" in lower
 
-    def test_review_gate_mentions_no_public_release_or_artifacts(self, review_gate_text: str) -> None:
+    def test_review_gate_mentions_no_public_release_or_artifacts(
+        self, review_gate_text: str
+    ) -> None:
         lower = review_gate_text.lower()
         for token in (
             "no public release",
@@ -180,7 +192,9 @@ class TestThisFileIsReadOnly:
         for line in _import_lines():
             lower = line.lower()
             for token in banned:
-                assert token not in lower, f"unexpected access/message import line: {line!r}"
+                assert (
+                    token not in lower
+                ), f"unexpected access/message import line: {line!r}"
 
     def test_no_artifact_creation_imports(self) -> None:
         banned = ("zipfile", "tarfile", "shutil", "tempfile")
