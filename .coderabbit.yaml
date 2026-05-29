@@ -1,4 +1,5 @@
 reviews:
+  profile: "assertive"
   auto_review:
     enabled: true
     drafts: false
@@ -42,6 +43,19 @@ reviews:
         Broker integrations must remain read-only in this repository. Flag any
         order placement, execution, credential handling, account lookup, or
         broker-session code that could reach a live trading path.
+    - path: "mt5_*.py"
+      instructions: >
+        MetaTrader 5 modules (mt5_fetcher.py, mt5_trader.py). This terminal must
+        not place live orders. Flag any live order_send/order placement,
+        modification, or cancellation, any hardcoded MT5 login/password/server,
+        and any change that flips dry-run/paper mode off. Reads of market or
+        account data for display are acceptable; live execution is not.
+    - path: "execution/**/*.py"
+      instructions: >
+        Execution package (execution_manager.py, guards.py). It must remain inert
+        in this read-only build: no live broker calls, no order submission, no
+        weakening of execution guards. Flag any addition that enables real trade
+        execution.
     - path: "frontend/src/**/*.tsx"
       instructions: >
         The UI must stay audit-first and read-only. Reject buy/sell/execute
@@ -86,21 +100,23 @@ reviews:
       enabled: true
     yamllint:
       enabled: true
+    actionlint:
+      enabled: true
     gitleaks:
       enabled: true
     trufflehog:
       enabled: true
     checkov:
       enabled: true
-pre_merge_checks:
-  custom_checks:
-    - name: "MellyTrade safety invariants"
-      mode: warning
-      instructions: >
-        Warn on any diff that regresses the safe read-only posture. Flag
-        exact or equivalent changes that set autotrade=true, dry_run=false,
-        read_only=false, live_orders_blocked=false, or execution_enabled=true;
-        add broker execution or order placement; add buy/sell/execute buttons;
-        introduce real broker credentials or account IDs; or raise risk above
-        1% per trade. This check must warn on first pass and must not block by
-        default.
+  pre_merge_checks:
+    custom_checks:
+      - name: "MellyTrade safety invariants"
+        mode: warning
+        instructions: >
+          Warn on any diff that regresses the safe read-only posture. Flag
+          exact or equivalent changes that set autotrade=true, dry_run=false,
+          read_only=false, live_orders_blocked=false, or execution_enabled=true;
+          add broker execution or order placement; add buy/sell/execute buttons;
+          introduce real broker credentials or account IDs; or raise risk above
+          1% per trade. This check must warn on first pass and must not block by
+          default.

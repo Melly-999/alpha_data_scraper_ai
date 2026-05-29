@@ -17,6 +17,18 @@ Datadog is optional observability for the read-only MellyTrade terminal. It does
 - Linux: use this for a non-containerized VM
 - Kubernetes: use only when there is a real Kubernetes cluster to observe
 
+### Render vs VPS / BytePlus
+
+- Render (and similar managed PaaS): you generally cannot run a co-located host
+  agent or mount the Docker socket, so the Docker/host-agent tile does not apply.
+  Use application-level APM with `ddtrace` pointing at Datadog's intake, or an
+  agentless log forwarder, and skip `docker-compose.observability.yml`. Treat
+  Render as observe-via-app-only.
+- VPS / BytePlus Docker host: you own the host, so you can run the sidecar
+  `datadog-agent` with the read-only Docker socket mount and collect container
+  logs, host metrics, and APM. This is the full-fidelity option and what the
+  compose override targets.
+
 ## Safe Setup Steps
 
 1. Create a Datadog API key in the Datadog UI.

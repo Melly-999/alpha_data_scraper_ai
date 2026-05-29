@@ -28,3 +28,9 @@ services:
       - "8125:8125/udp"
     networks:
       - trading-network
+
+networks:
+  # Declared so this override is usable on its own; merges cleanly with the
+  # identical trading-network in docker-compose.yml when the files are layered.
+  trading-network:
+    driver: bridge

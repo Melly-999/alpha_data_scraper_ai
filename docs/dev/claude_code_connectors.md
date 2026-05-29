@@ -47,6 +47,15 @@ Use connectors to speed up review, debugging, and validation without breaking th
 8. Inspect Datadog logs and traces for regressions.
 9. Mark the PR ready only after the safety gate passes.
 
+End-to-end gate: branch -> Draft PR -> CodeRabbit -> CI -> staging smoke ->
+Datadog logs -> human review gate.
+
+For multi-agent assistance modes (`/deep-interview`, `/team`, `/ralph`,
+`/ultraqa`, `/ask codex`, `/ask gemini`), see
+[oh_my_claudecode_setup.md](./oh_my_claudecode_setup.md). These improve review
+quality and iteration speed only; they must never bypass safety gates, push to
+main, access secrets, or enable live execution.
+
 ## Usage Rules
 
 - Keep all trading actions read-only, paper, or dry-run
