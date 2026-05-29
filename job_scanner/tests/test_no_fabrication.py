@@ -24,7 +24,7 @@ import pathlib
 
 sys.path.insert(0, str(pathlib.Path(__file__).parents[3]))
 
-from job_scanner.scorer import score_job, load_rules
+from job_scanner.scorer import score_job, load_rules  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Candidate profile — honest, no private contact data

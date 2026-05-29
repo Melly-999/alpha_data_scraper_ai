@@ -18,8 +18,6 @@ Test categories:
 
 from __future__ import annotations
 
-import pytest
-
 _STATUS_PATH = "/api/supabase/status"
 
 # ---------------------------------------------------------------------------

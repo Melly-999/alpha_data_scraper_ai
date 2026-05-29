@@ -350,7 +350,6 @@ def test_forbidden_metadata_key_sanitized_in_response(client) -> None:
 
 def test_non_finite_metadata_values_absent_in_response(client) -> None:
     """Non-finite float metadata values must be absent from event in response."""
-    import math
     from app.services.paper_sandbox_history import get_paper_sandbox_history
 
     svc = get_paper_sandbox_history()

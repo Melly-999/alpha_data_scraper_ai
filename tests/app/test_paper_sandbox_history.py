@@ -27,16 +27,12 @@ Proves:
 
 from __future__ import annotations
 
-import importlib
 import inspect
-import math
 from typing import Any
 
 import pytest
 
 from app.schemas.paper_sandbox_history import (
-    PaperAuditEvent,
-    PaperAuditHistory,
     VALID_EVENT_TYPES,
 )
 from app.services.paper_sandbox_history import (

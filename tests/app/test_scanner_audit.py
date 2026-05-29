@@ -23,8 +23,6 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-import pytest
-
 from app.schemas.audit_event import AuditEventRecord
 from app.schemas.signal_scanner import SignalScannerBatch
 from app.services.scanner_audit import emit_scanner_preview_event

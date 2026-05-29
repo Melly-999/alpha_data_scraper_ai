@@ -285,7 +285,7 @@ def _make_real_record(
     confidence: float = 0.80,
     risk_status: str = "pass",
     decision: str = "dry_run_allowed",
-) -> "SignalDecisionRecord":  # type: ignore[name-defined]
+) -> "SignalDecisionRecord":  # type: ignore[name-defined]  # noqa: F821
     from app.schemas.signal_decision import SignalDecisionRecord
 
     return SignalDecisionRecord(
@@ -378,7 +378,6 @@ class TestSupa011FallbackBehaviour:
         """When reader returns [], seed decisions are served."""
         from app.services.signal_decision_history_service import (
             SignalDecisionHistoryService,
-            _SEED_DECISIONS,
         )
 
         import app.services.signal_decision_reader as rdr
