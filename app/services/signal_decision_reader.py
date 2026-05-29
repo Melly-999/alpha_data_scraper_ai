@@ -177,7 +177,9 @@ def read_signal_decisions(
     bounded = _clamp_limit(limit)
 
     if client is None and _select_fn is None:
-        logger.debug("signal_decision_reader: no client — returning empty list (degraded)")
+        logger.debug(
+            "signal_decision_reader: no client — returning empty list (degraded)"
+        )
         return []
 
     from_iso = _to_iso(from_date)

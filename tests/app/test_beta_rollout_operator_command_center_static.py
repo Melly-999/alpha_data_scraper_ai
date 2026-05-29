@@ -4,10 +4,13 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-COMMAND_CENTER_DOC = REPO_ROOT / "docs" / "beta" / "beta_rollout_operator_command_center.md"
-MASTER_CHECKLIST_DOC = REPO_ROOT / "docs" / "qa" / "beta_rollout_operator_master_checklist.md"
+COMMAND_CENTER_DOC = (
+    REPO_ROOT / "docs" / "beta" / "beta_rollout_operator_command_center.md"
+)
+MASTER_CHECKLIST_DOC = (
+    REPO_ROOT / "docs" / "qa" / "beta_rollout_operator_master_checklist.md"
+)
 PLAN_DOC = REPO_ROOT / "docs" / "tasks" / "desktop_launcher_exe_plan.md"
 
 
@@ -56,7 +59,9 @@ class TestCommandCenterContent:
     def command_center_text(self) -> str:
         return _read(COMMAND_CENTER_DOC)
 
-    def test_command_center_mentions_safety_posture(self, command_center_text: str) -> None:
+    def test_command_center_mentions_safety_posture(
+        self, command_center_text: str
+    ) -> None:
         for token in (
             "autotrade=false",
             "dry_run=true",
@@ -88,7 +93,9 @@ class TestCommandCenterContent:
         for token in ("phase 0", "phase 1", "phase 2", "phase 3", "phase 4"):
             assert token in lower
 
-    def test_command_center_has_pass_hold_blocked(self, command_center_text: str) -> None:
+    def test_command_center_has_pass_hold_blocked(
+        self, command_center_text: str
+    ) -> None:
         lower = command_center_text.lower()
         assert "pass" in lower
         assert "hold" in lower
@@ -98,13 +105,17 @@ class TestCommandCenterContent:
         for token in ("P0", "P1", "P2", "P3"):
             assert token in command_center_text
 
-    def test_command_center_says_no_access_or_invites_automatically(self, command_center_text: str) -> None:
+    def test_command_center_says_no_access_or_invites_automatically(
+        self, command_center_text: str
+    ) -> None:
         lower = command_center_text.lower()
         assert "does not grant access" in lower
         assert "send invites automatically" in lower or "send invites" in lower
         assert "approve testers automatically" in lower
 
-    def test_command_center_mentions_no_secrets_or_account_ids(self, command_center_text: str) -> None:
+    def test_command_center_mentions_no_secrets_or_account_ids(
+        self, command_center_text: str
+    ) -> None:
         lower = command_center_text.lower()
         assert "secrets" in lower
         assert "account ids" in lower
@@ -155,7 +166,9 @@ class TestMasterChecklistContent:
         for token in ("P0", "P1", "P2", "P3"):
             assert token in checklist_text
 
-    def test_checklist_mentions_no_auto_access_or_invites(self, checklist_text: str) -> None:
+    def test_checklist_mentions_no_auto_access_or_invites(
+        self, checklist_text: str
+    ) -> None:
         lower = checklist_text.lower()
         assert "does not grant access" in lower
         assert "send invites automatically" in lower
@@ -183,11 +196,24 @@ class TestThisFileIsReadOnly:
                 assert token not in lower, f"unexpected network import line: {line!r}"
 
     def test_no_access_or_message_imports(self) -> None:
-        banned = ("github", "pygithub", "ghapi", "discord", "slack", "oauth", "sendgrid", "mailgun", "smtplib", "twilio")
+        banned = (
+            "github",
+            "pygithub",
+            "ghapi",
+            "discord",
+            "slack",
+            "oauth",
+            "sendgrid",
+            "mailgun",
+            "smtplib",
+            "twilio",
+        )
         for line in _import_lines():
             lower = line.lower()
             for token in banned:
-                assert token not in lower, f"unexpected access/message import line: {line!r}"
+                assert (
+                    token not in lower
+                ), f"unexpected access/message import line: {line!r}"
 
     def test_no_artifact_creation_imports(self) -> None:
         banned = ("zipfile", "tarfile", "shutil", "tempfile")

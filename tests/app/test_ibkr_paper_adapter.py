@@ -64,9 +64,9 @@ def test_ibkr_paper_config_has_no_secret_or_account_fields(field: str) -> None:
     from brokers.ibkr_config import IBKRPaperConfig
 
     declared = set(IBKRPaperConfig.__dataclass_fields__.keys())
-    assert field not in declared, (
-        f"IBKRPaperConfig must not declare forbidden field {field!r}"
-    )
+    assert (
+        field not in declared
+    ), f"IBKRPaperConfig must not declare forbidden field {field!r}"
 
 
 @pytest.mark.parametrize(
@@ -163,9 +163,7 @@ def test_account_snapshot_validates_into_schema() -> None:
     from app.schemas.broker import BrokerAccountSnapshot
     from brokers.ibkr_paper_readonly import IBKRPaperReadOnlyAdapter
 
-    snap = BrokerAccountSnapshot(
-        **dict(IBKRPaperReadOnlyAdapter().account_snapshot())
-    )
+    snap = BrokerAccountSnapshot(**dict(IBKRPaperReadOnlyAdapter().account_snapshot()))
     assert snap.adapter_id == "ibkr-paper"
     assert snap.read_only is True
     assert snap.cash == 0.0
@@ -179,8 +177,7 @@ def test_positions_returns_empty_list_and_validates() -> None:
     from brokers.ibkr_paper_readonly import IBKRPaperReadOnlyAdapter
 
     positions = [
-        BrokerPosition(**dict(p))
-        for p in IBKRPaperReadOnlyAdapter().positions()
+        BrokerPosition(**dict(p)) for p in IBKRPaperReadOnlyAdapter().positions()
     ]
     assert positions == []
 

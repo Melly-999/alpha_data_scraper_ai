@@ -95,9 +95,7 @@ class _RaisingAccountClient:
 # Test 1 — default adapter returns safe zeros.
 # ---------------------------------------------------------------------------
 def test_default_account_snapshot_returns_safe_zeros() -> None:
-    snap = BrokerAccountSnapshot(
-        **dict(IBKRPaperReadOnlyAdapter().account_snapshot())
-    )
+    snap = BrokerAccountSnapshot(**dict(IBKRPaperReadOnlyAdapter().account_snapshot()))
     assert snap.adapter_id == "ibkr-paper"
     assert snap.currency == "USD"
     assert snap.cash == 0.0
@@ -110,9 +108,7 @@ def test_default_account_snapshot_returns_safe_zeros() -> None:
 # Test 2 — safe paper client surfaces real values.
 # ---------------------------------------------------------------------------
 def test_safe_client_surfaces_account_values() -> None:
-    adapter = IBKRPaperReadOnlyAdapter(
-        readonly_client=_SafePaperAccountClient()
-    )
+    adapter = IBKRPaperReadOnlyAdapter(readonly_client=_SafePaperAccountClient())
     snap = BrokerAccountSnapshot(**dict(adapter.account_snapshot()))
     assert snap.currency == "USD"
     assert snap.cash == 1234.5
@@ -136,9 +132,7 @@ def test_safe_client_via_get_accessor_surfaces_account_values() -> None:
 # Test 3 — missing numeric fields default to 0.0.
 # ---------------------------------------------------------------------------
 def test_missing_numeric_fields_default_to_zero() -> None:
-    client = _SafePaperAccountClient(
-        snapshot={"currency": "USD", "cash": 250.0}
-    )
+    client = _SafePaperAccountClient(snapshot={"currency": "USD", "cash": 250.0})
     adapter = IBKRPaperReadOnlyAdapter(readonly_client=client)
     snap = BrokerAccountSnapshot(**dict(adapter.account_snapshot()))
     assert snap.cash == 250.0
@@ -208,9 +202,7 @@ def test_unsafe_client_returns_safe_zero_snapshot(
 def test_malformed_payload_degrades_safely(
     bad_snapshot: dict[str, object],
 ) -> None:
-    client = _SafePaperAccountClient(
-        snapshot={"currency": "USD", **bad_snapshot}
-    )
+    client = _SafePaperAccountClient(snapshot={"currency": "USD", **bad_snapshot})
     adapter = IBKRPaperReadOnlyAdapter(readonly_client=client)
     snap = BrokerAccountSnapshot(**dict(adapter.account_snapshot()))
     assert snap.cash == 0.0
@@ -323,9 +315,7 @@ def test_account_snapshot_always_read_only() -> None:
 # Test 12 — positions() remains [].
 # ---------------------------------------------------------------------------
 def test_positions_still_empty_with_safe_client() -> None:
-    adapter = IBKRPaperReadOnlyAdapter(
-        readonly_client=_SafePaperAccountClient()
-    )
+    adapter = IBKRPaperReadOnlyAdapter(readonly_client=_SafePaperAccountClient())
     assert adapter.positions() == []
 
 
@@ -357,14 +347,11 @@ _FORBIDDEN_METHOD_NAMES: tuple[str, ...] = (
 
 
 def test_adapter_has_no_forbidden_methods() -> None:
-    adapter = IBKRPaperReadOnlyAdapter(
-        readonly_client=_SafePaperAccountClient()
-    )
+    adapter = IBKRPaperReadOnlyAdapter(readonly_client=_SafePaperAccountClient())
     surface = set(dir(adapter)) | set(dir(IBKRPaperReadOnlyAdapter))
     leaked = sorted(surface & set(_FORBIDDEN_METHOD_NAMES))
     assert not leaked, (
-        "IBKRPaperReadOnlyAdapter must not expose forbidden "
-        f"method(s): {leaked!r}"
+        "IBKRPaperReadOnlyAdapter must not expose forbidden " f"method(s): {leaked!r}"
     )
 
 
