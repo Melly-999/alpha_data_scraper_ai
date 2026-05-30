@@ -1,11 +1,14 @@
-const badges = ["READ ONLY", "DRY RUN", "AUTO TRADE OFF", "LIVE ORDERS BLOCKED"];
+import { safetyBadges } from "../../design/terminalTheme";
 
 export function SafetyBadges() {
   return (
     <div className="safety-badges" aria-label="Global safety posture">
-      {badges.map((badge) => (
-        <span key={badge} className="safety-badge">
-          {badge}
+      {safetyBadges.map((badge) => (
+        <span
+          key={badge.label}
+          className={`safety-badge safety-badge--${badge.variant}`}
+        >
+          {badge.label}
         </span>
       ))}
     </div>

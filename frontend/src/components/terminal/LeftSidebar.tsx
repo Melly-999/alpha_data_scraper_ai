@@ -6,6 +6,7 @@ const navItems = [
   { label: "Watchlist", path: "/watchlist", icon: "W" },
   { label: "AI Workspace", path: "/workspace", icon: "AI" },
   { label: "Paper Run Preview", path: "/terminal/paper-run-preview", icon: "PR" },
+  { label: "Open Design Tabs", path: "/terminal/open-design-tabs", icon: "OD" },
   { label: "Signals Feed", path: "/signals", icon: "S" },
   { label: "Risk Manager", path: "/risk", icon: "R" },
   { label: "Brokers", path: "/brokers", icon: "B" },

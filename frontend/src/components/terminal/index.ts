@@ -11,6 +11,7 @@ export { IBKRBrokerCard } from "./IBKRBrokerCard";
 export { LeftSidebar } from "./LeftSidebar";
 export { LoadingScreen } from "./LoadingScreen";
 export { MarketOverviewGrid } from "./MarketOverviewGrid";
+export { OpenDesignTabsPanel } from "./OpenDesignTabsPanel";
 export { NewsRail } from "./NewsRail";
 export { RiskGuardrailsCard } from "./RiskGuardrailsCard";
 export { SafetyBadges } from "./SafetyBadges";

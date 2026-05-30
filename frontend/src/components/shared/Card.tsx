@@ -8,9 +8,9 @@ interface CardProps {
 
 export function Card({ title, right, children }: CardProps) {
   return (
-    <section className="card">
+    <section className="card card-terminal panel-glass">
       {title ? (
-        <header className="card-header">
+        <header className="card-header card-header-terminal">
           <span className="card-title">{title}</span>
           {right ? <div className="card-actions">{right}</div> : null}
         </header>
