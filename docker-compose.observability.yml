@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7
+    container_name: mellytrade-datadog-agent
+    restart: unless-stopped
+    environment:
+      DD_SITE: ${DD_SITE:-datadoghq.eu}
+      DD_API_KEY: ${DD_API_KEY}
+      DD_ENV: ${DD_ENV:-staging}
+      DD_SERVICE: ${DD_SERVICE:-mellytrade-api}
+      DD_VERSION: ${DD_VERSION:-local}
+      DD_LOGS_ENABLED: ${DD_LOGS_ENABLED:-true}
+      DD_APM_ENABLED: ${DD_APM_ENABLED:-true}
+      DD_TRACE_ENABLED: ${DD_TRACE_ENABLED:-true}
+      DD_LOGS_INJECTION: ${DD_LOGS_INJECTION:-true}
+      DD_APM_NON_LOCAL_TRAFFIC: "true"
+      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
+      DD_TAGS: "project:mellytrade env:staging service:mellytrade-api"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    ports:
+      - "8126:8126"
+      - "8125:8125/udp"
+    networks:
+      - trading-network
+
+networks:
+  # Declared so this override is usable on its own; merges cleanly with the
+  # identical trading-network in docker-compose.yml when the files are layered.
+  trading-network:
+    driver: bridge
