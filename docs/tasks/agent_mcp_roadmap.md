@@ -14,7 +14,7 @@ execution.
 |---|---|---|---|---|
 | AGENT-MCP-001 | GitHub App read-only permission matrix | Done | Low | Docs-only |
 | AGENT-MCP-002 | MCP read-only contract design | In progress | Low | Docs-only |
-| AGENT-MCP-003 | Local repo status collector script | Planned | Low-Med | Script + docs |
+| AGENT-MCP-003 | Local repo status collector script | In progress / Draft PR | Low-Med | Script + docs |
 | AGENT-MCP-004 | PR/checks task board generator | Planned | Med | Script + docs |
 | AGENT-MCP-005 | Safety reviewer prompt pack | Planned | Low | Docs-only |
 | AGENT-MCP-006 | Read-only agent demo runbook | Planned | Low | Docs-only |
@@ -67,6 +67,8 @@ execution.
   - PR remains draft until review
 
 ### AGENT-MCP-003 — Local repo status collector script
+
+**Status:** In progress (Draft PR).
 
 - **Goal:** A read-only script that reports repo SHA, branch, dirty files,
   worktrees, and open PRs.
