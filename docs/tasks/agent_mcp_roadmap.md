@@ -12,8 +12,8 @@ execution.
 
 | Task | Title | Status | Risk | Scope |
 |---|---|---|---|---|
-| AGENT-MCP-001 | GitHub App read-only permission matrix | In progress | Low | Docs-only |
-| AGENT-MCP-002 | MCP read-only contract design | Planned | Low | Docs-only |
+| AGENT-MCP-001 | GitHub App read-only permission matrix | Done | Low | Docs-only |
+| AGENT-MCP-002 | MCP read-only contract design | In progress | Low | Docs-only |
 | AGENT-MCP-003 | Local repo status collector script | Planned | Low-Med | Script + docs |
 | AGENT-MCP-004 | PR/checks task board generator | Planned | Med | Script + docs |
 | AGENT-MCP-005 | Safety reviewer prompt pack | Planned | Low | Docs-only |
@@ -35,15 +35,36 @@ execution.
 - **Exit criteria:** Docs-only Draft PR; no runtime changes; safety validation
   passes; no real unsafe strings.
 
-### AGENT-MCP-002 — MCP read-only contract design
+### AGENT-MCP-002 — MCP Read-Only Contract Design
 
-- **Goal:** Define the read-only MCP contract and the exact set of allowed
-  read operations (and the operations that are explicitly disallowed).
-- **Allowed files:** `docs/agents/mcp_readonly_agent_contract.md`,
-  `docs/tasks/agent_mcp_roadmap.md`
-- **Forbidden files:** runtime code, any write/delete/update action, secrets.
-- **Validation:** safety validator; static scan.
-- **Exit criteria:** Docs-only PR describing a read-only-only contract.
+**Status:** In progress (this PR).
+
+- **Goal:** Define the read-only MCP contract for safe MellyTrade agents —
+  the allowed read operations, the explicitly forbidden mutation functions, the
+  command allowlist, output/logging requirements, approval gates, and the
+  failure mode. See `docs/agents/mcp_readonly_agent_contract.md`.
+- **Allowed files:**
+  - `docs/agents/mcp_readonly_agent_contract.md`
+  - `docs/tasks/agent_mcp_roadmap.md`
+- **Forbidden files:**
+  - runtime app code
+  - frontend app code
+  - brokers
+  - `config.json`
+  - requirements
+  - workflows
+  - secrets
+  - credentials
+- **Validation:**
+  - `py -3.11 scripts/validate_safety_config.py`
+  - static scan for secrets and unsafe trading strings
+- **Exit criteria:**
+  - docs-only PR
+  - no runtime changes
+  - no secrets
+  - read-only functions only
+  - forbidden write/mutation functions explicitly listed
+  - PR remains draft until review
 
 ### AGENT-MCP-003 — Local repo status collector script
 
