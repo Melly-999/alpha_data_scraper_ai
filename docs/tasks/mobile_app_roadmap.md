@@ -10,13 +10,13 @@ controls.
 
 ## Current Task
 
-**MOBILE-APP-001:**
+**MOBILE-APP-002 — iPad/iPhone smoke checklist (Draft PR / In progress):**
 
-- mobile PWA shell
-- route `/mobile`
-- read-only safety cards
-- Melly Pet assistant surface
-- no trading controls
+- docs-only device smoke checklist for the `/mobile` shell
+- result template (TEMPLATE / NOT EXECUTED until run on hardware)
+- no screenshots/videos committed
+
+MOBILE-APP-001 (mobile PWA shell, `/mobile` route) is **Done** (merged via #245).
 
 ## Recommended Phases
 
@@ -61,11 +61,14 @@ controls.
 - read-only / dry-run by default
 - live orders blocked
 
-## Future Tasks
+## Task Status
 
-- MOBILE-APP-002 — iPad/iPhone smoke checklist
-- MOBILE-APP-003 — Vercel mobile frontend deploy checklist
-- MOBILE-APP-004 — Melly Pet mobile onboarding polish
-- MOBILE-APP-005 — App icon / favicon / PWA icon pipeline
-- MOBILE-APP-006 — Expo / native wrapper decision
-- MOBILE-APP-007 — Native prototype, only after safety review
+| Task | Title | Status |
+|---|---|---|
+| MOBILE-APP-001 | Mobile PWA shell (`/mobile`) | Done (#245) |
+| MOBILE-APP-002 | iPad/iPhone smoke checklist | Draft PR / In progress |
+| MOBILE-APP-003 | Vercel mobile frontend deploy checklist | Planned |
+| MOBILE-APP-004 | Melly Pet mobile onboarding polish | Planned |
+| MOBILE-APP-005 | App icon / favicon / PWA icon pipeline | Planned |
+| MOBILE-APP-006 | Expo / native wrapper decision | Planned |
+| MOBILE-APP-007 | Native prototype, only after safety review | Planned |
