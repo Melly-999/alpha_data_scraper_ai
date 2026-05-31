@@ -13,18 +13,22 @@ The project combines a FastAPI backend, React/TypeScript dashboard, broker adapt
 
 > Current status: local workstation and paper-trading infrastructure. Live trading is intentionally disabled by default.
 
-## For Recruiters
+## Project Overview
 
-MellyTrade is a portfolio project that demonstrates how I design AI-assisted, safety-first fintech tooling: a FastAPI backend, React/TypeScript terminal UI, read-only broker/status surfaces, risk guardrails, audit/event views, paper sandbox previews, and local validation scripts. It is intentionally **read-only and dry-run**: no live trading, no broker execution, no order routes, no order buttons, and no connect-live UX.
+MellyTrade is a safety-first, read-only AI trading terminal and operator dashboard. It focuses on explainable signals, sandbox previews, auditability, and strict live-order blocking by default. The stack is a FastAPI backend, a React/TypeScript/Vite terminal UI, read-only broker/status surfaces, risk guardrails, audit/event views, paper sandbox previews, and local validation scripts. It is intentionally **read-only and dry-run**: no live trading, no broker execution, no order routes, no order buttons, and no connect-live UX.
 
-What this proves technically: API design with typed schemas, frontend dashboard/state handling, safety-first product thinking, local runbooks, pytest-backed safety checks, Git/GitHub workflow, and supervised AI-assisted engineering with human review. Stack: Python, FastAPI, Pydantic, React, TypeScript, Vite, pytest, Git, PowerShell, Docker basics, Claude Code, OpenAI Codex, GitHub Copilot, and Ollama/LM Studio.
+Engineering surface: typed API schemas (Pydantic), frontend dashboard/state handling, safety-first product design, local runbooks, and pytest-backed safety checks. Stack: Python, FastAPI, Pydantic, React, TypeScript, Vite, pytest, Git, PowerShell, and Docker.
 
-Review in 3 minutes:
+Quick start: read the safety posture below and run `py -3.11 scripts/validate_safety_config.py`.
 
-1. Read the safety posture below and run `py -3.11 scripts/validate_safety_config.py`.
-2. Open the recruiter case study: [docs/career/recruiter_case_study.md](docs/career/recruiter_case_study.md).
-3. Check the demo evidence plan: [docs/demo/recruiter_screenshot_checklist.md](docs/demo/recruiter_screenshot_checklist.md) and [docs/demo/recruiter_loom_demo_script.md](docs/demo/recruiter_loom_demo_script.md).
-4. Review CV positioning notes: [docs/career/cv_positioning_notes.md](docs/career/cv_positioning_notes.md).
+## Roadmap and Docs
+
+- [MellyTrade Master Roadmap](docs/tasks/mellytrade_master_roadmap.md)
+- [Melly Pet Master Plan](docs/design/branding/melly_pet_master_plan.md)
+- [Advanced Claude Code Workflows](docs/agents/mellytrade_advanced_workflows.md)
+- [Demo Hosting Strategy](docs/deployment/demo_hosting_strategy.md)
+- [Render / Vercel / Sevalla Deployment Matrix](docs/deployment/render_vercel_sevalla_matrix.md)
+- [Demo Deploy Roadmap](docs/tasks/demo_deploy_roadmap.md)
 
 ## MellyTrade Terminal Demo
 
