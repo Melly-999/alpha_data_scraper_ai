@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { TerminalPage } from "./pages/TerminalPage";
 import { PaperRunPreviewPage } from "./pages/PaperRunPreviewPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
+import { MobileAppPage } from "./pages/MobileAppPage";
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
       <Route path="/audit" element={<TerminalPage />} />
       <Route path="/reports" element={<Navigate to="/audit" replace />} />
       <Route path="/settings" element={<TerminalPage />} />
+      <Route path="/mobile" element={<MobileAppPage />} />
       <Route path="*" element={<Navigate to="/terminal" replace />} />
     </Routes>
   );

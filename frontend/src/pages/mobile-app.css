@@ -1,0 +1,241 @@
+/*
+ * MOBILE-APP-001 — mobile-first PWA app shell styles.
+ * Reuses the terminal design tokens (--terminal-*) defined in terminal.css.
+ * Display-only surface: no trading controls, no animations required.
+ */
+
+.mobile-app-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    var(--terminal-radial-gradient),
+    var(--terminal-bg, #070a0f);
+  color: var(--terminal-text, #e6edf3);
+  font-family: var(--terminal-ui, "Inter", system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mobile-app-shell {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.mobile-app-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 14px 16px;
+  background: var(--terminal-chrome-bg, rgba(11, 15, 20, 0.96));
+  border: 1px solid var(--terminal-border, #263241);
+  border-radius: var(--terminal-radius, 14px);
+  backdrop-filter: blur(6px);
+}
+
+.mobile-app-eyebrow {
+  margin: 0 0 2px;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--terminal-amber, #f5a524);
+}
+
+.mobile-app-title {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-family: var(--terminal-display, "Space Grotesk", system-ui, sans-serif);
+  color: var(--terminal-text, #e6edf3);
+}
+
+.mobile-app-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--terminal-muted, #8b949e);
+}
+
+/* ── Safety strip ───────────────────────────────────────────────────────── */
+.mobile-safety-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mobile-safety-badge {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--terminal-amber-soft, #ffb84d);
+  background: var(--terminal-accent-bg, rgba(245, 165, 36, 0.08));
+  border: 1px solid var(--terminal-accent-border, rgba(245, 165, 36, 0.3));
+}
+
+/* ── Melly Pet card ─────────────────────────────────────────────────────── */
+.mobile-melly-pet-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--terminal-surface, #10161f);
+  border: 1px solid var(--terminal-border, #263241);
+  border-radius: var(--terminal-radius-lg, 18px);
+}
+
+.mobile-melly-pet-copy {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--terminal-muted, #8b949e);
+}
+
+/* ── Section titles ─────────────────────────────────────────────────────── */
+.mobile-section-title {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--terminal-dim, #5f6b7a);
+}
+
+/* ── Readiness grid ─────────────────────────────────────────────────────── */
+.mobile-readiness-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.mobile-readiness-card {
+  display: block;
+  padding: 14px;
+  min-height: 44px;
+  background: var(--terminal-surface-2, #131b26);
+  border: 1px solid var(--terminal-border, #263241);
+  border-radius: var(--terminal-radius, 14px);
+  text-decoration: none;
+  color: inherit;
+}
+
+.mobile-readiness-card--link {
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.mobile-readiness-card--link:hover,
+.mobile-readiness-card--link:focus-visible {
+  border-color: var(--terminal-accent-border, rgba(245, 165, 36, 0.3));
+  background: var(--terminal-accent-bg, rgba(245, 165, 36, 0.08));
+  outline: none;
+}
+
+.mobile-readiness-card--static {
+  opacity: 0.72;
+}
+
+.mobile-readiness-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.mobile-readiness-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--terminal-text, #e6edf3);
+}
+
+.mobile-readiness-status {
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--terminal-amber-soft, #ffb84d);
+  background: var(--terminal-accent-bg, rgba(245, 165, 36, 0.08));
+  border: 1px solid var(--terminal-accent-border, rgba(245, 165, 36, 0.3));
+  white-space: nowrap;
+}
+
+.mobile-readiness-desc {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--terminal-muted, #8b949e);
+}
+
+/* ── Quick links ────────────────────────────────────────────────────────── */
+.mobile-quick-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mobile-quick-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 14px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--terminal-text, #e6edf3);
+  background: var(--terminal-surface, #10161f);
+  border: 1px solid var(--terminal-border, #263241);
+  border-radius: var(--terminal-radius, 14px);
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.mobile-quick-link:hover,
+.mobile-quick-link:focus-visible {
+  border-color: var(--terminal-accent-border, rgba(245, 165, 36, 0.3));
+  background: var(--terminal-accent-bg, rgba(245, 165, 36, 0.08));
+  outline: none;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+.mobile-app-footer {
+  margin-top: 4px;
+  padding: 12px 14px;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--terminal-dim, #5f6b7a);
+  border-top: 1px solid var(--terminal-border, #263241);
+}
+
+.mobile-app-footer p {
+  margin: 0;
+}
+
+/* ── Tablet / desktop ───────────────────────────────────────────────────── */
+@media (min-width: 700px) {
+  .mobile-readiness-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mobile-quick-links {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .mobile-melly-pet-card {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-readiness-card--link,
+  .mobile-quick-link {
+    transition: none;
+  }
+}
