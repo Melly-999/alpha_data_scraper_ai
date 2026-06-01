@@ -13,9 +13,9 @@ execution.
 | Task | Title | Status | Risk | Scope |
 |---|---|---|---|---|
 | AGENT-MCP-001 | GitHub App read-only permission matrix | Done | Low | Docs-only |
-| AGENT-MCP-002 | MCP read-only contract design | In progress | Low | Docs-only |
-| AGENT-MCP-003 | Local repo status collector script | In progress / Draft PR | Low-Med | Script + docs |
-| AGENT-MCP-004 | PR/checks task board generator | Planned | Med | Script + docs |
+| AGENT-MCP-002 | MCP read-only contract design | Done | Low | Docs-only |
+| AGENT-MCP-003 | Local repo status collector script | Done | Low-Med | Script + docs |
+| AGENT-MCP-004 | PR/checks task board generator | In progress / Draft PR | Med | Script + docs |
 | AGENT-MCP-005 | Safety reviewer prompt pack | Planned | Low | Docs-only |
 | AGENT-MCP-006 | Read-only agent demo runbook | Planned | Low | Docs-only |
 
