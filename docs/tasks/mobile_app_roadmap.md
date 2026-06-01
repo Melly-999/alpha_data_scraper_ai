@@ -53,6 +53,33 @@ MOBILE-APP-002 (iPad/iPhone smoke checklist) is **Done** (merged via #246).
 - safe API base URL handling
 - no broker credentials in the mobile app
 
+## Mobile AI / Chart Review Expansion
+
+A new Mobile AI workstream extends this PWA-first mobile surface into an AI
+chart-review, paper game-plan, and risk-coach experience. It does not change
+the safety posture: the mobile surface stays read-only / dry-run, with no
+broker execution and no order controls.
+
+Related docs:
+
+- Mobile AI roadmap: `docs/tasks/mobile_ai_roadmap.md`
+- Architecture decision: `docs/mobile/mobile_app_architecture_decision.md`
+- Context / history snapshot: `docs/mobile/mobile_ai_context_snapshot.md`
+- Workspace setup: `docs/mobile/mobile_ai_workspace_setup.md`
+
+Planned features (paper/simulation only, analysis only — not financial advice):
+
+- AI Chart Review
+- Paper Game Plan
+- Mobile Watchlist
+- Setup Journal
+- Safety Score
+- Melly Pet Coach
+- Before/After Review
+- FOMO Guard
+- Weekly Report
+- Monte Carlo Simulation Snapshot (reuse existing concept; no new engine)
+
 ## Safety Rules
 
 - no live trading
