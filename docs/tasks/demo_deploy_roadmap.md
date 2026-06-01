@@ -2,8 +2,8 @@
 
 | Task | Title | Status | Risk | Scope |
 |---|---|---|---|---|
-| DEMO-DEPLOY-001 | Render backend read-only runbook | Planned | Low | Docs |
-| DEMO-DEPLOY-002 | Vercel frontend read-only runbook | Planned | Low | Docs |
+| DEMO-DEPLOY-001 | Render backend read-only runbook | In progress / Draft PR | Low | Docs |
+| DEMO-DEPLOY-002 | Vercel frontend read-only runbook | In progress / Draft PR | Low | Docs |
 | DEMO-DEPLOY-003 | Render backend smoke checklist | Planned | Low-Med | Docs/script |
 | DEMO-DEPLOY-004 | Vercel frontend smoke checklist | Planned | Low | Docs/script |
 | DEMO-DEPLOY-005 | Hosted E2E demo evidence pack | Planned | Low | Docs |
