@@ -119,3 +119,15 @@ Full MVP is ready when:
 - Melly Pet assistant is visible
 - EXE/icon plan is implemented if desktop packaging is chosen
 - safety tests and docs remain green
+
+## Related Roadmaps — Mobile AI
+
+A Mobile AI workstream extends the PWA-first `/mobile` surface into an AI
+chart-review, paper game-plan, and risk-coach experience. It is documented as a
+separate track and keeps the standing safety posture (read-only, dry-run, no
+broker execution, no order controls, max risk ≤ 1%).
+
+- Mobile AI roadmap: `docs/tasks/mobile_ai_roadmap.md`
+- Architecture decision: `docs/mobile/mobile_app_architecture_decision.md`
+- Context / history snapshot: `docs/mobile/mobile_ai_context_snapshot.md`
+- Workspace setup: `docs/mobile/mobile_ai_workspace_setup.md`
