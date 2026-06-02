@@ -184,24 +184,52 @@ No backend endpoints or upload functionality should be added in MOBILE-AI-003.
   order/execution fields; no broker credentials.
 - **Stop conditions:** any route or execution field is added.
 
-### MOBILE-AI-007 — Screenshot upload analysis endpoint
+### MOBILE-AI-007A — Screenshot upload safety contract and retention policy
+
+- **Purpose:** define the safety, privacy, and retention contract for a future
+  screenshot upload analysis endpoint **before** any endpoint is built.
+- **Scope:** documentation only.
+- **Status:** planned / this PR.
+- **Likely files to change:**
+  `docs/mobile/mobile_ai_screenshot_upload_safety_contract.md`,
+  `docs/mobile/mobile_ai_image_privacy_retention_policy.md`,
+  `docs/tasks/mobile_ai_roadmap.md`.
+- **Implementation type:** docs-only.
+- **Validation:** `python scripts/validate_safety_config.py`; static safety
+  scan of changed docs.
+- **Safety constraints:** no runtime code, no endpoint, no upload UI, no
+  provider keys, no storage, no image-processing dependencies.
+- **Stop conditions:** any runtime/endpoint/dependency change is attempted.
+
+### MOBILE-AI-007B — Screenshot upload analysis endpoint
 
 - **Purpose:** add a backend endpoint to accept a chart screenshot for analysis
   (paper/analysis only).
 - **Scope:** backend endpoint.
+- **Status:** future.
+- **Prerequisite:** MOBILE-AI-007A merged (safety contract + retention policy
+  approved).
 - **Likely files to change:** `app/api/routes/`, `app/services/`,
   `app/schemas/`, plus tests.
-- **Implementation type:** backend endpoint.
+- **Implementation type:** backend endpoint (high safety review).
 - **Validation:** endpoint tests; `tests/app/test_openapi_forbidden_paths.py`;
   `tests/app/test_safety_invariants.py`; safety config validation.
 - **Safety constraints:** analysis-only output; no order placement; no broker
-  call; size/type limits; no secrets in responses.
-- **Stop conditions:** endpoint exposes any execution or broker action.
+  call; MIME/size limits; no images stored without an approved retention
+  policy; no provider keys in frontend; no secrets in responses.
+- **Stop conditions:** endpoint exposes any execution or broker action, stores
+  images before retention approval, or requires frontend provider keys.
+
+> The endpoint implementation moved from MOBILE-AI-007 to **MOBILE-AI-007B**.
+> Do not build the upload endpoint before the MOBILE-AI-007A safety contract
+> and retention policy are merged.
 
 ### MOBILE-AI-008 — AI provider integration
 
 - **Purpose:** wire a backend-only AI provider for chart-review analysis.
 - **Scope:** backend AI integration (server-side only).
+- **Prerequisite:** upload endpoint safety, privacy, and retention reviewed;
+  no frontend keys.
 - **Likely files to change:** `app/services/`, backend config for env-based
   keys, plus tests.
 - **Implementation type:** AI integration.
@@ -211,6 +239,7 @@ No backend endpoints or upload functionality should be added in MOBILE-AI-003.
   provider keys in frontend**; no live trading; analysis only.
 - **Stop conditions:** any provider key reaches the frontend or any execution
   path is created.
+
 
 ### MOBILE-AI-009 — Smart alerts
 
@@ -269,11 +298,12 @@ No backend endpoints or upload functionality should be added in MOBILE-AI-003.
 3. MOBILE-AI-004 — Setup Journal mock
 4. MOBILE-AI-005 — FOMO Guard + Melly Pet Risk Coach
 5. MOBILE-AI-006 — backend schemas only
-6. MOBILE-AI-007 — screenshot upload analysis endpoint
-7. MOBILE-AI-008 — AI provider integration
-8. MOBILE-AI-009 — smart alerts
-9. MOBILE-AI-010 — subscription/paywall strategy
-10. MOBILE-AI-011/012 — native wrapper and app store readiness
+6. MOBILE-AI-007A — screenshot upload safety contract + retention policy (docs-only)
+7. MOBILE-AI-007B — screenshot upload analysis endpoint (after 007A merged)
+8. MOBILE-AI-008 — AI provider integration
+9. MOBILE-AI-009 — smart alerts
+10. MOBILE-AI-010 — subscription/paywall strategy
+11. MOBILE-AI-011/012 — native wrapper and app store readiness
 
 **Do not start with screenshot upload or AI provider integration. Build the
 mobile UX mock first.**
