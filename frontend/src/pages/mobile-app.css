@@ -523,6 +523,123 @@
   color: var(--terminal-text, #e6edf3);
 }
 
+/* ── FOMO Guard / Risk Coach (MOBILE-AI-005) ────────────────────────────── */
+/* Static cooldown meter — purely visual, no timers or dynamic state. */
+.mobile-cooldown-meter {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--terminal-surface-2, #131b26);
+  border: 1px solid var(--terminal-border, #263241);
+  overflow: hidden;
+}
+
+.mobile-cooldown-fill {
+  width: 45%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--terminal-amber, #f5a524);
+}
+
+/* Behavior rules panel */
+.mobile-rule-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-rule-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--terminal-text, #e6edf3);
+}
+
+.mobile-rule-mark {
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--terminal-green, #3fb950);
+}
+
+/* Melly Pet coach messages */
+.mobile-coach-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-coach-message {
+  padding: 10px 12px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  font-style: italic;
+  color: var(--terminal-amber-soft, #ffb84d);
+  background: var(--terminal-accent-bg, rgba(245, 165, 36, 0.08));
+  border: 1px solid var(--terminal-accent-border, rgba(245, 165, 36, 0.3));
+  border-radius: var(--terminal-radius, 14px);
+}
+
+/* Anti-FOMO review script */
+.mobile-script-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mobile-script-item {
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--terminal-text, #e6edf3);
+}
+
+/* Watchlist risk nudges */
+.mobile-nudge-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-nudge-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--terminal-border, #263241);
+}
+
+.mobile-nudge-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.mobile-nudge-symbol {
+  flex: 0 0 auto;
+  min-width: 64px;
+  font-family: var(--font-code);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--terminal-amber-soft, #ffb84d);
+}
+
+.mobile-nudge-text {
+  font-size: 0.84rem;
+  color: var(--terminal-muted, #8b949e);
+}
+
 /* ── Bullet list (weekly report) ────────────────────────────────────────── */
 .mobile-bullet-list {
   margin: 0;

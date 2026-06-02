@@ -243,6 +243,73 @@ const WEEKLY_METRICS: { label: string; value: string; tone: "ok" | "warn" | "inf
   { label: "Paper-only compliance", value: "100%", tone: "ok" },
 ];
 
+// ── Section 9: FOMO Guard + Risk Coach (MOBILE-AI-005) ─────────────────────
+// All data below is static mock behavior feedback. No timers, no state,
+// no network calls, no trading execution.
+
+const FOMO_METRICS: { label: string; value: string; tone: "ok" | "warn" | "info" }[] = [
+  { label: "Repeated analysis", value: "High", tone: "warn" },
+  { label: "Candle-close discipline", value: "Medium", tone: "info" },
+  { label: "News-risk awareness", value: "High", tone: "ok" },
+  { label: "Overtrading risk", value: "Medium", tone: "warn" },
+  { label: "Cooldown suggestion", value: "15 min", tone: "info" },
+  { label: "Current mode", value: "Paper only", tone: "ok" },
+];
+
+const COOLDOWN_ROWS: { label: string; value: string }[] = [
+  { label: "Cooldown", value: "15 min suggested" },
+  { label: "Current state", value: "Waiting for confirmation" },
+  { label: "Next allowed review", value: "After candle close" },
+];
+
+const BEHAVIOR_RULES = [
+  "One clean setup > five rushed analyses",
+  "Wait for candle close",
+  "No revenge analysis after invalidation",
+  "No trade during high-impact news spike",
+  "Risk must stay ≤ 1%",
+  "Paper plan before any decision",
+] as const;
+
+const COACH_SUBMETRICS: { label: string; value: string; tone: "ok" | "warn" | "info" }[] = [
+  { label: "Discipline", value: "78", tone: "info" },
+  { label: "Patience", value: "72", tone: "info" },
+  { label: "Over-analysis control", value: "64", tone: "warn" },
+  { label: "News caution", value: "86", tone: "ok" },
+  { label: "Journal completion", value: "70", tone: "info" },
+  { label: "Paper-only compliance", value: "100", tone: "ok" },
+];
+
+const COACH_MESSAGES = [
+  "Wait for confirmation. The plan is stronger after the candle closes.",
+  "You already reviewed this setup. Re-checking too often can create FOMO.",
+  "Paper plan first. Live orders are blocked.",
+  "Good skip. Avoiding bad trades is part of edge-building.",
+] as const;
+
+const ANTI_FOMO_SCRIPT = [
+  "What is the setup?",
+  "What invalidates it?",
+  "Is risk ≤ 1%?",
+  "Is this after candle close?",
+  "Would I still take this if I had not seen the last candle?",
+] as const;
+
+const WATCHLIST_NUDGES: { symbol: string; nudge: string }[] = [
+  { symbol: "XAUUSD", nudge: "High volatility · wait for M15 close" },
+  { symbol: "US100", nudge: "FOMO risk · avoid chasing breakout candle" },
+  { symbol: "EURUSD", nudge: "Range mode · wait for rejection" },
+  { symbol: "WTI", nudge: "News risk · paper-only review" },
+  { symbol: "BTC", nudge: "Volatile · reduce analysis frequency" },
+];
+
+const COACH_SUMMARY: { label: string; value: string }[] = [
+  { label: "Best behavior", value: "Skipped invalidated setup" },
+  { label: "Risk improvement", value: "Used 0.5% paper risk" },
+  { label: "FOMO pattern", value: "Repeated analysis before close" },
+  { label: "Next focus", value: "Fewer reviews, better confirmations" },
+];
+
 // ── Section 11: Monte Carlo Simulation Snapshot (static existing summary) ──
 const MONTE_CARLO_ROWS: { label: string; value: string }[] = [
   { label: "Simulated paper paths", value: "1,000" },
@@ -557,22 +624,166 @@ export function MobileAppPage() {
           </div>
         </section>
 
-        {/* ── 9. FOMO Guard ─────────────────────────────────────────────── */}
-        <section
-          aria-label="FOMO guard"
-          className="mobile-card mobile-card--warn"
-        >
-          <div className="mobile-card-head">
-            <h2 className="mobile-card-title">FOMO Guard active</h2>
-            <span className="mobile-pill mobile-pill--warn">Guard</span>
+        {/* ── 9. FOMO Guard + Risk Coach ────────────────────────────────── */}
+        <section aria-label="FOMO guard and risk coach">
+          <h2 className="mobile-section-title">FOMO Guard &amp; Risk Coach</h2>
+
+          {/* 9.1 FOMO Guard dashboard card */}
+          <div className="mobile-card mobile-card--warn">
+            <div className="mobile-card-head">
+              <h3 className="mobile-card-title">FOMO Guard</h3>
+              <span className="mobile-pill mobile-pill--warn">ACTIVE</span>
+            </div>
+            <p className="mobile-card-body">
+              You analyzed XAUUSD 4 times in 30 minutes.
+            </p>
+            <p className="mobile-card-body mobile-tone--warn">
+              Wait for the next M15 candle close before reviewing again.
+            </p>
+            <dl className="mobile-fact-list">
+              {FOMO_METRICS.map((row) => (
+                <div key={row.label} className="mobile-fact-row">
+                  <dt className="mobile-fact-label">{row.label}</dt>
+                  <dd className={`mobile-fact-value mobile-tone--${row.tone}`}>
+                    {row.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mobile-disclaimer">
+              FOMO Guard is behavior feedback only. It does not execute trades.
+            </p>
           </div>
-          <p className="mobile-card-body">
-            You analyzed XAUUSD 4 times in 30 minutes. Suggestion: wait for
-            candle close.
-          </p>
-          <p className="mobile-coach-quote">
-            Melly Pet: &ldquo;Do not chase. Wait for confirmation.&rdquo;
-          </p>
+
+          {/* 9.2 Cooldown meter (static, no timers) */}
+          <div className="mobile-card">
+            <div className="mobile-card-head">
+              <h3 className="mobile-card-title">Cooldown</h3>
+              <span className="mobile-pill mobile-pill--amber">15 min</span>
+            </div>
+            <div
+              className="mobile-cooldown-meter"
+              role="img"
+              aria-label="Cooldown suggested, waiting for confirmation"
+            >
+              <div className="mobile-cooldown-fill" />
+            </div>
+            <dl className="mobile-fact-list">
+              {COOLDOWN_ROWS.map((row) => (
+                <div key={row.label} className="mobile-fact-row">
+                  <dt className="mobile-fact-label">{row.label}</dt>
+                  <dd className="mobile-fact-value">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {/* 9.3 Behavior rules panel */}
+          <div className="mobile-card">
+            <h3 className="mobile-card-title">Rules before review</h3>
+            <ul className="mobile-rule-list">
+              {BEHAVIOR_RULES.map((rule) => (
+                <li key={rule} className="mobile-rule-item">
+                  <span className="mobile-rule-mark" aria-hidden="true">
+                    ✓
+                  </span>
+                  {rule}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 9.4 Risk Coach Score card */}
+          <div className="mobile-card mobile-card--accent">
+            <div className="mobile-card-head">
+              <h3 className="mobile-card-title">Risk Coach Score</h3>
+              <span className="mobile-score" aria-label="Risk coach score 78 of 100">
+                78<span className="mobile-score-max">/100</span>
+              </span>
+            </div>
+            <div className="mobile-metric-grid" aria-label="Risk coach sub-metrics">
+              {COACH_SUBMETRICS.map((metric) => (
+                <div key={metric.label} className="mobile-metric-chip">
+                  <span className="mobile-metric-label">{metric.label}</span>
+                  <span className={`mobile-metric-value mobile-tone--${metric.tone}`}>
+                    {metric.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="mobile-journal-line mobile-tone--ok">
+              Strongest behavior this week: skipping high-risk news setups.
+            </p>
+            <p className="mobile-journal-line mobile-tone--warn">
+              Weakest behavior this week: repeated analysis before candle close.
+            </p>
+          </div>
+
+          {/* 9.5 Melly Pet coach messages */}
+          <div className="mobile-card">
+            <h3 className="mobile-card-title">Melly Pet coach</h3>
+            <p className="mobile-card-sub">
+              Melly Pet reviews risk behavior and journal outcomes. It never
+              places orders and never enables live trading.
+            </p>
+            <ul className="mobile-coach-list">
+              {COACH_MESSAGES.map((msg) => (
+                <li key={msg} className="mobile-coach-message">
+                  {msg}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 9.6 Anti-FOMO review script */}
+          <div className="mobile-card">
+            <h3 className="mobile-card-title">Before you review again</h3>
+            <ol className="mobile-script-list">
+              {ANTI_FOMO_SCRIPT.map((q) => (
+                <li key={q} className="mobile-script-item">
+                  {q}
+                </li>
+              ))}
+            </ol>
+            <p className="mobile-disclaimer">
+              Static review checklist. No trading action. Live orders blocked.
+            </p>
+          </div>
+
+          {/* 9.7 Watchlist risk nudges */}
+          <div className="mobile-card">
+            <h3 className="mobile-card-title">Watchlist risk nudges</h3>
+            <ul className="mobile-nudge-list">
+              {WATCHLIST_NUDGES.map((item) => (
+                <li key={item.symbol} className="mobile-nudge-item">
+                  <span className="mobile-nudge-symbol">{item.symbol}</span>
+                  <span className="mobile-nudge-text">{item.nudge}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 9.8 Journal connection copy */}
+          <div className="mobile-card">
+            <h3 className="mobile-card-title">Linked to your Setup Journal</h3>
+            <p className="mobile-card-body">
+              FOMO Guard reads your mock journal pattern: repeated XAUUSD
+              reviews, skipped news trades, and pending outcome reviews.
+            </p>
+          </div>
+
+          {/* 9.9 Weekly coach summary */}
+          <div className="mobile-card">
+            <h3 className="mobile-card-title">Coach Summary This Week</h3>
+            <dl className="mobile-fact-list">
+              {COACH_SUMMARY.map((row) => (
+                <div key={row.label} className="mobile-fact-row">
+                  <dt className="mobile-fact-label">{row.label}</dt>
+                  <dd className="mobile-fact-value">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </section>
 
         {/* ── 10. Weekly Report + learning summary ──────────────────────── */}
