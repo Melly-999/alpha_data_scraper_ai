@@ -107,15 +107,32 @@ const WATCHLIST: WatchRow[] = [
 
 const WATCH_LABELS = ["Review", "Paper", "Journal"] as const;
 
-// ── Section 7: Setup Journal preview ───────────────────────────────────────
+// ── Section 7: Setup Journal ───────────────────────────────────────────────
+// MOBILE-AI-004 — Setup Journal mock (display-only, paper/simulation only).
+
+// Journal dashboard summary (static mock metrics).
+const JOURNAL_SUMMARY: { label: string; value: string; tone?: "ok" | "warn" | "info" }[] = [
+  { label: "Saved setups", value: "12" },
+  { label: "Pending review", value: "3", tone: "info" },
+  { label: "Reviewed this week", value: "7", tone: "ok" },
+  { label: "Best setup type", value: "Retest continuation", tone: "ok" },
+  { label: "Most common risk pattern", value: "Over-analysis before candle close", tone: "warn" },
+  { label: "Safety mode", value: "Paper only", tone: "ok" },
+];
+
+type JournalStatusTone = "ok" | "warn" | "info" | "muted";
+
 type JournalEntry = {
   instrument: string;
   timeframe: string;
   setup: string;
+  bias: string;
   risk: string;
+  status: string;
+  statusTone: JournalStatusTone;
+  emotion: string;
   plan: string;
   outcome: string;
-  emotion: string;
 };
 
 const JOURNAL_ENTRIES: JournalEntry[] = [
@@ -123,29 +140,81 @@ const JOURNAL_ENTRIES: JournalEntry[] = [
     instrument: "XAUUSD",
     timeframe: "M15",
     setup: "Retest continuation",
+    bias: "Neutral-Bullish",
     risk: "0.5%",
-    plan: "Wait for retest",
-    outcome: "Pending review",
+    status: "Pending review",
+    statusTone: "info",
     emotion: "Calm",
+    plan: "Wait for retest confirmation",
+    outcome: "Not reviewed yet",
   },
   {
     instrument: "US100",
-    timeframe: "M15",
-    setup: "Breakout pullback",
-    risk: "1%",
-    plan: "Wait for candle close",
-    outcome: "Pending review",
+    timeframe: "M5",
+    setup: "Breakout fakeout avoided",
+    bias: "Mixed",
+    risk: "0.25%",
+    status: "Skipped",
+    statusTone: "muted",
     emotion: "FOMO risk",
+    plan: "Wait for candle close",
+    outcome: "Skipped correctly",
+  },
+  {
+    instrument: "EURUSD",
+    timeframe: "H1",
+    setup: "Range rejection",
+    bias: "Neutral",
+    risk: "0.5%",
+    status: "TP1 simulated",
+    statusTone: "ok",
+    emotion: "Patient",
+    plan: "Paper only after confirmation",
+    outcome: "TP1 paper path reached",
   },
   {
     instrument: "WTI",
-    timeframe: "H1",
-    setup: "Range rejection",
-    risk: "0.5%",
-    plan: "Skip during news",
-    outcome: "Pending review",
+    timeframe: "M15",
+    setup: "High-risk news trade",
+    bias: "Volatile",
+    risk: "0%",
+    status: "Invalidated",
+    statusTone: "warn",
     emotion: "News caution",
+    plan: "No trade during news spike",
+    outcome: "Invalidated before entry",
   },
+];
+
+// Outcome review chips (static mock, not state-mutating controls).
+const OUTCOME_CHIPS = [
+  "TP1",
+  "TP2",
+  "SL",
+  "Skipped",
+  "Invalidated",
+  "Still waiting",
+] as const;
+
+// Emotion / behavior tag cloud (links FOMO Guard + Weekly Review).
+const EMOTION_TAGS = [
+  "Calm",
+  "FOMO risk",
+  "Revenge risk",
+  "News caution",
+  "Patient",
+  "Over-analysis",
+  "Chased entry avoided",
+  "Waited for candle close",
+] as const;
+
+// Journal timeline (chronological, display-only).
+const JOURNAL_TIMELINE: { time: string; event: string }[] = [
+  { time: "09:10", event: "XAUUSD reviewed" },
+  { time: "10:25", event: "US100 skipped" },
+  { time: "12:40", event: "EURUSD TP1 paper path" },
+  { time: "14:00", event: "WTI invalidated" },
+  { time: "16:30", event: "Weekly report generated" },
 ];
 
 // ── Section 8: Before/After Review chips ───────────────────────────────────
@@ -157,6 +226,22 @@ const WEEKLY_BEST = [
   "Breakout fakeout avoided",
   "High-risk news trades skipped",
 ] as const;
+
+// Weekly learning summary (MOBILE-AI-004).
+const WEEKLY_LEARNING: { label: string; value: string }[] = [
+  { label: "Best setup", value: "Retest continuation" },
+  { label: "Best behavior", value: "Waited for candle close" },
+  { label: "Mistake avoided", value: "Breakout fakeout" },
+  { label: "Highest risk pattern", value: "Analyzing same asset repeatedly" },
+  { label: "Next focus", value: "Fewer low-quality analyses, more confirmed retests" },
+];
+
+const WEEKLY_METRICS: { label: string; value: string; tone: "ok" | "warn" | "info" }[] = [
+  { label: "Discipline score", value: "78/100", tone: "info" },
+  { label: "Overtrading risk", value: "Medium", tone: "warn" },
+  { label: "Review completion", value: "7/10", tone: "info" },
+  { label: "Paper-only compliance", value: "100%", tone: "ok" },
+];
 
 // ── Section 11: Monte Carlo Simulation Snapshot (static existing summary) ──
 const MONTE_CARLO_ROWS: { label: string; value: string }[] = [
@@ -320,9 +405,39 @@ export function MobileAppPage() {
           </div>
         </section>
 
-        {/* ── 7. Setup Journal preview ──────────────────────────────────── */}
-        <section aria-label="Setup journal preview">
+        {/* ── 7. Setup Journal ──────────────────────────────────────────── */}
+        <section aria-label="Setup journal">
           <h2 className="mobile-section-title">Setup Journal</h2>
+
+          {/* 7a. Journal dashboard summary */}
+          <div className="mobile-card mobile-card--accent">
+            <div className="mobile-card-head">
+              <h3 className="mobile-card-title">Journal summary</h3>
+              <span className="mobile-pill mobile-pill--green">Paper only</span>
+            </div>
+            <dl className="mobile-fact-list">
+              {JOURNAL_SUMMARY.map((row) => (
+                <div key={row.label} className="mobile-fact-row">
+                  <dt className="mobile-fact-label">{row.label}</dt>
+                  <dd
+                    className={
+                      row.tone
+                        ? `mobile-fact-value mobile-tone--${row.tone}`
+                        : "mobile-fact-value"
+                    }
+                  >
+                    {row.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mobile-disclaimer">
+              Journal is for review and learning only. No live orders.
+            </p>
+          </div>
+
+          {/* 7b. Saved setup cards */}
+          <h3 className="mobile-subhead mobile-subhead--spaced">Saved setups</h3>
           <div className="mobile-journal-grid">
             {JOURNAL_ENTRIES.map((entry) => (
               <article
@@ -330,21 +445,100 @@ export function MobileAppPage() {
                 className="mobile-card mobile-journal-card"
               >
                 <div className="mobile-card-head">
-                  <h3 className="mobile-card-title">
+                  <h4 className="mobile-card-title">
                     {entry.instrument} {entry.timeframe}
-                  </h3>
-                  <span className="mobile-pill mobile-pill--blue">
-                    {entry.emotion}
+                  </h4>
+                  <span
+                    className={`mobile-pill mobile-pill--${
+                      entry.statusTone === "muted" ? "muted" : entry.statusTone
+                    }`}
+                  >
+                    {entry.status}
                   </span>
                 </div>
                 <p className="mobile-journal-line">Setup: {entry.setup}</p>
+                <p className="mobile-journal-line">Bias: {entry.bias}</p>
                 <p className="mobile-journal-line">Risk: {entry.risk}</p>
                 <p className="mobile-journal-line">Plan: {entry.plan}</p>
                 <p className="mobile-journal-line mobile-tone--info">
                   Outcome: {entry.outcome}
                 </p>
+                <div className="mobile-chip-row">
+                  <span
+                    className="mobile-static-chip mobile-static-chip--sm"
+                    aria-disabled="true"
+                  >
+                    {entry.emotion}
+                  </span>
+                </div>
               </article>
             ))}
+
+            {/* 7e. Empty state example (mock placeholder, does not replace data) */}
+            <article
+              className="mobile-card mobile-journal-card mobile-journal-card--empty"
+              aria-label="Journal empty state example"
+            >
+              <h4 className="mobile-card-title">No journal entries yet</h4>
+              <p className="mobile-journal-line mobile-tone--info">
+                Save an analysis to review the setup later.
+              </p>
+            </article>
+          </div>
+
+          {/* 7c. Outcome review panel */}
+          <div className="mobile-card">
+            <div className="mobile-card-head">
+              <h3 className="mobile-card-title">Review outcome</h3>
+              <span className="mobile-pill mobile-pill--blue">Review</span>
+            </div>
+            <div className="mobile-chip-row" aria-label="Outcome review chips">
+              {OUTCOME_CHIPS.map((chip) => (
+                <span
+                  key={chip}
+                  className="mobile-static-chip"
+                  aria-disabled="true"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+            <p className="mobile-disclaimer">
+              Outcome review teaches the model/user what happened after the
+              plan. It does not execute trades.
+            </p>
+          </div>
+
+          {/* 7d. Emotion / behavior tags */}
+          <div className="mobile-card">
+            <h3 className="mobile-card-title">Emotion &amp; behavior tags</h3>
+            <p className="mobile-card-sub">
+              Connects to FOMO Guard and Weekly Review.
+            </p>
+            <div className="mobile-chip-row" aria-label="Emotion and behavior tags">
+              {EMOTION_TAGS.map((tag) => (
+                <span
+                  key={tag}
+                  className="mobile-static-chip mobile-static-chip--sm"
+                  aria-disabled="true"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* 7f. Journal timeline */}
+          <div className="mobile-card">
+            <h3 className="mobile-card-title">Today&rsquo;s journal timeline</h3>
+            <ol className="mobile-timeline" aria-label="Journal timeline">
+              {JOURNAL_TIMELINE.map((item) => (
+                <li key={`${item.time}-${item.event}`} className="mobile-timeline-item">
+                  <span className="mobile-timeline-time">{item.time}</span>
+                  <span className="mobile-timeline-event">{item.event}</span>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
@@ -381,8 +575,8 @@ export function MobileAppPage() {
           </p>
         </section>
 
-        {/* ── 10. Weekly Report preview ─────────────────────────────────── */}
-        <section aria-label="Weekly report preview" className="mobile-card">
+        {/* ── 10. Weekly Report + learning summary ──────────────────────── */}
+        <section aria-label="Weekly report and learning summary" className="mobile-card">
           <h2 className="mobile-card-title">Your best setups this week</h2>
           <ul className="mobile-bullet-list">
             {WEEKLY_BEST.map((item) => (
@@ -394,6 +588,29 @@ export function MobileAppPage() {
           <p className="mobile-card-body mobile-tone--warn">
             Most common risk pattern: over-analysis before candle close.
           </p>
+
+          <h3 className="mobile-subhead mobile-subhead--spaced">
+            Weekly learning summary
+          </h3>
+          <dl className="mobile-fact-list">
+            {WEEKLY_LEARNING.map((row) => (
+              <div key={row.label} className="mobile-fact-row">
+                <dt className="mobile-fact-label">{row.label}</dt>
+                <dd className="mobile-fact-value">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="mobile-metric-grid" aria-label="Weekly discipline metrics">
+            {WEEKLY_METRICS.map((metric) => (
+              <div key={metric.label} className="mobile-metric-chip">
+                <span className="mobile-metric-label">{metric.label}</span>
+                <span className={`mobile-metric-value mobile-tone--${metric.tone}`}>
+                  {metric.value}
+                </span>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* ── 11. Monte Carlo Simulation Snapshot (existing static summary) ─ */}
@@ -426,9 +643,9 @@ export function MobileAppPage() {
         >
           <MellyPetMascot />
           <p className="mobile-melly-pet-copy">
-            Melly Pet is your paper-only risk coach: chart review, risk guard,
-            FOMO guard, and journal review. It never places orders and never
-            enables live trading.
+            Melly Pet reviews your saved setups, flags FOMO behavior, and helps
+            you learn from paper outcomes. It never places orders or enables
+            live trading.
           </p>
         </section>
 

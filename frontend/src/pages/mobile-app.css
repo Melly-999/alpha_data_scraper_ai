@@ -191,6 +191,10 @@
   color: var(--terminal-dim, #5f6b7a);
 }
 
+.mobile-subhead--spaced {
+  margin-top: 14px;
+}
+
 /* ── Pills / score ──────────────────────────────────────────────────────── */
 .mobile-pill {
   font-size: 0.62rem;
@@ -224,6 +228,12 @@
   color: var(--terminal-red, #ff6b6b);
   background: var(--terminal-danger-bg, rgba(255, 107, 107, 0.1));
   border: 1px solid var(--terminal-danger-border, rgba(255, 107, 107, 0.3));
+}
+
+.mobile-pill--muted {
+  color: var(--terminal-muted, #8b949e);
+  background: var(--terminal-surface-2, #131b26);
+  border: 1px solid var(--terminal-border, #263241);
 }
 
 .mobile-score {
@@ -437,6 +447,79 @@
 .mobile-journal-line {
   margin: 0;
   font-size: 0.84rem;
+  color: var(--terminal-text, #e6edf3);
+}
+
+.mobile-journal-card--empty {
+  border-style: dashed;
+  opacity: 0.78;
+  justify-content: center;
+}
+
+/* ── Journal timeline ───────────────────────────────────────────────────── */
+.mobile-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-timeline-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--terminal-border, #263241);
+}
+
+.mobile-timeline-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.mobile-timeline-time {
+  flex: 0 0 auto;
+  font-family: var(--font-code);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--terminal-amber-soft, #ffb84d);
+}
+
+.mobile-timeline-event {
+  font-size: 0.86rem;
+  color: var(--terminal-text, #e6edf3);
+}
+
+/* ── Weekly metric grid ─────────────────────────────────────────────────── */
+.mobile-metric-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mobile-metric-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: var(--terminal-surface-2, #131b26);
+  border: 1px solid var(--terminal-border, #263241);
+  border-radius: var(--terminal-radius, 14px);
+}
+
+.mobile-metric-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--terminal-muted, #8b949e);
+}
+
+.mobile-metric-value {
+  font-family: var(--font-code);
+  font-size: 1.05rem;
+  font-weight: 700;
   color: var(--terminal-text, #e6edf3);
 }
 
