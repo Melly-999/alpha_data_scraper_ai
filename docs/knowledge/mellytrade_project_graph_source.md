@@ -1,7 +1,7 @@
 # MellyTrade Project Knowledge Graph Source
 
 ## Current Active Context
-- Active task/branch context: `claude/mobile-ai-000-roadmap-u9GEY`
+- Active task/branch context: `docs/ace-knowledge-graph-source`
 - Purpose: organize Mobile AI / Mobile PWA roadmap and connect it with agents, ClickUp, GitHub PR flow, validation, and safety constraints.
 
 ## Main Project Nodes
