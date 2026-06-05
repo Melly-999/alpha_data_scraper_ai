@@ -54,6 +54,12 @@ TERMINAL_V1_GET_ONLY_PREFIXES: tuple[str, ...] = (
 #       no broker execution, no live trading, no paper fills yet;
 #       enforces paper_only=true, dry_run=true, risk_allowed=false,
 #       broker_execution_allowed=false; human review always required.
+#   - /mobile/ai/screenshot/preview (POST) → MOBILE-AI-007B analysis-only
+#       chart screenshot preview; accepts a raw image, validates MIME/size,
+#       returns a paper-only ScreenshotAnalysisPreview. No image storage, no
+#       AI provider call, no broker execution, no order placement; response is
+#       Literal-locked analysis_only=true, paper_only=true,
+#       live_orders_blocked=true, broker_execution=false.
 # If you need to add another mutating route, add it here together with a
 # justification — the review will catch unintended additions.
 ADMIN_NON_GET_ALLOWLIST: frozenset[tuple[str, str]] = frozenset(
@@ -62,6 +68,7 @@ ADMIN_NON_GET_ALLOWLIST: frozenset[tuple[str, str]] = frozenset(
         ("POST", "/api/risk/emergency-stop"),
         ("POST", "/api/broker/dry-run-report"),
         ("POST", "/api/paper/tickets/draft"),
+        ("POST", "/api/mobile/ai/screenshot/preview"),
     }
 )
 

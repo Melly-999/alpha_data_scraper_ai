@@ -191,3 +191,27 @@ class WeeklyReview(_MobileAIBase):
 
     # Safety locks
     paper_only: Literal[True] = True
+
+
+class ScreenshotAnalysisPreview(_MobileAIBase):
+    """Analysis-only preview returned by the screenshot upload endpoint.
+
+    Wraps the existing chart-review, paper-plan, and risk schemas and echoes
+    the locked safety posture. The uploaded image is never stored and no AI
+    provider is called: ``stored`` and ``provider_used`` are Literal-locked to
+    ``False``. This payload carries no execution intent.
+    """
+
+    chart_analysis: ChartAnalysisResult
+    paper_game_plan: PaperGamePlan
+    risk_assessment: RiskAssessment
+
+    # Echoed / locked safety posture
+    analysis_only: Literal[True] = True
+    paper_only: Literal[True] = True
+    live_orders_blocked: Literal[True] = True
+    broker_execution: Literal[False] = False
+    requires_human_review: Literal[True] = True
+    stored: Literal[False] = False
+    provider_used: Literal[False] = False
+    disclaimer: str = ANALYSIS_DISCLAIMER
