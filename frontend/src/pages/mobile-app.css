@@ -640,6 +640,91 @@
   color: var(--terminal-muted, #8b949e);
 }
 
+/* ── Screenshot preview upload (MOBILE-AI-007C) ─────────────────────────── */
+.mobile-upload-row {
+  display: flex;
+}
+
+.mobile-upload-input {
+  width: 100%;
+  font-size: 0.86rem;
+  color: var(--terminal-text, #e6edf3);
+  padding: 10px;
+  background: var(--terminal-surface-2, #131b26);
+  border: 1px dashed var(--terminal-border, #263241);
+  border-radius: var(--terminal-radius, 14px);
+}
+
+.mobile-upload-input::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--terminal-amber-soft, #ffb84d);
+  background: var(--terminal-accent-bg, rgba(245, 165, 36, 0.08));
+  border: 1px solid var(--terminal-accent-border, rgba(245, 165, 36, 0.3));
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.mobile-upload-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-upload-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--terminal-radius, 14px);
+  border: 1px solid var(--terminal-border, #263241);
+}
+
+.mobile-upload-filename {
+  font-size: 0.8rem;
+  color: var(--terminal-muted, #8b949e);
+  word-break: break-all;
+}
+
+.mobile-upload-error {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--terminal-red, #ff6b6b);
+}
+
+.mobile-upload-notice {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--terminal-blue, #58a6ff);
+}
+
+.mobile-upload-result {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--terminal-radius, 14px);
+  background: var(--terminal-surface-2, #131b26);
+  border: 1px solid var(--terminal-border, #263241);
+}
+
+.mobile-upload-safety {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mobile-upload-safety-item {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--terminal-amber-soft, #ffb84d);
+}
+
 /* ── Bullet list (weekly report) ────────────────────────────────────────── */
 .mobile-bullet-list {
   margin: 0;

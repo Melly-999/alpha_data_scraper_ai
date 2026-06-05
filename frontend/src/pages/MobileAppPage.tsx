@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { MellyPetMascot } from "../components/branding/MellyPetMascot";
+import { ScreenshotPreviewCard } from "../components/mobile/ScreenshotPreviewCard";
 import "../components/terminal/terminal.css";
 import "./mobile-app.css";
 
@@ -395,6 +396,9 @@ export function MobileAppPage() {
           </div>
           <p className="mobile-disclaimer">Analysis only. Not financial advice.</p>
         </section>
+
+        {/* ── 3b. AI Screenshot Review (MOBILE-AI-007C) ─────────────────── */}
+        <ScreenshotPreviewCard />
 
         {/* ── 4. Safety Score ───────────────────────────────────────────── */}
         <section aria-label="Safety score" className="mobile-card">
