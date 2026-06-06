@@ -29,6 +29,7 @@ Quick start: read the safety posture below and run `py -3.11 scripts/validate_sa
 - [Demo Hosting Strategy](docs/deployment/demo_hosting_strategy.md)
 - [Render / Vercel / Sevalla Deployment Matrix](docs/deployment/render_vercel_sevalla_matrix.md)
 - [Demo Deploy Roadmap](docs/tasks/demo_deploy_roadmap.md)
+- [Hosted Demo Go-Live Runbook (web + mobile)](docs/deployment/hosted_demo_go_live_runbook.md)
 
 ## MellyTrade Terminal Demo
 
