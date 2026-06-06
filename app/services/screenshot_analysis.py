@@ -11,18 +11,16 @@ contract and image privacy/retention policy:
 
 Validation is pure standard library: MIME allowlist + magic-signature
 checks. No Pillow / python-magic / python-multipart dependency is used.
+
+The analysis result itself is produced by the pluggable provider layer
+(``app/services/mobile_ai_provider.py``, MOBILE-AI-008B), which defaults to a
+deterministic mock and degrades to a safe stub.
 """
 
 from __future__ import annotations
 
-from app.schemas.mobile_ai import (
-    ChartAnalysisResult,
-    MarketBias,
-    PaperGamePlan,
-    RiskAssessment,
-    RiskLevel,
-    ScreenshotAnalysisPreview,
-)
+from app.schemas.mobile_ai import ScreenshotAnalysisPreview
+from app.services.mobile_ai_provider import run_analysis
 
 # Conservative upload limit (5 MB) per the MOBILE-AI-007A safety contract.
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
@@ -100,59 +98,14 @@ def validate_image(content_type: str | None, data: bytes) -> str:
     return detected
 
 
-def build_preview() -> ScreenshotAnalysisPreview:
-    """Return a deterministic analysis-only preview.
-
-    Content is static and advisory only — no AI provider, no OCR, and no
-    dependence on image contents beyond successful validation. Mirrors the
-    safe `/mobile` mock copy.
-    """
-    chart = ChartAnalysisResult(
-        instrument="XAUUSD",
-        timeframe="M15",
-        trading_style="Intraday / paper only",
-        market_bias=MarketBias.NEUTRAL_BULLISH,
-        trend="Bullish short-term",
-        key_levels=["Support 2,318-2,322", "Resistance 2,341-2,346"],
-        momentum="Improving",
-        volatility=RiskLevel.HIGH,
-        pattern="Retest continuation candidate",
-        confirmation_checklist=[
-            "M15 close confirms",
-            "Retest holds",
-            "Momentum confirms",
-            "Risk <= 1%",
-        ],
-    )
-    plan = PaperGamePlan(
-        scenario="Long only if confirmed",
-        entry_zone="2,322 - 2,326 (example)",
-        invalidation="M15 candle close below 2,316 (example)",
-        take_profit_1="2,341 (example)",
-        take_profit_2="2,352 (example)",
-        max_risk_per_trade_pct=1.0,
-    )
-    risk = RiskAssessment(
-        safety_score=82,
-        risk_per_trade_pct=1.0,
-        stop_loss_present=True,
-        take_profit_present=True,
-        overtrading_risk=RiskLevel.MEDIUM,
-        news_risk=RiskLevel.HIGH,
-    )
-    return ScreenshotAnalysisPreview(
-        chart_analysis=chart,
-        paper_game_plan=plan,
-        risk_assessment=risk,
-    )
-
-
 class ScreenshotAnalysisService:
     """Validate an uploaded screenshot and return an analysis-only preview."""
 
     def analyze(
         self, content_type: str | None, data: bytes
     ) -> ScreenshotAnalysisPreview:
-        # Validate then discard the bytes — nothing is stored or logged.
-        validate_image(content_type, data)
-        return build_preview()
+        # Validate, then hand the bytes to the provider layer for analysis.
+        # Nothing is stored or logged; the provider defaults to a deterministic
+        # mock and degrades to a safe stub on any error.
+        mime = validate_image(content_type, data)
+        return run_analysis(data, mime)
