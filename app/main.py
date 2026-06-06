@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.routes import (
     account,
+    alpaca_paper,
     broker,
     brokers,
     dashboard,
@@ -149,6 +150,7 @@ for router in (
     paper_tickets.router,
     paper_sandbox.router,
     portfolio.router,
+    alpaca_paper.router,
 ):
     app.include_router(router, prefix="/api")
 
