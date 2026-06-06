@@ -7,31 +7,37 @@ This document defines how multiple agents should collaborate on MellyTrade witho
 ## Role Split
 
 ### ChatGPT
+
 - planner
 - prompt builder
 - explanation layer
 - task decomposition
 
 ### Claude Code
+
 - implementation agent
 - code author for scoped changes
 - refactor executor when a plan is already approved
 
 ### Codex
+
 - review gate
 - merge gate
 - safety and repo hygiene checker
 - final validation coordinator
 
 ### OpenCode
+
 - local docs or small executor
 - useful for lightweight editing or narrow task execution
 
 ### Cursor
+
 - IDE and workspace operator
 - best for interactive editing and quick local iteration
 
 ### Meta AI
+
 - mobile and social helper only
 - useful for visual framing, summaries, and lightweight ideation
 
