@@ -1,6 +1,7 @@
 # MellyTrade Showcase Growth Roadmap
 
 ## Project Positioning
+
 MellyTrade should be presented as an open-source, safety-first AI trading workstation built for visibility, review, and learning rather than execution.
 
 The project’s strongest story is not "trade faster". It is:
@@ -20,6 +21,7 @@ That positioning makes the project useful as:
 - a vibe-coding showcase that still respects safety boundaries
 
 ## Why MellyTrade Is Different
+
 Most trading dashboards optimize for action. MellyTrade should optimize for confidence.
 
 The differentiators are:
@@ -43,6 +45,7 @@ This makes the project legible to both technical and non-technical audiences.
 ## Module Roadmap
 
 ### A. GitHub Showcase Layer
+
 Goal: turn the repository into a strong landing page for contributors, recruiters, and reviewers.
 
 Potential modules:
@@ -55,6 +58,7 @@ Potential modules:
 - release notes and changelog process
 
 ### B. Risk / Backtest / Walk-Forward Dashboard Layer
+
 Goal: show that signals are tested, bounded, and reviewable.
 
 Potential modules:
@@ -66,6 +70,7 @@ Potential modules:
 - Audit Log Feed
 
 ### C. AI Explanation Layer
+
 Goal: make model behavior understandable and reviewable.
 
 Potential modules:
@@ -76,6 +81,7 @@ Potential modules:
 - model provenance notes
 
 ### D. Alerts / Watchlist / PWA Layer
+
 Goal: support monitoring without crossing into execution.
 
 Potential modules:
@@ -86,6 +92,7 @@ Potential modules:
 - settings and watchlist persistence
 
 ### E. Reports / Export Layer
+
 Goal: produce review artifacts that help users and recruiters understand the system.
 
 Potential modules:
@@ -96,6 +103,7 @@ Potential modules:
 - portfolio review summaries
 
 ## Safe PR Slicing
+
 Each change should be small, reviewable, and isolated.
 
 - `GH-SHOWCASE-001` - this roadmap and planning layer
@@ -104,6 +112,7 @@ Each change should be small, reviewable, and isolated.
 - `DASH-BT-001` - backtest results viewer
 - `DASH-WF-001` - walk-forward viewer
 - `DASH-AI-001` - AI explanation feed
+- `ALERTS-PWA-001` - PWA alerts and watchlist concept docs
 - `ALERTS-DISCORD-001` - read-only Discord alerts concept docs
 - `REPORTS-001` - weekly report and export roadmap
 
@@ -130,6 +139,7 @@ Each change should be small, reviewable, and isolated.
 - paper/simulation only
 
 ## Growth Strategy Framing
+
 The GitHub story should be simple:
 
 1. show the safety contract first

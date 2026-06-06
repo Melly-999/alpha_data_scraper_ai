@@ -1,6 +1,7 @@
 # Vibe Coding Agent Workflow
 
 ## Purpose
+
 This document defines how multiple agents should collaborate on MellyTrade without stepping on each other’s edits or weakening the safety posture.
 
 ## Role Split
@@ -35,6 +36,7 @@ This document defines how multiple agents should collaborate on MellyTrade witho
 - useful for visual framing, summaries, and lightweight ideation
 
 ## Collaboration Rule
+
 One agent writes, one agent reviews.
 
 Do not let two agents edit the same files at the same time.

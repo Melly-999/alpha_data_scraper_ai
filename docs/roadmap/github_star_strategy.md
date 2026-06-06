@@ -1,6 +1,7 @@
 # GitHub Star Strategy
 
 ## Positioning Statement
+
 Use this language consistently across the README, demo captions, and social posts:
 
 > open-source AI trading terminal with hard no-live-trading safety posture
@@ -8,6 +9,7 @@ Use this language consistently across the README, demo captions, and social post
 Avoid any language that implies guaranteed profit, financial advice, or live execution capability.
 
 ## README As Landing Page
+
 The README should act like a landing page, not just a setup file.
 
 It should quickly answer:
@@ -19,6 +21,7 @@ It should quickly answer:
 - how to contribute
 
 ## First 8 Seconds Rule
+
 A visitor should understand the project’s value within 8 seconds.
 
 Show this order:
@@ -41,6 +44,7 @@ Show this order:
 - no live trading language visible
 
 ## GitHub Topics
+
 Use topics that reinforce the project’s identity without overselling it.
 
 Suggested examples:
@@ -67,6 +71,7 @@ Suggested examples:
 - visible human review requirement
 
 ## Good First Issues
+
 Focus on low-risk, high-clarity tasks such as:
 
 - README wording improvements
@@ -77,6 +82,7 @@ Focus on low-risk, high-clarity tasks such as:
 - validation checklist updates
 
 ## Release Notes
+
 Release notes should summarize:
 
 - what changed
@@ -85,6 +91,7 @@ Release notes should summarize:
 - what safety checks were preserved
 
 ## Promotion Plan
+
 Use low-friction, credibility-first channels:
 
 - LinkedIn post with a short product story and screenshot
@@ -101,6 +108,7 @@ Focus on:
 Do not focus on profit claims.
 
 ## Safety-First Positioning
+
 Repeat these principles consistently:
 
 - no live trading
@@ -112,6 +120,7 @@ Repeat these principles consistently:
 - paper/simulation only
 
 ## Copy Guardrails
+
 Do not say:
 
 - "guaranteed returns"
