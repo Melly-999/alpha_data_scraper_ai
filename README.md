@@ -67,6 +67,7 @@ Demo docs:
 - [iPad PWA Paper Run Preview Showcase](docs/showcase/ipad_pwa_paper_run_preview.md)
 - [DEMO-010 — Portfolio / LinkedIn copy pack](docs/demo/demo_010_portfolio_linkedin_copy_pack.md)
 - [DEMO-MASCOT-001 — Melly Pet workspace companion evidence](docs/demo/demo_mascot_001_melly_pet_evidence.md)
+- [DEMO-MOBILE-AI — Screenshot preview evidence](docs/demo/mobile_ai_screenshot_preview_evidence.md)
 
 ## iPad PWA Paper Run Preview Showcase
 
