@@ -4,6 +4,15 @@
 - Active task/branch context: `docs/ace-knowledge-graph-source`
 - Purpose: organize Mobile AI / Mobile PWA roadmap and connect it with agents, ClickUp, GitHub PR flow, validation, and safety constraints.
 
+## Mobile AI Delivery Status
+- MOBILE-AI-003/004/005 — `/mobile` mock screens (chart review, setup journal, FOMO guard / risk coach): merged.
+- MOBILE-AI-006 — backend mobile AI schemas (analysis-only, paper-only, Literal-locked): merged.
+- MOBILE-AI-007A — screenshot upload safety contract + image privacy/retention policy: merged.
+- MOBILE-AI-007B — `POST /api/mobile/ai/screenshot/preview` analysis-only endpoint (no storage, no provider call): merged.
+- MOBILE-AI-007C — `/mobile` screenshot preview UI (analysis-only, paper-only): merged.
+- Next: MOBILE-AI-008 backend-only AI provider integration (no frontend provider keys); then MOBILE-AI-009 smart alerts (reminders only).
+- Safety constant across all: read-only, dry-run, no live trading, no broker execution, no order controls, no provider keys in frontend, max risk <= 1%.
+
 ## Main Project Nodes
 - MellyTrade Repo
 - Mobile/PWA Roadmap
