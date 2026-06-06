@@ -30,6 +30,19 @@ End-to-end smoke of the hosted read-only demo: Render backend + Vercel frontend 
 - [ ] no order / buy / sell / execute controls
 - [ ] no horizontal overflow
 
+## AI Screenshot Review Smoke (MOBILE-AI-007/008)
+
+- [ ] "AI Screenshot Review" card visible on `/mobile`
+- [ ] valid PNG/JPEG/WebP upload → paper-only preview (instrument, bias, paper
+      plan, max simulated risk ≤ 1%, safety score)
+- [ ] preview chips: "No live orders", "Human review required", "Not stored"
+- [ ] rejection cases: SVG/PDF → 415, file > 5 MB → 413, empty → 400
+- [ ] backend `POST /api/mobile/ai/screenshot/preview` returns
+      `provider_used:false` (real provider stays disabled for the demo)
+- [ ] backend has **no** `ANTHROPIC_API_KEY` / `MOBILE_AI_PROVIDER_ENABLED`
+      (confirm the demo runs the deterministic mock — no key, no spend)
+- [ ] use **synthetic** screenshots only — no account numbers / secrets
+
 ## iPad / iPhone Smoke
 
 - [ ] Safari loads `/mobile`
@@ -54,6 +67,7 @@ End-to-end smoke of the hosted read-only demo: Render backend + Vercel frontend 
 | Render backend | | |
 | Vercel frontend | | |
 | /mobile | | |
+| AI Screenshot Review | | |
 | iPad/iPhone | | |
 | CORS | | |
 
