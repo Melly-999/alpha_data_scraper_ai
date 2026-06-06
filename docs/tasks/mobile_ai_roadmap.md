@@ -14,6 +14,30 @@ Related docs:
 - Workspace setup: `docs/mobile/mobile_ai_workspace_setup.md`
 - Existing mobile roadmap: `docs/tasks/mobile_app_roadmap.md`
 
+## Delivery status (current)
+
+| Task | Status |
+|---|---|
+| MOBILE-AI-000 — architecture decision, workspace setup, roadmap | Done |
+| MOBILE-AI-001/002 — safety contract / MVP screen plan | Folded into 003–005 |
+| MOBILE-AI-003 — `/mobile` AI chart-review mock | Done (#250) |
+| MOBILE-AI-004 — Setup Journal mock | Done (#251) |
+| MOBILE-AI-005 — FOMO Guard + Melly Pet risk coach | Done (#252) |
+| MOBILE-AI-006 — backend schemas only | Done (#253) |
+| MOBILE-AI-007A — screenshot upload safety contract + retention policy | Done (#254) |
+| MOBILE-AI-007B — screenshot upload analysis endpoint | Done (#256) |
+| MOBILE-AI-007C — screenshot preview UI on `/mobile` | Done (#257) |
+| MOBILE-AI-008 — backend-only AI provider integration | Next (planned) |
+| MOBILE-AI-009 — smart alerts | Planned |
+| MOBILE-AI-010 — subscription/paywall strategy | Planned (docs-first) |
+| MOBILE-AI-011/012 — native wrapper research / app-store readiness | Planned |
+
+Next tasks: **MOBILE-AI-008** (backend-only AI provider integration —
+analysis-only responses, no frontend provider keys; prerequisite: provider
+data-use + privacy review), then MOBILE-AI-009 smart alerts (reminders only,
+never execution). Related mobile-shell polish: MOBILE-APP-004 (Melly Pet
+onboarding) and MOBILE-APP-005 (PWA icon pipeline).
+
 ## Product vision (one line)
 
 MellyTrade Mobile should feel like a premium mobile trading terminal, an AI

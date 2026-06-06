@@ -60,6 +60,12 @@ chart-review, paper game-plan, and risk-coach experience. It does not change
 the safety posture: the mobile surface stays read-only / dry-run, with no
 broker execution and no order controls.
 
+**Status:** MOBILE-AI-003/004/005 mock screens, 006 schemas, and the
+007A/007B/007C screenshot review (safety contract → analysis-only endpoint →
+`/mobile` preview UI) are merged. Next: MOBILE-AI-008 backend-only AI provider
+integration. Related mobile-shell polish remains: MOBILE-APP-004 (Melly Pet
+onboarding) and MOBILE-APP-005 (PWA icon pipeline).
+
 Related docs:
 
 - Mobile AI roadmap: `docs/tasks/mobile_ai_roadmap.md`
