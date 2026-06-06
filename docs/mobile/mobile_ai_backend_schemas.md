@@ -52,6 +52,16 @@ Supporting enums: `MarketBias`, `RiskLevel`, `OutcomeStatus`.
 
 ## Next recommended task
 
-MOBILE-AI-007 — Screenshot upload analysis endpoint (backend endpoint, high
-safety review: privacy/retention policy, no provider keys in frontend, no
-trading execution).
+The screenshot upload work was split into MOBILE-AI-007A (safety contract +
+retention policy, merged) and MOBILE-AI-007B (the analysis-only upload
+endpoint, merged in #256):
+
+- MOBILE-AI-007A — Screenshot upload safety contract and image
+  privacy/retention policy (docs-only).
+- MOBILE-AI-007B — Screenshot upload analysis endpoint
+  (`POST /api/mobile/ai/screenshot/preview`): analysis-only, paper-only,
+  no image storage, no provider keys in frontend, no trading execution.
+
+Next: MOBILE-AI-008 — backend-only AI provider integration (analysis-only
+responses; prerequisite: provider data-use + privacy review; no frontend
+provider keys).
