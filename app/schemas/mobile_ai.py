@@ -197,9 +197,12 @@ class ScreenshotAnalysisPreview(_MobileAIBase):
     """Analysis-only preview returned by the screenshot upload endpoint.
 
     Wraps the existing chart-review, paper-plan, and risk schemas and echoes
-    the locked safety posture. The uploaded image is never stored and no AI
-    provider is called: ``stored`` and ``provider_used`` are Literal-locked to
-    ``False``. This payload carries no execution intent.
+    the locked safety posture. The uploaded image is never stored
+    (``stored`` is Literal-locked to ``False``). ``provider_used`` is an
+    informational flag — ``False`` for the deterministic mock/stub, and ``True``
+    only when a real backend provider (MOBILE-AI-008C) produced the result. It
+    is not a safety guarantee; the execution-safety flags below stay locked
+    regardless. This payload carries no execution intent.
     """
 
     chart_analysis: ChartAnalysisResult
@@ -213,5 +216,6 @@ class ScreenshotAnalysisPreview(_MobileAIBase):
     broker_execution: Literal[False] = False
     requires_human_review: Literal[True] = True
     stored: Literal[False] = False
-    provider_used: Literal[False] = False
+    # Informational only (not a safety lock): True when a real provider ran.
+    provider_used: bool = False
     disclaimer: str = ANALYSIS_DISCLAIMER

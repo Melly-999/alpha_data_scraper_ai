@@ -113,17 +113,35 @@ def _provider_name() -> str:
     return (os.getenv("MOBILE_AI_PROVIDER") or DEFAULT_PROVIDER).strip().lower()
 
 
+def _provider_enabled() -> bool:
+    """Real backend providers run only when explicitly enabled (default off)."""
+    return (os.getenv("MOBILE_AI_PROVIDER_ENABLED") or "false").strip().lower() == (
+        "true"
+    )
+
+
 def select_provider() -> AnalysisProvider:
     """Pick the analysis provider from backend config.
 
-    008B only ships ``mock`` (default) and ``stub`` (fallback). Any other
-    selection — including ``claude``, whose real implementation arrives in
-    008C — safely degrades to the deterministic stub.
+    Defaults to the deterministic ``mock``. The real ``claude`` provider
+    (MOBILE-AI-008C) runs only when ``MOBILE_AI_PROVIDER=claude`` AND
+    ``MOBILE_AI_PROVIDER_ENABLED=true`` AND a backend key is present; any
+    construction problem (e.g. missing key, SDK unavailable) degrades to the
+    safe deterministic stub. Anything else also degrades to the stub.
     """
     name = _provider_name()
+    if name == "claude" and _provider_enabled():
+        try:
+            # Lazy import keeps this module (and the default path) free of the
+            # provider SDK; construction raises if no key is configured.
+            from app.services.mobile_ai_claude_provider import ClaudeProvider
+
+            return ClaudeProvider()
+        except Exception:
+            return StubProvider()
     if name == "mock":
         return MockProvider()
-    # Unknown / not-yet-implemented provider (e.g. "claude" before 008C):
+    # Unknown / disabled provider (e.g. "claude" without the enabled flag):
     # degrade to the safe deterministic stub. No network, no key, no error.
     return StubProvider()
 
