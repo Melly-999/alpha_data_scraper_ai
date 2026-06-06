@@ -33,7 +33,7 @@ Quick start: read the safety posture below and run `py -3.11 scripts/validate_sa
 
 ## MellyTrade Terminal Demo
 
-MellyTrade is a safety-first, read-only AI trading terminal prototype focused on explainable signals, paper sandbox previews, auditability, and strict execution guardrails.
+MellyTrade is a safety-first, read-only AI trading terminal prototype focused on explainable signals, paper sandbox previews, auditability, and strict execution guardrails. It ships both a desktop terminal and a mobile-first `/mobile` AI companion — all paper/simulation only.
 
 What the current demo shows:
 
@@ -43,6 +43,12 @@ What the current demo shows:
 - Paper Sandbox Activity/Audit Rail
 - Read-only broker/safety posture
 - GET-only local smoke checks
+- Mobile AI app (`/mobile`): AI Chart Review, Paper Game Plan, Safety Score, Watchlist, Setup Journal, FOMO Guard, Weekly Report, Monte Carlo snapshot, and the Melly Pet risk coach
+- AI Screenshot Review on `/mobile`: upload a chart screenshot for an analysis-only, paper-only preview (image never stored; runs a deterministic mock by default)
+
+**Try the demo:** run locally (`scripts/start_backend*` + `scripts/start_frontend*`, then open `/terminal` and `/mobile`), or deploy a public demo with the [Hosted Demo Go-Live Runbook](docs/deployment/hosted_demo_go_live_runbook.md).
+
+> Demo posture: analysis only, not financial advice; paper plan only, no live orders; human review required. No broker execution, no order/buy/sell/execute controls, and no AI provider keys in the frontend.
 
 Safety posture:
 
