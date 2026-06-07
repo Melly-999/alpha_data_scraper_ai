@@ -20,10 +20,8 @@ from app.schemas.alpaca_paper import (
     AlpacaPaperAccountPreview,
     AlpacaPaperMarketClock,
     AlpacaPaperMarketClockData,
-    AlpacaPaperMarketHours,
     AlpacaPaperStatus,
     AlpacaPaperWatchlist,
-    AlpacaPaperWatchlistItem,
     AlpacaPaperWatchlistPreview,
 )
 

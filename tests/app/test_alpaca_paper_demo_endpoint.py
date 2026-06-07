@@ -62,7 +62,9 @@ def _walk_keys(value: object) -> Iterable[str]:
 def test_alpaca_paper_get_routes_return_200(client, path: str) -> None:
     """Verify all Alpaca Paper endpoints return HTTP 200."""
     response = client.get(path)
-    assert response.status_code == 200, f"Expected 200 for {path}, got {response.status_code}"
+    assert (
+        response.status_code == 200
+    ), f"Expected 200 for {path}, got {response.status_code}"
 
 
 @pytest.mark.parametrize("path", _PATHS)
@@ -92,9 +94,15 @@ def test_alpaca_paper_responses_include_safety_flags(client, path: str) -> None:
     assert payload["paper_only"] is True, f"{path}: paper_only must be True"
     assert payload["dry_run"] is True, f"{path}: dry_run must be True"
     assert payload["read_only"] is True, f"{path}: read_only must be True"
-    assert payload["live_orders_blocked"] is True, f"{path}: live_orders_blocked must be True"
-    assert payload["execution_enabled"] is False, f"{path}: execution_enabled must be False"
-    assert payload["requires_human_review"] is True, f"{path}: requires_human_review must be True"
+    assert (
+        payload["live_orders_blocked"] is True
+    ), f"{path}: live_orders_blocked must be True"
+    assert (
+        payload["execution_enabled"] is False
+    ), f"{path}: execution_enabled must be False"
+    assert (
+        payload["requires_human_review"] is True
+    ), f"{path}: requires_human_review must be True"
 
 
 @pytest.mark.parametrize("path", _PATHS)
