@@ -33,6 +33,16 @@ def load_settings() -> Settings:
         origin.strip() for origin in frontend_origins.split(",") if origin.strip()
     ]
 
+    # Tauri desktop thin-shell (EXE-DESKTOP-002) loads the bundled frontend from
+    # the WebView2 custom-protocol origins below. They are fixed, local-only
+    # desktop origins (never arbitrary web origins), so always allow them in
+    # addition to the configured web origins. Read-only paper preview only; no
+    # broker execution, no order controls. This is a CORS allowlist entry only.
+    desktop_origins = ["http://tauri.localhost", "https://tauri.localhost"]
+    for origin in desktop_origins:
+        if origin not in origins:
+            origins.append(origin)
+
     return Settings(
         app_name="MellyTrade Phase 1",
         app_version="0.1.0",
