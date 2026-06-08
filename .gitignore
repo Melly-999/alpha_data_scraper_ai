@@ -91,3 +91,10 @@ _prototypes/
 # PyInstaller generated artifacts — local-only, never commit
 *.spec
 *.exe
+
+# Tauri / Rust desktop build output — local-only, never commit
+frontend/src-tauri/target/
+frontend/src-tauri/gen/
+
+# Allow the non-secret desktop build env example (public backend URL only)
+!.env.desktop.example
