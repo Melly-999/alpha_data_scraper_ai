@@ -25,6 +25,7 @@ import { PaperRunPreviewPanel } from "./PaperRunPreviewPanel";
 import { NewsRail } from "./NewsRail";
 import { RiskGuardrailsCard } from "./RiskGuardrailsCard";
 import { SupabaseStatusCard } from "./SupabaseStatusCard";
+import { AlpacaPaperReadOnlyCard } from "./AlpacaPaperReadOnlyCard";
 import { AgentStatusBar } from "./AgentStatusBar";
 import { TopTickerBar } from "./TopTickerBar";
 
@@ -205,6 +206,7 @@ export function TerminalShell({
                 <RiskGuardrailsCard policy={data.riskPolicy} status={data.riskStatus} />
                 <IBKRBrokerCard broker={data.broker} />
                 <SupabaseStatusCard />
+                <AlpacaPaperReadOnlyCard />
               </section>
               <section className="terminal-columns">
                 <AISignalFeedPreview signals={data.signals} />
