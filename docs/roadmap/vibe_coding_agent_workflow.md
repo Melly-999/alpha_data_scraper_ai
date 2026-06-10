@@ -74,16 +74,12 @@ Recommended ownership pattern:
 Use this structure after each task:
 
 ```text
-Task:
-Branch:
-Files changed:
-Summary:
-Validation:
-Safety scan:
-Docs-only confirmation:
-Safety confirmation:
-Notes:
-Next recommended task:
+Findings:
+Scope:
+Tests:
+Safety issues:
+Secrets scan:
+Recommendation:
 ```
 
 ## Safety Scan Checklist

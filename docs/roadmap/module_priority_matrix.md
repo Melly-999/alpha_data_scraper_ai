@@ -8,7 +8,7 @@
 | Walk-Forward Viewer | High | Medium | Low | DASH-WF-001 | Shows out-of-sample discipline and model validation maturity. |
 | AI Explanation Feed | High | Medium | Low | DASH-AI-001 | Makes the system understandable and review-friendly. |
 | Discord Alerts | Medium | Medium | Low | ALERTS-DISCORD-001 | Keep read-only and informational only. |
-| PWA Alerts / Watchlist | Medium | High | Low | ALERTS-PWA-001 | Good product polish, but should follow the showcase layer. |
+| PWA Alerts / Watchlist | Medium | High | Low | ALERTS-PWA-001 | Good product polish with read-only alerts; should follow the showcase layer. |
 | Weekly PDF Report | Medium | Medium | Low | REPORTS-001 | Nice recruiter artifact and useful review output. |
 | Settings Persistence | Medium | Medium | Medium | GH-SHOWCASE-002 | Must keep safety-critical settings locked and auditable. |
 | Audit Log Feed | High | Medium | Low | DASH-RISK-001 | Reinforces trust, traceability, and review-first UX. |

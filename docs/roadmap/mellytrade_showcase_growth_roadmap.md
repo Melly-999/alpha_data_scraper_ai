@@ -2,7 +2,8 @@
 
 ## Project Positioning
 
-MellyTrade should be presented as an open-source, safety-first AI trading workstation built for visibility, review, and learning rather than execution.
+MellyTrade should be presented as an 
+ safety-first AI trading workstation built for visibility, review, and learning rather than execution.
 
 The project’s strongest story is not "trade faster". It is:
 
@@ -112,7 +113,7 @@ Each change should be small, reviewable, and isolated.
 - `DASH-BT-001` - backtest results viewer
 - `DASH-WF-001` - walk-forward viewer
 - `DASH-AI-001` - AI explanation feed
-- `ALERTS-PWA-001` - PWA alerts and watchlist concept docs
+- `ALERTS-PWA-001` - read-only PWA alerts and watchlist concept docs
 - `ALERTS-DISCORD-001` - read-only Discord alerts concept docs
 - `REPORTS-001` - weekly report and export roadmap
 
