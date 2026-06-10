@@ -1,6 +1,10 @@
-# MellyTrade — Read-only AI Trading Terminal & Paper Risk Workspace
+# MellyTrade
 
-> A safety-first fintech demo showing AI-assisted market review, paper-only planning, portfolio/risk status, audit visibility, mobile/PWA workflow, and screenshot-based analysis — **without broker execution**.
+**Safety-first AI trading terminal and paper-risk workspace.**
+
+MellyTrade is a read-only / dry-run fintech terminal demo for AI market analysis, portfolio/risk overview, broker status, paper-only previews, and audit-ready safety evidence — delivered as a web app, a mobile route, and a desktop (Tauri) shell on a shared FastAPI backend.
+
+> Read-only · Dry-run · Paper-only · Live orders blocked · Human review required · No live execution
 
 [![Read Only](https://img.shields.io/badge/mode-READ%20ONLY-blue?style=flat-square)](https://alpha-data-scraper-ai.vercel.app)
 [![Dry Run](https://img.shields.io/badge/execution-DRY%20RUN-blue?style=flat-square)](https://alpha-data-scraper-ai.vercel.app)
@@ -13,29 +17,30 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-backend-green?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-frontend-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-typed-3178C6?style=flat-square&logo=typescript)](https://typescriptlang.org)
-[![Vite](https://img.shields.io/badge/Vite-build-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
+[![Tauri](https://img.shields.io/badge/Tauri-desktop-FFC131?style=flat-square&logo=tauri)](https://tauri.app)
 [![Hosted on Vercel](https://img.shields.io/badge/hosted-Vercel-black?style=flat-square&logo=vercel)](https://alpha-data-scraper-ai.vercel.app)
 
 ---
 
-## Live Demo
+## Live Demo Matrix
 
-| Surface | URL |
-|---|---|
-| **Frontend demo** | [alpha-data-scraper-ai.vercel.app](https://alpha-data-scraper-ai.vercel.app) |
-| **Terminal** | [/terminal](https://alpha-data-scraper-ai.vercel.app/terminal) |
-| **Mobile / PWA** | [/mobile](https://alpha-data-scraper-ai.vercel.app/mobile) |
-| **Broker status** | [/brokers](https://alpha-data-scraper-ai.vercel.app/brokers) |
-| **Backend health** | [alpha-data-scraper-ai.onrender.com/api/health](https://alpha-data-scraper-ai.onrender.com/api/health) |
-| **Safety status** | [alpha-data-scraper-ai.onrender.com/api/safety/status](https://alpha-data-scraper-ai.onrender.com/api/safety/status) |
+No account, no login, no API keys required. Every surface is read-only and paper/simulation only.
 
-> **No account, no login, no API keys required.** All views are read-only and paper/simulation only.
+| Surface | Link | What it proves |
+|---|---|---|
+| **Main app** | [alpha-data-scraper-ai.vercel.app](https://alpha-data-scraper-ai.vercel.app) | Hosted product entry point on Vercel |
+| **Terminal** | [/terminal](https://alpha-data-scraper-ai.vercel.app/terminal) | Institutional dashboard: safety rail, market overview, signal workspace, Alpaca Paper status + order preview |
+| **Mobile route** | [/mobile](https://alpha-data-scraper-ai.vercel.app/mobile) | Mobile command center: AI chart review, paper game plan, safety score, FOMO guard |
+| **Brokers status** | [/brokers](https://alpha-data-scraper-ai.vercel.app/brokers) | Read-only broker surfaces — `read_only=true`, `execution_enabled=false`, orders denied |
+| **Backend health** | [/api/health](https://alpha-data-scraper-ai.onrender.com/api/health) | Live FastAPI service on Render with safety posture embedded in the payload |
+| **Backend safety status** | [/api/safety/status](https://alpha-data-scraper-ai.onrender.com/api/safety/status) | Machine-readable safety invariants: dry-run, read-only, live orders blocked, 1% risk cap |
+| **Desktop shell** | [`frontend/src-tauri/`](frontend/src-tauri/) | Tauri v2 thin-shell wrapping the hosted app (merged via PR #271, smoke-tested against production) |
 
 ---
 
 ## Safety Contract
 
-MellyTrade enforces a strict read-only posture at every layer. The safety invariants are codified in `config.json`, enforced by the FastAPI backend, and verified by an executable pytest suite on every push.
+The safety posture is not a disclaimer — it is enforced in config, backend, UI, and CI simultaneously.
 
 ```text
 autotrade           = false
@@ -43,180 +48,174 @@ dry_run             = true
 read_only           = true
 live_orders_blocked = true
 execution_enabled   = false
+paper_only          = true
+human_review        = required
 max_risk_per_trade  = <= 1%
-
-No buy / sell / order / execute controls in the UI
-No live broker connections
-No real orders placed
-No AI provider keys in the frontend
-No secrets required to run the demo
 ```
 
-The safety regression suite (`tests/app/test_safety_invariants.py`, `test_openapi_forbidden_paths.py`) fails the build if any of these invariants ever drift.
+- **No live orders, no broker execution.** No code path on any demo surface can submit an order to a real broker.
+- **No Buy / Sell / Place Order / Execute / Submit controls** anywhere in the UI.
+- **Read-only broker surfaces** — broker cards and Alpaca Paper status are GET-only.
+- **Paper-only previews** — order previews are labeled *"Preview only — not submitted"* and never leave the demo.
+- **Dry-run defaults** codified in `config.json` and asserted by pytest on every push.
+- **No financial advice, no profit guarantees.**
+- **Never put real broker credentials into a public demo.** This demo requires no secrets at all.
+
+The safety regression suite (`tests/app/test_safety_invariants.py`, `test_openapi_forbidden_paths.py`) fails the build if any invariant drifts.
 
 ---
 
-## Demo Screenshots
+## Product Screenshots
 
 ![MellyTrade terminal dashboard with read-only safety banner](docs/assets/screenshots/public-demo/terminal-home.png)
-*Terminal dashboard — institutional dark UI with safety banner, signal workspace, audit feed, and risk posture.*
-
-![MellyTrade mobile PWA command center](docs/assets/screenshots/public-demo/mobile-pwa.png)
-*Mobile / PWA view — AI companion, Paper Game Plan, Safety Score, FOMO Guard, and paper-only review flow.*
-
-![MellyTrade AI screenshot review paper-only result](docs/assets/screenshots/public-demo/ai-screenshot-review-result.png)
-*AI Screenshot Review — chart image review surface with analysis-only, paper-only, not-stored, and human-review framing.*
+*Terminal — safety rail and market overview: read-only banner, signal workspace, audit feed, risk posture.*
 
 ![MellyTrade broker status read-only guardrails](docs/assets/screenshots/public-demo/brokers-readonly.png)
-*Broker status — read-only degraded paper adapter with `execution_enabled=false`, orders denied, and no execution controls visible.*
+*Brokers — `read_only=true`, `execution_enabled=false`, orders denied, live execution denied. No execution controls exist.*
+
+![MellyTrade mobile command center](docs/assets/screenshots/public-demo/mobile-pwa.png)
+*Mobile route — command center with safety badges, AI chart review, paper game plan, and safety score.*
+
+![MellyTrade AI screenshot review paper-only result](docs/assets/screenshots/public-demo/ai-screenshot-review-result.png)
+*AI Screenshot Review — analysis-only chart review workflow: paper-only, image not stored, human review required.*
 
 ---
 
-## Feature Overview
+## What MellyTrade Does
 
-### Institutional Terminal Preview
-Red/black professional trading terminal UI. Shows system status, equity curve, signal workspace, audit/event feed, and daily paper plan preview — all display-only. No order entry, no execution affordances.
-
-### AI Workspace
-Signal analysis layer with a structured reasoning panel: confidence breakdown, risk gate pass/fail status, explicit *human review required* framing, and four safety badges on every variant. Powered by a deterministic mock by default — no live AI provider key needed.
-
-### Paper Sandbox
-Paper-only plan preview. The backend exposes `GET /paper/run/preview` — no `POST/PUT/PATCH/DELETE` trading mutation routes. The Pydantic schema deliberately omits execution-shaped fields (quantity, lot, sl, tp, order id).
-
-### AI Screenshot Review
-On the `/mobile` route: upload a chart screenshot for analysis-only paper commentary. The image is never stored, no broker integration, no order placement. Runs a deterministic mock by default.
-
-### Mobile / PWA Demo
-Full mobile-first companion app installable as a PWA on iOS / Android / iPad:
-- AI Chart Review
-- Paper Game Plan
-- Safety Score
-- Watchlist
-- Setup Journal
-- FOMO Guard
-- Weekly Report
-- Monte Carlo snapshot
-- Melly Pet risk coach (inline SVG mascot — pure UI, no API calls)
-
-### Broker Status — Read-only
-Broker cards show adapter name, paper/live mode indicator, connection health, and `Live orders: BLOCKED`. No write paths. No broker credentials required.
-
-### Audit / Evidence Trail
-Every API response carries `read_only=true` and a `safety_note`. The audit feed logs `live_orders_blocked`, `scanner_evaluated`, `risk_blocked`, and `stale_data_warning` events. Every smoke test run is documented as a markdown evidence report in `docs/evidence/`.
-
-### Safety-First Architecture
-- All endpoints are `GET`-only on Terminal / Signal / Paper surfaces
-- `autotrade=false` and `dry_run=true` enforced in `config.json` and asserted in pytest
-- Forbidden-path test (`test_openapi_forbidden_paths.py`) fails if a mutating route appears under guarded prefixes
-- Safety validator script (`scripts/validate_safety_config.py`) runs in CI and locally
-- Playwright e2e suite: 54 tests across iPad and mobile viewports (GitHub Actions, no backend required)
+- **AI market workspace** — structured signal reasoning with confidence breakdown and explicit *human review required* framing
+- **Portfolio / risk overview** — display-only risk posture, equity curve, and daily paper plan
+- **Read-only broker status** — adapter health, paper/live mode indicator, `Live orders: BLOCKED`
+- **Alpaca Paper read-only status** — GET-only status card with all six safety flags
+- **Paper-only order preview** — deterministic Alpaca Paper preview that is never submitted to any broker
+- **Audit / safety evidence** — every API response carries `read_only=true` and a safety note; smoke runs documented in `docs/evidence/`
+- **Mobile demo** — mobile-first command center route with the same safety rails
+- **Desktop shell** — Tauri v2 thin-shell loading the hosted app with desktop CORS origins
 
 ---
 
-## Architecture
+## Architecture Overview
 
 ```text
-┌──────────────────────────────────────────────────────┐
-│  Frontend  (React + TypeScript + Vite)               │
-│  Hosted: Vercel                                      │
-│                                                      │
-│  /terminal   — institutional dashboard               │
-│  /mobile     — PWA AI companion                     │
-│  /brokers    — read-only broker status               │
-│                                                      │
-│  Poll-only: apiGet() — no mutation helpers           │
-│  No provider keys exposed in browser                │
-└───────────────────┬──────────────────────────────────┘
-                    │  HTTPS  GET-only
-┌───────────────────▼──────────────────────────────────┐
-│  Backend  (FastAPI + Python 3.11+)                   │
-│  Hosted: Render                                      │
-│                                                      │
-│  GET /api/health          liveness + safety posture  │
-│  GET /api/safety/status   live invariant values      │
-│  GET /api/terminal/*      dashboard payloads         │
-│  GET /api/signals/*       signal decisions           │
-│  GET /api/risk/config     dry_run / autotrade gates  │
-│  GET /paper/run/preview   paper plan preview         │
-│                                                      │
-│  No POST/PUT/PATCH/DELETE on trading surfaces        │
-│  No broker write paths registered                    │
-│  No live order execution reachable                   │
-└──────────────────────────────────────────────────────┘
+   Web App        Mobile Route        Desktop EXE (Tauri)
+      │                │                     │
+      └────────────────┼─────────────────────┘
+                       │  GET-only clients (no mutation helpers)
+                       ▼
+              FastAPI Backend (Render)
+                       │
+   ┌───────────────────┼────────────────────────────┐
+   ▼                   ▼                            ▼
+Safety Layer    Paper Preview Engine    Broker Read-only Surfaces
+   │                   │                            │
+   └───────────────────┴──────────► Audit / Safety Evidence
 ```
 
-**Stack:** Python · FastAPI · Pydantic · React · TypeScript · Vite · Vercel · Render · pytest · PWA
+- Frontend: React + TypeScript + Vite, hosted on Vercel, poll-only `apiGet()` client
+- Backend: FastAPI + Pydantic, hosted on Render — no `POST/PUT/PATCH/DELETE` on trading surfaces
+- Desktop: Tauri v2 shell pointed at the hosted frontend, CORS-scoped desktop origins
 
 ---
 
-## Validation & Evidence
+## Feature Surface Table
 
-### Hosted Smoke — PASS (demo-008)
-
-Full 21-check hosted smoke test run against production URLs — CORS verified, safety posture confirmed, no unsafe controls found.
-
-- Evidence report: [`docs/evidence/demo-008-hosted-smoke-pass.md`](docs/evidence/demo-008-hosted-smoke-pass.md)
-- Merged via PR #268
-
-### SPA Deep-link Fix (PR #269)
-
-Direct routes (`/terminal`, `/mobile`, `/brokers`) return HTTP 200 without full reload via Vercel SPA catch-all rewrite. Post-merge production smoke confirmed PASS.
-
-- Config: [`frontend/vercel.json`](frontend/vercel.json)
-- Merged via PR #269
-
-### Safety Validator
-
-```powershell
-py -3.11 scripts/validate_safety_config.py
-# OVERALL PASS — all safety invariants confirmed
-```
-
-### Test Suite
-
-```powershell
-py -3.11 -m pytest tests/app/test_openapi_forbidden_paths.py tests/app/test_safety_invariants.py -q
-# 60 tests passed
-```
-
-### Static Safety Scan
-
-No `placeOrder(`, no `executeOrder(`, no "Place Order" / "Execute Trade" / "Submit Order" button text, no broker write paths, no secrets in source.
+| Surface | Route / app | What it proves | Safety mode |
+|---|---|---|---|
+| Web terminal | `/terminal` | Institutional dashboard with safety rail | Read-only, display-only |
+| Mobile route | `/mobile` | Mobile-first product surface | Read-only, paper-only, mock AI by default |
+| Brokers status | `/brokers` | Broker adapters without execution | `read_only=true`, `execution_enabled=false` |
+| Alpaca Paper status | `GET /api/alpaca-paper/status` | Read-only paper-broker status contract | Six safety flags on every response |
+| Alpaca Paper order preview | `GET /api/alpaca-paper/order-preview` | Risk-gated preview that is never submitted | `submitted=false`, paper IDs only, 1% risk cap |
+| Backend health / safety | `GET /api/health` · `GET /api/safety/status` | Live safety invariants as API payloads | Dry-run, read-only, live orders blocked |
+| Desktop shell | `frontend/src-tauri/` | Same product packaged as desktop EXE | Thin-shell, no extra privileges, GET-only |
 
 ---
 
-## What This Project Demonstrates
+## Technical Stack
 
-| Engineering skill | Where it shows |
+| Layer | Technology |
 |---|---|
-| **AI product engineering** | Signal reasoning panel, screenshot review flow, safety-aware UX patterns |
-| **Safe fintech UX** | Read-only posture enforced simultaneously at UI, API, and test layers |
-| **FastAPI + React architecture** | Typed Pydantic schemas, poll-only frontend, CORS-safe cross-origin hosting |
-| **Deployment & debugging** | CORS root-cause analysis, Vercel build-time env var bake, SPA rewrite fix |
-| **Safety-first automation** | config.json + pytest safety contract, forbidden-path testing, validator script |
-| **Portfolio-quality evidence** | Smoke reports, PRs with detailed bodies, documented merge history |
-| **PWA / mobile engineering** | iOS/iPad-installable PWA, responsive mobile companion, multi-viewport CI |
-| **CI/CD** | GitHub Actions: pytest, Playwright e2e (54 tests, iPad + mobile viewports) |
+| Backend | Python 3.11+ · FastAPI · Pydantic |
+| Frontend | React · TypeScript · Vite |
+| Desktop | Tauri v2 thin-shell |
+| Testing | pytest (safety regression suite) · Playwright e2e (multi-viewport) |
+| Hosting | Render (API) · Vercel (web) |
+| CI/CD | GitHub Actions: quality (black/flake8), tests, build, Playwright |
+| Security | Bandit SAST · secret scanning · dependency vulnerability audit · forbidden-path tests |
+
+---
+
+## Current Status
+
+| Component | Status |
+|---|---|
+| Web demo | ✅ Live on Vercel |
+| Backend API | ✅ Live on Render |
+| Desktop EXE (Tauri) | ✅ Merged, hosted smoke passed (PR #271) |
+| Alpaca Paper read-only status | ✅ Merged (PR #273) |
+| Alpaca Paper order preview | ✅ Merged (PR #275) |
+| Mobile route | ✅ Live — screenshot refresh planned |
+| Real-money execution | ⛔ Intentionally blocked — not planned on this demo |
 
 ---
 
 ## Roadmap
 
-Honest, safe roadmap — no live trading planned.
+**Demo polish (current phase)**
+- README / showcase upgrade (this document)
+- Screenshot realism pass — true-viewport captures of the live app
+- Demo freeze report
 
-**Planned:**
-- [ ] Demo asset capture pack (annotated screenshots for portfolio)
-- [ ] Portfolio case study document
-- [ ] EXE / desktop wrapper exploration
-- [ ] PWA / mobile wrapper hardening
-- [ ] Better signal reasoning UI (expand AI reasoning panel)
-- [ ] Auth / persistent storage (only after explicit safety review)
+**After demo freeze**
+- Mobile polish: compact sticky header, quick-action behavior, install experience
+- Observability / audit polish: richer evidence trail and status reporting
+- Portfolio case study document
 
-**Explicitly not planned:**
-- Live trading
-- Real-money order execution
-- Unattended automated order placement
-- Broker live credentials in the repository
+**Paper trading safety (design only)**
+- Paper execution sandbox design — still no live paths
+
+**Real-money readiness (future only, heavily gated)**
+- Documented as a gated roadmap requiring reconciliation, risk engine, kill switch, audit, monitoring, and weeks of paper/shadow validation — **not implemented and not enabled in this demo**
+
+**Explicitly not planned on this demo**
+- Live trading · real-money order execution · unattended order placement · broker live credentials in the repository
+
+---
+
+## What This Project Proves
+
+For recruiters, clients, and technical reviewers:
+
+| Capability | Where it shows |
+|---|---|
+| **Safe product design** | Read-only posture enforced at UI, API, config, and test layers simultaneously |
+| **AI-assisted engineering workflow** | Staged task queue, review-bot gates (CodeRabbit / Sourcery / Codex), disciplined PR history |
+| **Frontend/backend integration** | Typed Pydantic schemas mirrored by TypeScript literal types; poll-only client |
+| **CI / review discipline** | Quality, tests, build, e2e, SAST, and secret scans green before every merge |
+| **Desktop / web / mobile delivery** | One product shipped across three surfaces on a shared backend |
+| **Risk-first thinking** | 1% risk cap, geometry validation, blocked-by-default responses (HTTP 200 `allowed=false`) |
+| **Public demo deployment** | Hosted Render + Vercel demo with CORS, SPA deep links, and smoke evidence |
+| **Complete product surface** | Not a script — a terminal, mobile route, desktop shell, API, and audit trail |
+
+---
+
+## Before You Begin
+
+- **This is a public demo.** It runs without secrets, accounts, or broker connections.
+- **Do not add real API keys** or broker credentials to any public demo deployment.
+- **Do not use outputs as financial advice.** All analysis is illustrative and runs on deterministic mocks by default.
+- **"Paper preview" means not submitted.** Previews never reach a broker — they exist to demonstrate safe product design.
+- **Real-money execution is intentionally blocked** at config, API, UI, and test level.
+
+---
+
+## Validation & Evidence
+
+- **Hosted smoke — PASS:** 21-check production smoke run, CORS verified, no unsafe controls found — [`docs/evidence/demo-008-hosted-smoke-pass.md`](docs/evidence/demo-008-hosted-smoke-pass.md)
+- **Safety validator:** `py -3.11 scripts/validate_safety_config.py` → OVERALL PASS
+- **Safety regression tests:** `py -3.11 -m pytest tests/app/test_safety_invariants.py tests/app/test_openapi_forbidden_paths.py -q`
+- **Static safety scan:** no `placeOrder(`, no `executeOrder(`, no "Place Order" / "Execute Trade" / "Submit Order" button text, no broker write paths, no secrets in source
+- **SPA deep links:** `/terminal`, `/mobile`, `/brokers` return HTTP 200 directly via [`frontend/vercel.json`](frontend/vercel.json)
 
 ---
 
@@ -234,10 +233,8 @@ npm run dev
 ```
 
 ```powershell
-# Safety validator
+# Safety validator + regression tests
 py -3.11 scripts/validate_safety_config.py
-
-# Safety regression tests
 py -3.11 -m pytest tests/app/test_safety_invariants.py tests/app/test_openapi_forbidden_paths.py -q
 ```
 
@@ -248,12 +245,12 @@ py -3.11 -m pytest tests/app/test_safety_invariants.py tests/app/test_openapi_fo
 ```text
 app/              FastAPI application — routes, schemas, services
 frontend/         React + TypeScript + Vite dashboard
-  vercel.json     SPA catch-all rewrite (deep-link fix, PR #269)
+  src-tauri/      Tauri v2 desktop thin-shell
+  vercel.json     SPA catch-all rewrite (deep-link fix)
 scripts/          Safety validator, local helper scripts
 tests/app/        Safety regression suite (pytest)
 docs/evidence/    Smoke test evidence reports
-docs/demo/        Demo docs and screenshot checklists
-docs/showcase/    Portfolio showcase docs
+docs/roadmap/     Roadmap and milestone plans
 config.json       Runtime safety config (autotrade=false, dry_run=true)
 ```
 
@@ -261,13 +258,13 @@ config.json       Runtime safety config (autotrade=false, dry_run=true)
 
 ## Beta Documentation
 
-For source-only beta operations, start here:
+Source-only beta operations start here:
 
 - [Beta Docs Index](docs/beta/README.md)
 - [Beta Rollout Operator Command Center](docs/beta/beta_rollout_operator_command_center.md)
 - [Beta Rollout Operator Master Checklist](docs/qa/beta_rollout_operator_master_checklist.md)
 
-> Source-only beta is read-only, dry-run-only, and manual. It does not approve live trading, broker execution, investment advice, or generated artifact releases.
+> Beta documentation is source-only planning and evidence material. It does not enable live trading, broker execution, or real-money order placement. The public demo remains read-only, dry-run, paper-only where applicable, and human-review gated.
 
 ---
 
@@ -276,34 +273,11 @@ For source-only beta operations, start here:
 This repository is for **educational, research, and paper-trading portfolio demonstration purposes only**.
 
 - **Not financial advice.** Nothing here constitutes investment advice, financial guidance, or a recommendation to trade any instrument.
-- **No live trading.** No real orders are or can be placed through this demo.
-- **Paper / simulation / read-only only.** All outputs are for analysis and planning preview only.
-- **Human review required.** No automated execution of any kind is enabled or planned.
+- **No live trading execution.** No real orders are or can be placed through this demo.
+- **Demo / paper / read-only functionality only.** All outputs are for analysis and planning preview only.
+- **Real-money execution is intentionally blocked.** No automated execution of any kind is enabled.
 - **No profit guarantee.** Past signal analysis does not imply future trading performance.
-- **No broker execution.** This demo does not connect to any live broker account.
-
----
-
-## GitHub About Metadata
-
-> *Proposed repository metadata — apply via GitHub repository Settings > About.*
-
-**Repository description:**
-```
-Safety-first read-only AI trading terminal and paper risk workspace with FastAPI, React, mobile PWA, AI screenshot review, audit evidence, and no live order execution.
-```
-
-**Website:**
-```
-https://alpha-data-scraper-ai.vercel.app
-```
-
-**Topics:**
-```
-ai  fintech  trading-dashboard  risk-management  fastapi  react  vite  pwa
-paper-trading  read-only  safety-first  portfolio-project  ai-dashboard
-automation  python
-```
+- **Human review required.** Every workflow assumes a human decision-maker.
 
 ---
 
