@@ -256,6 +256,18 @@ config.json       Runtime safety config (autotrade=false, dry_run=true)
 
 ---
 
+## Beta Documentation
+
+Source-only beta operations start here:
+
+- [Beta Docs Index](docs/beta/README.md)
+- [Beta Rollout Operator Command Center](docs/beta/beta_rollout_operator_command_center.md)
+- [Beta Rollout Operator Master Checklist](docs/qa/beta_rollout_operator_master_checklist.md)
+
+> Beta documentation is source-only planning and evidence material. It does not enable live trading, broker execution, or real-money order placement. The public demo remains read-only, dry-run, paper-only where applicable, and human-review gated.
+
+---
+
 ## Disclaimer
 
 This repository is for **educational, research, and paper-trading portfolio demonstration purposes only**.
