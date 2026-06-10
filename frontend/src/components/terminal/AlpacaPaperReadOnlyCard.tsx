@@ -10,6 +10,7 @@
 // real buying power, or real positions.
 
 import { useAlpacaPaperStatus } from "../../hooks/useAlpacaPaperStatus";
+import { AlpacaPaperOrderPreview } from "./AlpacaPaperOrderPreview";
 
 const STATUS_LABEL: Record<string, string> = {
   connected: "connected",
@@ -46,33 +47,37 @@ export function AlpacaPaperReadOnlyCard() {
     : [];
 
   return (
-    <section id="alpaca-paper-status" className="terminal-panel">
-      <div className="panel-header">
-        <span>Alpaca Paper</span>
-        <span className={statusClass}>
-          {loading && !view ? "polling…" : statusLabel}
-        </span>
-      </div>
+    <>
+      <section id="alpaca-paper-status" className="terminal-panel">
+        <div className="panel-header">
+          <span>Alpaca Paper</span>
+          <span className={statusClass}>
+            {loading && !view ? "polling…" : statusLabel}
+          </span>
+        </div>
 
-      <div className="guardrail-list">
-        {rows.map(([label, value]) => (
-          <div key={label} className="guardrail-row">
-            <span>{label}</span>
-            <strong>{value}</strong>
-          </div>
-        ))}
-      </div>
+        <div className="guardrail-list">
+          {rows.map(([label, value]) => (
+            <div key={label} className="guardrail-row">
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
 
-      <p className="panel-note">
-        No order routing. No credentials exposed. Advisory / demo status only —
-        not live trading.
-      </p>
-
-      {view?.source === "fallback" ? (
         <p className="panel-note">
-          Backend status unavailable — showing safe read-only fallback.
+          No order routing. No credentials exposed. Advisory / demo status only —
+          not live trading.
         </p>
-      ) : null}
-    </section>
+
+        {view?.source === "fallback" ? (
+          <p className="panel-note">
+            Backend status unavailable — showing safe read-only fallback.
+          </p>
+        ) : null}
+      </section>
+
+      <AlpacaPaperOrderPreview />
+    </>
   );
 }
