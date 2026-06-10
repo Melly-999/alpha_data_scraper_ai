@@ -132,9 +132,7 @@ def generate_alpaca_paper_order_preview(
                 "Alpaca paper order preview blocked — invalid short geometry."
             )
     else:
-        return _blocked(
-            f"Unknown side '{side}'. Must be BUY or SELL. Preview blocked."
-        )
+        return _blocked(f"Unknown side '{side}'. Must be BUY or SELL. Preview blocked.")
 
     # --- 3. All checks passed — build synthetic Alpaca paper order preview ---
 

@@ -57,9 +57,7 @@ class AlpacaPaperOrderPreviewOrder(BaseModel):
     fill_type: Literal["simulated"] = "simulated"
     broker: Literal["alpaca-paper-demo"] = "alpaca-paper-demo"
     submitted: Literal[False] = False
-    label: Literal["Preview only — not submitted"] = (
-        "Preview only — not submitted"
-    )
+    label: Literal["Preview only — not submitted"] = "Preview only — not submitted"
 
     # immutable safety contract
     paper_only: Literal[True] = True
@@ -84,7 +82,5 @@ class AlpacaPaperOrderPreviewResponse(AlpacaPaperSafetyFlags):
 
     # top-level Alpaca-paper-specific literals
     submitted: Literal[False] = False
-    label: Literal["Preview only — not submitted"] = (
-        "Preview only — not submitted"
-    )
+    label: Literal["Preview only — not submitted"] = "Preview only — not submitted"
     broker: Literal["alpaca-paper-demo"] = "alpaca-paper-demo"

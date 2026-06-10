@@ -134,8 +134,7 @@ def _assert_safety_flags(obj: dict[str, Any], context: str = "") -> None:
     for flag, expected in _SAFETY_FLAGS.items():
         assert flag in obj, f"Safety flag '{flag}' missing{label}"
         assert obj[flag] == expected, (
-            f"Safety flag '{flag}' expected {expected!r}, "
-            f"got {obj[flag]!r}{label}"
+            f"Safety flag '{flag}' expected {expected!r}, " f"got {obj[flag]!r}{label}"
         )
 
 
@@ -374,8 +373,7 @@ def test_mutating_methods_return_405(client, method: str) -> None:
     """POST/PUT/PATCH/DELETE must return 405 Method Not Allowed."""
     response = getattr(client, method)(ENDPOINT)
     assert response.status_code == 405, (
-        f"Expected 405 for {method.upper()} {ENDPOINT}, "
-        f"got {response.status_code}"
+        f"Expected 405 for {method.upper()} {ENDPOINT}, " f"got {response.status_code}"
     )
 
 
@@ -503,9 +501,9 @@ def test_blocked_response_has_no_forbidden_fields(client) -> None:
 def test_endpoint_is_registered_in_openapi(client) -> None:
     """Endpoint must appear in the OpenAPI schema."""
     schema = client.app.openapi()
-    assert ENDPOINT in schema["paths"], (
-        f"{ENDPOINT} not found in OpenAPI paths: {list(schema['paths'].keys())}"
-    )
+    assert (
+        ENDPOINT in schema["paths"]
+    ), f"{ENDPOINT} not found in OpenAPI paths: {list(schema['paths'].keys())}"
 
 
 def test_endpoint_is_get_only_in_openapi(client) -> None:
@@ -519,33 +517,36 @@ def test_endpoint_has_correct_operation_id(client) -> None:
     """operation_id must be 'get_alpaca_paper_order_preview'."""
     schema = client.app.openapi()
     op_id = schema["paths"][ENDPOINT]["get"].get("operationId")
-    assert op_id == "get_alpaca_paper_order_preview", (
-        f"Expected operation_id 'get_alpaca_paper_order_preview', got {op_id!r}"
-    )
+    assert (
+        op_id == "get_alpaca_paper_order_preview"
+    ), f"Expected operation_id 'get_alpaca_paper_order_preview', got {op_id!r}"
 
 
 def test_endpoint_has_alpaca_paper_tag(client) -> None:
     """Endpoint must be tagged 'alpaca-paper'."""
     schema = client.app.openapi()
     tags = schema["paths"][ENDPOINT]["get"].get("tags", [])
-    assert "alpaca-paper" in tags, (
-        f"Expected 'alpaca-paper' tag, got {tags!r}"
-    )
+    assert "alpaca-paper" in tags, f"Expected 'alpaca-paper' tag, got {tags!r}"
 
 
 def test_no_execution_shaped_path_in_openapi(client) -> None:
     """No execution-shaped paths must appear in the OpenAPI schema."""
     schema = client.app.openapi()
     forbidden_segments = {
-        "execute", "place_order", "submit_order", "autotrade", "live",
-        "place-order", "submit-order",
+        "execute",
+        "place_order",
+        "submit_order",
+        "autotrade",
+        "live",
+        "place-order",
+        "submit-order",
     }
     for path in schema.get("paths", {}):
         parts = {p for p in path.split("/") if p}
         leaked = sorted(parts & forbidden_segments)
-        assert not leaked, (
-            f"Forbidden path segment(s) {leaked!r} found in path {path!r}"
-        )
+        assert (
+            not leaked
+        ), f"Forbidden path segment(s) {leaked!r} found in path {path!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -574,9 +575,7 @@ def test_service_module_has_no_broker_imports() -> None:
     """Service module must not import any live broker SDK."""
     import app.services.alpaca_paper_order_preview_service as svc_module
 
-    _assert_no_broker_imports(
-        inspect.getsource(svc_module), "service module"
-    )
+    _assert_no_broker_imports(inspect.getsource(svc_module), "service module")
 
 
 # ---------------------------------------------------------------------------
@@ -596,7 +595,4 @@ def test_different_symbols_produce_different_ids(client) -> None:
     """Different symbols must produce different paper_order_id values."""
     body_aapl = client.get(ENDPOINT, params=_buy_params(symbol="AAPL")).json()
     body_msft = client.get(ENDPOINT, params=_buy_params(symbol="MSFT")).json()
-    assert (
-        body_aapl["order"]["paper_order_id"]
-        != body_msft["order"]["paper_order_id"]
-    )
+    assert body_aapl["order"]["paper_order_id"] != body_msft["order"]["paper_order_id"]
