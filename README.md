@@ -58,20 +58,17 @@ The safety regression suite (`tests/app/test_safety_invariants.py`, `test_openap
 
 ## Demo Screenshots
 
-<!-- screenshot: terminal -->
-*Terminal dashboard — red/black institutional UI with safety banner, signal workspace, audit feed, and risk posture*
+![MellyTrade terminal dashboard with read-only safety banner](docs/assets/screenshots/public-demo/terminal-home.png)
+*Terminal dashboard — institutional dark UI with safety banner, signal workspace, audit feed, and risk posture.*
 
-<!-- screenshot: mobile-pwa -->
-*Mobile / PWA view — AI companion, Paper Game Plan, Safety Score, FOMO Guard, Melly Pet risk coach*
+![MellyTrade mobile PWA command center](docs/assets/screenshots/public-demo/mobile-pwa.png)
+*Mobile / PWA view — AI companion, Paper Game Plan, Safety Score, FOMO Guard, and paper-only review flow.*
 
-<!-- screenshot: ai-screenshot-review -->
-*AI Screenshot Review — upload a chart image, receive analysis-only paper preview (image never stored)*
+![MellyTrade AI screenshot review paper-only result](docs/assets/screenshots/public-demo/ai-screenshot-review-result.png)
+*AI Screenshot Review — chart image review surface with analysis-only, paper-only, not-stored, and human-review framing.*
 
-<!-- screenshot: safety-badges -->
-*Safety badge rail — DRY RUN · READ ONLY · HUMAN REVIEW REQUIRED · LIVE ORDERS BLOCKED on every key view*
-
-<!-- screenshot: broker-readonly -->
-*Broker status — safe disconnected read-only state, no execution controls visible*
+![MellyTrade broker status read-only guardrails](docs/assets/screenshots/public-demo/brokers-readonly.png)
+*Broker status — read-only degraded paper adapter with `execution_enabled=false`, orders denied, and no execution controls visible.*
 
 ---
 
