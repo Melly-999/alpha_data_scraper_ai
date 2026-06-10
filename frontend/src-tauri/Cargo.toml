@@ -1,0 +1,19 @@
+[package]
+name = "mellytrade"
+version = "0.1.0"
+description = "MellyTrade desktop thin shell — read-only paper preview over the hosted backend. No live trading, no broker execution, no secrets."
+edition = "2021"
+rust-version = "1.77.2"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
