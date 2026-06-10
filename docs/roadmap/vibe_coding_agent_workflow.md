@@ -75,11 +75,13 @@ Use this structure after each task:
 
 ```text
 Findings:
+Branch:
 Scope:
 Tests:
-Safety issues:
+Safety posture:
 Secrets scan:
-Recommendation:
+Validation:
+Verdict:
 ```
 
 ## Safety Scan Checklist
