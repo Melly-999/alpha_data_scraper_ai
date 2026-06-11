@@ -65,8 +65,8 @@ def readonly_connection() -> Iterator[psycopg.Connection[Any]]:
         raise RuntimeError("DATABASE_URL is not configured.")
 
     with psycopg.connect(database_url, row_factory=dict_row) as conn:
-        conn.execute("SET default_transaction_read_only = on")
-        yield conn
+        with conn.transaction(read_only=True):
+            yield conn
 
 
 def fetch_all(sql: str, params: tuple[Any, ...] | None = None) -> list[dict[str, Any]]:
