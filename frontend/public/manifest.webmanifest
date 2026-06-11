@@ -6,17 +6,23 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#07090c",
-  "theme_color": "#0a0d11",
+  "background_color": "#070A0D",
+  "theme_color": "#070A0D",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
+      "src": "/icons/mellytrade-icon-128.png",
+      "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/mellytrade-icon-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/mellytrade-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
