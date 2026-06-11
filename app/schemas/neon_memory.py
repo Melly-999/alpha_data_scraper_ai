@@ -28,9 +28,9 @@ class NeonMemoryStatus(AlpacaPaperSafetyFlags):
     database_reachable: bool
     postgres_version: str | None = None
     current_database: str | None = None
-    neon_project_id: str = "fragrant-river-86681973"
+    neon_project_id: str = "example-project"
     neon_branch: str = "production"
-    ace_namespace: str = "mateusz-workspace"
+    ace_namespace: str = "example-workspace"
     message: str
     note: str = "GET-only memory introspection. No writes or execution."
 
@@ -43,7 +43,7 @@ class NeonMemorySummary(AlpacaPaperSafetyFlags):
     availability: str
     mode: str = "read-only"
     source: str
-    ace_namespace: str = "mateusz-workspace"
+    ace_namespace: str = "example-workspace"
     tables: List[NeonMemoryTableCount] = Field(default_factory=list)
     total_rows: int = 0
     message: str
