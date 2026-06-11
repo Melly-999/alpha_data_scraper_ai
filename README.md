@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/design/assets/mellytrade-brand/exports/mellytrade_logo_horizontal_dark_1280x320.png" alt="MellyTrade — institutional AI workstation" width="760" />
+</p>
+
 # MellyTrade
 
 **Safety-first AI trading terminal and paper-risk workspace.**
