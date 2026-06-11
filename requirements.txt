@@ -1,3 +1,6 @@
 fastapi
+numpy
+pandas
 pydantic
 psycopg[binary]
+scikit-learn
