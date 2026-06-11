@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Melly Pet community mascot badge">
+  <!-- Melly Pet community badge — SECONDARY / COMMUNITY IDENTITY ONLY.
+       Head and upper body crop, circular-safe, no text.
+       Intended for Discord avatars and community/social surfaces.
+       This is NOT the official MellyTrade logo (official = MT monogram + wordmark).
+       Approved direction: docs/design/mellytrade_visual_identity_board_summary.md
+       Status: draft-review. -->
+  <defs>
+    <clipPath id="mp-circle">
+      <circle cx="128" cy="128" r="123"/>
+    </clipPath>
+  </defs>
+
+  <!-- badge field -->
+  <circle cx="128" cy="128" r="123" fill="#070A0D"/>
+
+  <!-- pixel mascot: 11px grid, head + suit upper body, clipped to circle -->
+  <g clip-path="url(#mp-circle)" shape-rendering="crispEdges">
+    <!-- ears -->
+    <rect x="73"  y="40" width="22" height="22" fill="#F27A4D"/>
+    <rect x="161" y="40" width="22" height="22" fill="#F27A4D"/>
+    <rect x="84"  y="51" width="11" height="11" fill="#FF9A6A"/>
+    <rect x="161" y="51" width="11" height="11" fill="#FF9A6A"/>
+
+    <!-- head -->
+    <rect x="62" y="62" width="132" height="77" fill="#F27A4D"/>
+    <!-- soft highlight, top-left -->
+    <rect x="62" y="62" width="33" height="11" fill="#FF9A6A"/>
+    <rect x="62" y="73" width="11" height="22" fill="#FF9A6A"/>
+
+    <!-- eyes -->
+    <rect x="95"  y="84" width="11" height="22" fill="#0D1117"/>
+    <rect x="150" y="84" width="11" height="22" fill="#0D1117"/>
+
+    <!-- cheeks -->
+    <rect x="73"  y="106" width="11" height="11" fill="#FF9A6A"/>
+    <rect x="172" y="106" width="11" height="11" fill="#FF9A6A"/>
+
+    <!-- friendly mouth -->
+    <rect x="117" y="117" width="22" height="11" fill="#0D1117"/>
+
+    <!-- broker suit, upper body (extends past frame, cropped by circle) -->
+    <rect x="84" y="139" width="88"  height="11" fill="#0D1117"/>
+    <rect x="73" y="150" width="110" height="11" fill="#0D1117"/>
+    <rect x="62" y="161" width="132" height="99" fill="#0D1117"/>
+    <!-- suit edge highlights so the black jacket stays legible on #070A0D -->
+    <rect x="62"  y="161" width="11" height="99" fill="#2A313A"/>
+    <rect x="183" y="161" width="11" height="99" fill="#2A313A"/>
+    <rect x="106" y="150" width="11" height="11" fill="#2A313A"/>
+    <rect x="139" y="150" width="11" height="11" fill="#2A313A"/>
+
+    <!-- white shirt -->
+    <rect x="106" y="139" width="44" height="11" fill="#F4F6F8"/>
+    <rect x="117" y="150" width="22" height="11" fill="#F4F6F8"/>
+
+    <!-- amber tie -->
+    <rect x="117" y="161" width="22" height="44" fill="#D6A84F"/>
+  </g>
+
+  <!-- badge ring -->
+  <circle cx="128" cy="128" r="123" fill="none" stroke="#2A313A" stroke-width="3"/>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" width="320" height="120" role="img" aria-label="MellyTrade secondary terminal badge">
+  <!-- MellyTrade secondary identity: restrained terminal badge.
+       For README banners, splash panels, product-safe brand moments.
+       Shows terminal posture only — no execution UI, no actionable controls.
+       Approved direction: docs/design/mellytrade_visual_identity_board_summary.md
+       Status: draft-review. -->
+
+  <!-- terminal window frame -->
+  <rect x="1" y="1" width="318" height="118" rx="12" fill="#10151B" stroke="#2A313A" stroke-width="2"/>
+
+  <!-- title bar dots (decorative window chrome) -->
+  <circle cx="20" cy="18" r="4" fill="#4B5563"/>
+  <circle cx="34" cy="18" r="4" fill="#7B8491"/>
+  <circle cx="48" cy="18" r="4" fill="#F27A4D"/>
+  <line x1="1" y1="32" x2="319" y2="32" stroke="#2A313A" stroke-width="1.5"/>
+
+  <!-- subtle mascot reference: tiny pixel "ears" mark, top right (non-figurative) -->
+  <g fill="#F27A4D" shape-rendering="crispEdges" opacity="0.9">
+    <rect x="288" y="12" width="5" height="5"/>
+    <rect x="298" y="12" width="5" height="5"/>
+    <rect x="288" y="17" width="15" height="5" fill="#FF9A6A" opacity="0.55"/>
+  </g>
+
+  <!-- prompt line -->
+  <text x="20" y="64" font-family="JetBrains Mono, IBM Plex Mono, Space Mono, Consolas, monospace" font-size="20" font-weight="700">
+    <tspan fill="#D6A84F">&gt;</tspan><tspan fill="#F4F6F8" dx="8">MellyTrade</tspan>
+  </text>
+  <!-- block cursor -->
+  <rect x="178" y="48" width="10" height="19" fill="#F27A4D" shape-rendering="crispEdges"/>
+
+  <!-- safety posture strip (brand element, not a feature claim) -->
+  <text x="20" y="94" font-family="JetBrains Mono, IBM Plex Mono, Space Mono, Consolas, monospace" font-size="10" letter-spacing="1" fill="#7B8491">READ ONLY &#183; PAPER SANDBOX &#183; AI WORKSPACE</text>
+</svg>

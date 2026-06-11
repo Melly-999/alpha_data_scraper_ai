@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" width="640" height="160" role="img" aria-label="MellyTrade official horizontal logo, dark variant">
+  <!-- MellyTrade official horizontal logo (dark background variant).
+       Primary official identity: MT pixel monogram + MellyTrade wordmark.
+       Approved direction: docs/design/mellytrade_visual_identity_board_summary.md
+       Text is editable SVG text with a fallback stack; outline to paths in
+       Figma/Illustrator for final production export. Status: draft-review. -->
+  <defs>
+    <linearGradient id="hz-accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F27A4D"/>
+      <stop offset="1" stop-color="#D6A84F"/>
+    </linearGradient>
+  </defs>
+
+  <!-- deep terminal background -->
+  <rect x="0" y="0" width="640" height="160" rx="14" fill="#070A0D"/>
+
+  <!-- MT monogram tile -->
+  <g transform="translate(32,32)">
+    <rect x="1" y="1" width="94" height="94" rx="12" fill="#10151B" stroke="#2A313A" stroke-width="2"/>
+    <g transform="translate(15,16)" fill="#F4F6F8" shape-rendering="crispEdges">
+      <rect x="0"  y="0" width="6"  height="42"/>
+      <rect x="24" y="0" width="6"  height="42"/>
+      <rect x="6"  y="6" width="6"  height="6"/>
+      <rect x="18" y="6" width="6"  height="6"/>
+      <rect x="12" y="12" width="6" height="6"/>
+      <rect x="36" y="0" width="30" height="6"/>
+      <rect x="48" y="6" width="6"  height="36"/>
+    </g>
+    <rect x="15" y="70" width="66" height="5" fill="url(#hz-accent)" shape-rendering="crispEdges"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="156" y="90" font-family="Space Grotesk, Sora, Geist, Inter, Arial, sans-serif" font-size="54" font-weight="700" letter-spacing="-1">
+    <tspan fill="#F4F6F8">Melly</tspan><tspan fill="#F27A4D">Trade</tspan>
+  </text>
+
+  <!-- terminal sub-label -->
+  <text x="158" y="120" font-family="JetBrains Mono, IBM Plex Mono, Space Mono, Consolas, monospace" font-size="12" letter-spacing="4" fill="#D6A84F">INSTITUTIONAL AI WORKSTATION</text>
+</svg>

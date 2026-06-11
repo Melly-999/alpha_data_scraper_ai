@@ -1,0 +1,75 @@
+{
+  "pack": "mellytrade-brand",
+  "version": "1.0.0-draft",
+  "status": "draft-review",
+  "source_docs": [
+    "docs/design/mellytrade_visual_identity_board_summary.md",
+    "docs/design/mellytrade_visual_identity_prompt_pack.md"
+  ],
+  "hierarchy_rule": "Official MellyTrade logo is MT pixel monogram + wordmark. Melly Pet mascot is secondary/community only and is never the primary official logo.",
+  "safety_notes": "Brand assets only. No buy/sell/order/execute controls, no broker execution, no live-trading UX, no profit claims, no secrets, no credentials, no account IDs. Safety badges (READ ONLY / PAPER SANDBOX / AI WORKSPACE) are descriptive brand elements.",
+  "assets": [
+    {
+      "name": "Official horizontal logo (dark)",
+      "file": "docs/design/assets/mellytrade-brand/mellytrade_logo_horizontal_dark.svg",
+      "type": "logo/svg",
+      "role": "primary-official",
+      "intended_use": ["github", "readme-header", "website-header", "app-header"],
+      "background": "#070A0D",
+      "primary_colors": ["#F4F6F8", "#F27A4D", "#D6A84F", "#10151B"],
+      "status": "draft-review"
+    },
+    {
+      "name": "Official stacked logo (dark)",
+      "file": "docs/design/assets/mellytrade-brand/mellytrade_logo_stacked_dark.svg",
+      "type": "logo/svg",
+      "role": "primary-official",
+      "intended_use": ["splash-screen", "readme-intro", "app-intro"],
+      "background": "#070A0D",
+      "primary_colors": ["#F4F6F8", "#F27A4D", "#D6A84F", "#10151B"],
+      "status": "draft-review"
+    },
+    {
+      "name": "MT pixel monogram tile",
+      "file": "docs/design/assets/mellytrade-brand/mellytrade_mt_monogram.svg",
+      "type": "monogram/svg",
+      "role": "primary-official",
+      "intended_use": ["favicon-base", "app-icon-base", "small-official-marks"],
+      "background": "#10151B",
+      "primary_colors": ["#F4F6F8", "#F27A4D", "#D6A84F"],
+      "status": "draft-review"
+    },
+    {
+      "name": "Terminal badge",
+      "file": "docs/design/assets/mellytrade-brand/mellytrade_terminal_badge.svg",
+      "type": "badge/svg",
+      "role": "secondary",
+      "intended_use": ["readme-banner", "product-safe-brand-moments"],
+      "background": "#10151B",
+      "primary_colors": ["#F4F6F8", "#D6A84F", "#F27A4D", "#7B8491"],
+      "status": "draft-review"
+    },
+    {
+      "name": "Melly Pet community badge",
+      "file": "docs/design/assets/mellytrade-brand/melly_pet_community_badge.svg",
+      "type": "mascot-badge/svg",
+      "role": "community-secondary-only",
+      "intended_use": ["discord-avatar", "community-social-surfaces"],
+      "background": "#070A0D",
+      "primary_colors": ["#F27A4D", "#FF9A6A", "#0D1117", "#F4F6F8", "#D6A84F"],
+      "status": "draft-review",
+      "notes": "Head and upper body only, circular-crop safe, no text. Never use as the official MellyTrade logo."
+    },
+    {
+      "name": "Preview contact sheet",
+      "file": "docs/design/assets/mellytrade-brand/preview_contact_sheet.svg",
+      "type": "preview/svg",
+      "role": "review-aid",
+      "intended_use": ["pr-review", "documentation"],
+      "background": "#161C23",
+      "primary_colors": ["#F4F6F8", "#F27A4D", "#D6A84F"],
+      "status": "draft-review",
+      "notes": "Generated composition for review only; individual SVGs are the source of truth."
+    }
+  ]
+}

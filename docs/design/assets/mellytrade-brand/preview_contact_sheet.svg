@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="900" height="600" role="img" aria-label="MellyTrade brand asset pack contact sheet">
+  <!-- Generated preview contact sheet for review convenience.
+       Source of truth is the individual SVG files in this folder.
+       Status: draft-review. -->
+  <defs>
+    <linearGradient id="cs-accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F27A4D"/>
+      <stop offset="1" stop-color="#D6A84F"/>
+    </linearGradient>
+    <clipPath id="cs-circle">
+      <circle cx="128" cy="128" r="123"/>
+    </clipPath>
+    <g id="cs-tile">
+      <rect x="1" y="1" width="94" height="94" rx="12" fill="#10151B" stroke="#2A313A" stroke-width="2"/>
+      <g transform="translate(15,16)" fill="#F4F6F8" shape-rendering="crispEdges">
+        <rect x="0"  y="0" width="6"  height="42"/>
+        <rect x="24" y="0" width="6"  height="42"/>
+        <rect x="6"  y="6" width="6"  height="6"/>
+        <rect x="18" y="6" width="6"  height="6"/>
+        <rect x="12" y="12" width="6" height="6"/>
+        <rect x="36" y="0" width="30" height="6"/>
+        <rect x="48" y="6" width="6"  height="36"/>
+      </g>
+      <rect x="15" y="70" width="66" height="5" fill="url(#cs-accent)" shape-rendering="crispEdges"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="600" fill="#161C23"/>
+  <text x="40" y="44" font-family="Space Grotesk, Sora, Geist, Inter, Arial, sans-serif" font-size="20" font-weight="700" fill="#F4F6F8">MellyTrade Brand Asset Pack — Contact Sheet</text>
+  <text x="40" y="64" font-family="JetBrains Mono, IBM Plex Mono, Consolas, monospace" font-size="10" letter-spacing="1" fill="#7B8491">OFFICIAL = MT MONOGRAM + WORDMARK &#183; MELLY PET = SECONDARY / COMMUNITY ONLY &#183; DRAFT-REVIEW</text>
+
+  <!-- 1. MT monogram -->
+  <use href="#cs-tile" transform="translate(40,96)"/>
+  <text x="40" y="216" font-family="JetBrains Mono, IBM Plex Mono, Consolas, monospace" font-size="10" fill="#7B8491">mellytrade_mt_monogram.svg</text>
+
+  <!-- 2. Horizontal logo -->
+  <g transform="translate(220,96) scale(0.82)">
+    <rect x="0" y="0" width="640" height="160" rx="14" fill="#070A0D"/>
+    <use href="#cs-tile" transform="translate(32,32)"/>
+    <text x="156" y="90" font-family="Space Grotesk, Sora, Geist, Inter, Arial, sans-serif" font-size="54" font-weight="700" letter-spacing="-1">
+      <tspan fill="#F4F6F8">Melly</tspan><tspan fill="#F27A4D">Trade</tspan>
+    </text>
+    <text x="158" y="120" font-family="JetBrains Mono, IBM Plex Mono, Space Mono, Consolas, monospace" font-size="12" letter-spacing="4" fill="#D6A84F">INSTITUTIONAL AI WORKSTATION</text>
+  </g>
+  <text x="220" y="246" font-family="JetBrains Mono, IBM Plex Mono, Consolas, monospace" font-size="10" fill="#7B8491">mellytrade_logo_horizontal_dark.svg</text>
+
+  <!-- 3. Stacked logo -->
+  <g transform="translate(40,290) scale(0.62)">
+    <rect x="0" y="0" width="360" height="340" rx="14" fill="#070A0D"/>
+    <use href="#cs-tile" transform="translate(132,32)"/>
+    <text x="180" y="198" text-anchor="middle" font-family="Space Grotesk, Sora, Geist, Inter, Arial, sans-serif" font-size="42" font-weight="700" letter-spacing="-0.5">
+      <tspan fill="#F4F6F8">Melly</tspan><tspan fill="#F27A4D">Trade</tspan>
+    </text>
+    <text x="180" y="226" text-anchor="middle" font-family="JetBrains Mono, IBM Plex Mono, Space Mono, Consolas, monospace" font-size="10" letter-spacing="3" fill="#D6A84F">INSTITUTIONAL AI WORKSTATION</text>
+    <rect x="38" y="256" width="284" height="30" rx="8" fill="#10151B" stroke="#2A313A" stroke-width="1.5"/>
+    <text x="180" y="275" text-anchor="middle" font-family="JetBrains Mono, IBM Plex Mono, Space Mono, Consolas, monospace" font-size="10" letter-spacing="1.5" fill="#7B8491">READ ONLY / PAPER SANDBOX / AI WORKSPACE</text>
+  </g>
+  <text x="40" y="530" font-family="JetBrains Mono, IBM Plex Mono, Consolas, monospace" font-size="10" fill="#7B8491">mellytrade_logo_stacked_dark.svg</text>
+
+  <!-- 4. Terminal badge -->
+  <g transform="translate(310,310)">
+    <rect x="1" y="1" width="318" height="118" rx="12" fill="#10151B" stroke="#2A313A" stroke-width="2"/>
+    <circle cx="20" cy="18" r="4" fill="#4B5563"/>
+    <circle cx="34" cy="18" r="4" fill="#7B8491"/>
+    <circle cx="48" cy="18" r="4" fill="#F27A4D"/>
+    <line x1="1" y1="32" x2="319" y2="32" stroke="#2A313A" stroke-width="1.5"/>
+    <g fill="#F27A4D" shape-rendering="crispEdges" opacity="0.9">
+      <rect x="288" y="12" width="5" height="5"/>
+      <rect x="298" y="12" width="5" height="5"/>
+      <rect x="288" y="17" width="15" height="5" fill="#FF9A6A" opacity="0.55"/>
+    </g>
+    <text x="20" y="64" font-family="JetBrains Mono, IBM Plex Mono, Space Mono, Consolas, monospace" font-size="20" font-weight="700">
+      <tspan fill="#D6A84F">&gt;</tspan><tspan fill="#F4F6F8" dx="8">MellyTrade</tspan>
+    </text>
+    <rect x="178" y="48" width="10" height="19" fill="#F27A4D" shape-rendering="crispEdges"/>
+    <text x="20" y="94" font-family="JetBrains Mono, IBM Plex Mono, Space Mono, Consolas, monospace" font-size="10" letter-spacing="1" fill="#7B8491">READ ONLY &#183; PAPER SANDBOX &#183; AI WORKSPACE</text>
+  </g>
+  <text x="310" y="460" font-family="JetBrains Mono, IBM Plex Mono, Consolas, monospace" font-size="10" fill="#7B8491">mellytrade_terminal_badge.svg</text>
+
+  <!-- 5. Melly Pet community badge -->
+  <g transform="translate(680,300) scale(0.72)">
+    <circle cx="128" cy="128" r="123" fill="#070A0D"/>
+    <g clip-path="url(#cs-circle)" shape-rendering="crispEdges">
+      <rect x="73"  y="40" width="22" height="22" fill="#F27A4D"/>
+      <rect x="161" y="40" width="22" height="22" fill="#F27A4D"/>
+      <rect x="84"  y="51" width="11" height="11" fill="#FF9A6A"/>
+      <rect x="161" y="51" width="11" height="11" fill="#FF9A6A"/>
+      <rect x="62" y="62" width="132" height="77" fill="#F27A4D"/>
+      <rect x="62" y="62" width="33" height="11" fill="#FF9A6A"/>
+      <rect x="62" y="73" width="11" height="22" fill="#FF9A6A"/>
+      <rect x="95"  y="84" width="11" height="22" fill="#0D1117"/>
+      <rect x="150" y="84" width="11" height="22" fill="#0D1117"/>
+      <rect x="73"  y="106" width="11" height="11" fill="#FF9A6A"/>
+      <rect x="172" y="106" width="11" height="11" fill="#FF9A6A"/>
+      <rect x="117" y="117" width="22" height="11" fill="#0D1117"/>
+      <rect x="84" y="139" width="88"  height="11" fill="#0D1117"/>
+      <rect x="73" y="150" width="110" height="11" fill="#0D1117"/>
+      <rect x="62" y="161" width="132" height="99" fill="#0D1117"/>
+      <rect x="62"  y="161" width="11" height="99" fill="#2A313A"/>
+      <rect x="183" y="161" width="11" height="99" fill="#2A313A"/>
+      <rect x="106" y="150" width="11" height="11" fill="#2A313A"/>
+      <rect x="139" y="150" width="11" height="11" fill="#2A313A"/>
+      <rect x="106" y="139" width="44" height="11" fill="#F4F6F8"/>
+      <rect x="117" y="150" width="22" height="11" fill="#F4F6F8"/>
+      <rect x="117" y="161" width="22" height="44" fill="#D6A84F"/>
+    </g>
+    <circle cx="128" cy="128" r="123" fill="none" stroke="#2A313A" stroke-width="3"/>
+  </g>
+  <text x="680" y="510" font-family="JetBrains Mono, IBM Plex Mono, Consolas, monospace" font-size="10" fill="#7B8491">melly_pet_community_badge.svg</text>
+</svg>
