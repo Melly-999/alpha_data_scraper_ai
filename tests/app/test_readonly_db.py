@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import textwrap
+from typing import Literal
 
 import pytest
 
@@ -64,10 +65,11 @@ def test_readonly_helpers_use_read_only_transaction_and_params(
     calls: list[tuple[str, object]] = []
 
     class _FakeTransaction:
-        def __enter__(self) -> None:
+        def __enter__(self) -> "_FakeTransaction":
             calls.append(("transaction_enter", True))
+            return self
 
-        def __exit__(self, exc_type, exc, tb) -> bool:
+        def __exit__(self, exc_type, exc, tb) -> Literal[False]:
             calls.append(("transaction_exit", exc_type))
             return False
 
@@ -76,7 +78,7 @@ def test_readonly_helpers_use_read_only_transaction_and_params(
             calls.append(("cursor_enter", None))
             return self
 
-        def __exit__(self, exc_type, exc, tb) -> bool:
+        def __exit__(self, exc_type, exc, tb) -> Literal[False]:
             calls.append(("cursor_exit", exc_type))
             return False
 
@@ -91,16 +93,19 @@ def test_readonly_helpers_use_read_only_transaction_and_params(
             calls.append(("connect_enter", None))
             return self
 
-        def __exit__(self, exc_type, exc, tb) -> bool:
+        def __exit__(self, exc_type, exc, tb) -> Literal[False]:
             calls.append(("connect_exit", exc_type))
             return False
 
-        def transaction(self, read_only: bool = False) -> _FakeTransaction:
-            calls.append(("transaction", read_only))
+        def transaction(self) -> _FakeTransaction:
+            calls.append(("transaction", None))
             return _FakeTransaction()
 
         def cursor(self) -> _FakeCursor:
             return _FakeCursor()
+
+        def execute(self, sql: str) -> None:
+            calls.append(("execute", sql))
 
     monkeypatch.setenv("DATABASE_URL", "postgresql://example")
     monkeypatch.setattr(
@@ -112,6 +117,9 @@ def test_readonly_helpers_use_read_only_transaction_and_params(
     with readonly_connection() as conn:
         assert isinstance(conn, _FakeConnection)
 
+    assert ("transaction", None) in calls
+    assert ("execute", "SET TRANSACTION READ ONLY") in calls
+
     rows = fetch_all("  SELECT * FROM memories WHERE id = %s", (7,))
     assert rows == [{"id": 1}, {"id": 2}]
 
@@ -121,7 +129,6 @@ def test_readonly_helpers_use_read_only_transaction_and_params(
     )
     assert first == {"id": 1}
 
-    assert ("transaction", True) in calls
     assert (
         "execute",
         ("  SELECT * FROM memories WHERE id = %s", (7,)),

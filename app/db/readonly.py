@@ -65,7 +65,8 @@ def readonly_connection() -> Iterator[psycopg.Connection[Any]]:
         raise RuntimeError("DATABASE_URL is not configured.")
 
     with psycopg.connect(database_url, row_factory=dict_row) as conn:
-        with conn.transaction(read_only=True):
+        with conn.transaction():
+            conn.execute("SET TRANSACTION READ ONLY")
             yield conn
 
 
