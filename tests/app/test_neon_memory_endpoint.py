@@ -56,9 +56,7 @@ def test_neon_memory_summary_is_get_only_and_safe_without_database(client, monke
 
 def test_neon_memory_status_degrades_when_psycopg_driver_missing(client, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "postgresql://user:pass@host/neondb")
-    monkeypatch.setattr(
-        "app.services.neon_memory.is_driver_available", lambda: False
-    )
+    monkeypatch.setattr("app.services.neon_memory.is_driver_available", lambda: False)
 
     response = client.get("/api/neon-memory/status")
     data = response.json()

@@ -16,6 +16,7 @@ from app.schemas.neon_memory import (
 def _ace_namespace() -> str:
     return os.environ.get("ACE_NAMESPACE", "example-workspace")
 
+
 _ACE_TABLES = (
     "memories",
     "decisions",
