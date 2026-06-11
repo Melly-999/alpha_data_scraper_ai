@@ -36,6 +36,7 @@ from app.api.routes import (
     terminal,
     watchlist,
 )
+from app.api.routes.neon_memory import router as neon_memory_router
 from app.core.container import build_container
 from app.core.settings import load_settings
 from app.schemas.common import LogCategory, Severity
@@ -155,3 +156,4 @@ for router in (
     app.include_router(router, prefix="/api")
 
 app.include_router(health.router)
+app.include_router(neon_memory_router)

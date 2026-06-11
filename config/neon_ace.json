@@ -1,0 +1,18 @@
+{
+  "organization_id": "org-bitter-forest-07173841",
+  "organization_name": "Mateusz",
+  "project_id": "fragrant-river-86681973",
+  "project_name": "ace-mellytrade-memory",
+  "database": "neondb",
+  "branches": {
+    "local_default": "production",
+    "vercel_default": "vercel-dev"
+  },
+  "ace_namespace": "mateusz-workspace",
+  "ace_profile": "default",
+  "ace_config_path": "%USERPROFILE%/.ace/profiles/default/config.json",
+  "api_routes": {
+    "status": "/api/neon-memory/status",
+    "summary": "/api/neon-memory/summary"
+  }
+}
