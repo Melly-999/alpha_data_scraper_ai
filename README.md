@@ -26,6 +26,19 @@ MellyTrade is a read-only / dry-run fintech terminal demo for AI market analysis
 
 ---
 
+## Product Snapshot
+
+| | |
+|---|---|
+| **Product type** | Read-only AI trading workstation / portfolio-risk dashboard / paper sandbox demo |
+| **Status** | Active development — public read-only demo, hosted web + API |
+| **Core surfaces** | Web terminal · mobile route · desktop (Tauri) shell · read-only API |
+| **Safety posture** | `autotrade=false` · `dry_run=true` · `read_only=true` · live orders blocked · max risk ≤ 1% |
+| **Tech stack** | Python / FastAPI / Pydantic · React / TypeScript / Vite · Tauri v2 · pytest + Playwright |
+| **Audience** | Recruiters, technical reviewers, and anyone studying safety-first fintech product design |
+
+---
+
 ## Live Demo Matrix
 
 No account, no login, no API keys required. Every surface is read-only and paper/simulation only.
@@ -149,6 +162,18 @@ Safety Layer    Paper Preview Engine    Broker Read-only Surfaces
 
 ---
 
+## Brand & UX System
+
+MellyTrade ships with a documented, versioned brand system rather than ad-hoc graphics:
+
+- **Official identity** — the MT pixel monogram + MellyTrade wordmark (the banner above); locked direction documented in the [visual identity board summary](docs/design/mellytrade_visual_identity_board_summary.md)
+- **Melly Pet** — the pixel mascot is a **secondary, community-only** mark (Discord/social); it is never used as the official logo
+- **Asset pipeline** — SVG masters and PNG/ICO exports live in [`docs/design/assets/mellytrade-brand/`](docs/design/assets/mellytrade-brand/README.md) with a machine-readable manifest
+- **Wired into the product** — the favicon and PWA app icons in `frontend/public/` are the official MT monogram set; the app theme color matches the brand palette (`#070A0D`)
+- **Prohibited visuals by design** — no buy/sell/order/execute controls, no casino/gambling styling, no profit imagery, anywhere in the brand or UI
+
+---
+
 ## Current Status
 
 | Component | Status |
@@ -159,6 +184,9 @@ Safety Layer    Paper Preview Engine    Broker Read-only Surfaces
 | Alpaca Paper read-only status | ✅ Merged (PR #273) |
 | Alpaca Paper order preview | ✅ Merged (PR #275) |
 | Mobile route | ✅ Live — screenshot refresh planned |
+| Brand system (identity docs · SVG pack · PNG/ICO exports) | ✅ Merged (PRs #284, #285, #287) |
+| Official favicon / PWA icons wired into frontend | ✅ Merged (PR #288) |
+| README brand banner | ✅ Merged (PR #289) |
 | Real-money execution | ⛔ Intentionally blocked — not planned on this demo |
 
 ---
@@ -174,6 +202,8 @@ Safety Layer    Paper Preview Engine    Broker Read-only Surfaces
 - Mobile polish: compact sticky header, quick-action behavior, install experience
 - Observability / audit polish: richer evidence trail and status reporting
 - Portfolio case study document
+- Landing page / showcase polish
+- Optional 192px PWA icon export — only if a PWA install audit requires it
 
 **Paper trading safety (design only)**
 - Paper execution sandbox design — still no live paths
@@ -200,6 +230,8 @@ For recruiters, clients, and technical reviewers:
 | **Risk-first thinking** | 1% risk cap, geometry validation, blocked-by-default responses (HTTP 200 `allowed=false`) |
 | **Public demo deployment** | Hosted Render + Vercel demo with CORS, SPA deep links, and smoke evidence |
 | **Complete product surface** | Not a script — a terminal, mobile route, desktop shell, API, and audit trail |
+
+> **Portfolio note.** This project exists to demonstrate product thinking, safety-first AI workflow design, full-stack implementation (API, web, mobile route, desktop shell), documentation discipline, and UI/UX polish — as a verifiable public demo and Git history, not as a commercial trading product.
 
 ---
 
