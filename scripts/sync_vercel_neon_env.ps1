@@ -1,6 +1,7 @@
 # Sync Neon DATABASE_URL to Vercel environments for branch `vercel-dev`.
 # Requires: vercel CLI logged in, project linked (`vercel link`).
-# Usage: pwsh scripts/sync_vercel_neon_env.ps1 [-ProjectName <name>]
+# Usage: pwsh scripts/sync_vercel_neon_env.ps1 [-ProjectName <org/team scope>]
+# Note: `-ProjectName` maps to Vercel's `--scope` flag (team/org scope).
 
 param(
     [string]$ProjectName = ""

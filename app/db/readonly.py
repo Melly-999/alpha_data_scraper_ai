@@ -5,12 +5,17 @@ from __future__ import annotations
 import os
 import re
 from contextlib import contextmanager
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 import psycopg
 from psycopg.rows import dict_row
 
-_SELECT_ONLY = re.compile(r"^\s*(select|with)\b", re.IGNORECASE | re.DOTALL)
+_SELECT_ONLY_PATTERN = re.compile(r"^\s*(select|with)\b", re.IGNORECASE | re.DOTALL)
+_DANGEROUS_SQL_PATTERN = re.compile(
+    r"\b(insert|update|delete|drop|alter|create|truncate|grant|revoke|merge|call|copy|execute)\b",
+    re.IGNORECASE,
+)
 
 
 def get_database_url() -> str | None:
@@ -20,11 +25,35 @@ def get_database_url() -> str | None:
     return value or None
 
 
+def _strip_leading_comments(sql: str) -> str:
+    """Remove leading whitespace and SQL comments conservatively."""
+
+    remaining = sql.lstrip()
+    while remaining.startswith("--") or remaining.startswith("/*"):
+        if remaining.startswith("--"):
+            newline = remaining.find("\n")
+            if newline == -1:
+                return ""
+            remaining = remaining[newline + 1 :]
+        else:
+            end = remaining.find("*/")
+            if end == -1:
+                return ""
+            remaining = remaining[end + 2 :]
+        remaining = remaining.lstrip()
+    return remaining
+
+
 def assert_select_only(sql: str) -> None:
     """Reject any statement that is not a read-only SELECT/WITH query."""
 
-    if not _SELECT_ONLY.match(sql):
-        raise ValueError("Only read-only SELECT queries are allowed.")
+    statement = _strip_leading_comments(sql)
+    if not _SELECT_ONLY_PATTERN.match(statement):
+        raise ValueError("Only a single read-only SELECT or WITH query is allowed.")
+    if ";" in statement:
+        raise ValueError("Only a single read-only SELECT or WITH query is allowed.")
+    if _DANGEROUS_SQL_PATTERN.search(statement):
+        raise ValueError("Only a single read-only SELECT or WITH query is allowed.")
 
 
 @contextmanager

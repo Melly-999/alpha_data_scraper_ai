@@ -1,6 +1,6 @@
-fastapi
-numpy
-pandas
-pydantic
-psycopg[binary]
-scikit-learn
+fastapi==0.133.0
+numpy==2.4.6
+pandas==3.0.3
+pydantic==2.13.4
+psycopg[binary]==3.3.4
+scikit-learn==1.9.0
