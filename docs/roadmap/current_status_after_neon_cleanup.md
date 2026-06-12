@@ -1,6 +1,7 @@
 # Current Status — After Neon/ACE Hardening and Cleanup
 
-- **Last updated:** 2026-06-12
+- **Last updated:** 2026-06-12 (revised same day: M5 Render unblock completed —
+  see [docs/deployment/render_current_status.md](../deployment/render_current_status.md))
 - **Audience:** the next agent/maintainer session — use this as the baseline
   for Render/deploy unblock, demo freeze, recruiter/portfolio pack, and final
   evidence work.
@@ -40,10 +41,10 @@
 | **M2 — Fable Agent Operating Contract** | **DONE** (optional lessons backfill) | PR #291; contract already exercised on PRs #286/#291/#293 gates |
 | **M3 — Neon/ACE Read-only Memory Introspection** | **DONE** | PRs #286 + #293 at `1ecd14f`; 28 tests green; boot-safe without psycopg; optional later: dedicated read-only DB role |
 | **M4 — Repo Hygiene / Cleanup** | **IN PROGRESS / MOSTLY DONE** | Neon cleanup done (#292 closed, worktrees/branches removed); remaining: stale PR closeout (#18/#17/#12/#10/#7, #283 decision), merged-branch pruning, primary repo dir triage |
-| **M5 — Render / Hosted Backend Deploy Unblock** | **NEXT / IN PROGRESS** | README demo matrix lists a live Render health endpoint; unmerged branch `docs/render-github-access-blocker` suggests an external GitHub/Render access item that needs verification |
+| **M5 — Render / Hosted Backend Deploy Unblock** | **DONE** (2026-06-12) | GitHub App access confirmed healthy; one user-approved manual deploy succeeded; hosted backend now serves current main incl. Neon routes (`/api/neon-memory/status` 404 → 200 degraded-read-only); CORS echoes Vercel origin; details in [render_current_status.md](../deployment/render_current_status.md). Neon stays intentionally unconfigured (no `DATABASE_URL` on Render) — safe degraded mode, not a failure |
 | **M6 — Desktop EXE / Tauri Demo** | **DONE** (demo-level) | PR #271 merged + hosted smoke; optional: land the local evidence-pack docs branch |
 | **M7 — Mobile/PWA Evidence** | **IN PROGRESS** | Mobile route live; iPad/PWA evidence refresh remains; optional 192px PWA icon only if an install audit requires it |
-| **M8 — Final Demo Freeze / Recruiter Portfolio Pack** | **NEXT** | README names demo-freeze report as the current phase; `docs/career/` + case study merged; depends on M4/M5 |
+| **M8 — Final Demo Freeze / Recruiter Portfolio Pack** | **NEXT** (unblocked) | README names demo-freeze report as the current phase; `docs/career/` + case study merged; M5 dependency cleared 2026-06-12 — hosted backend is current; remaining soft dependency: M4 leftovers |
 | **M9 — Post-demo Product Roadmap** | **BACKLOG** | Paper-trading M4 fast-track design docs exist; design-only, heavily gated, no live paths |
 
 ## 4. Remaining task counts (estimates from current repo state, not guarantees)
@@ -58,8 +59,9 @@
 ## 5. Recommended next task sequence
 
 1. ~~ROADMAP-STATUS-DOCS-001~~ — this document
-2. **RENDER-DEPLOY-UNBLOCK-001** — verify/clear the hosted-backend blocker
-3. **DEMO-FREEZE-001** — freeze report + evidence baseline
+2. ~~RENDER-DEPLOY-UNBLOCK-001~~ — completed 2026-06-12; hosted backend current
+   (see [render_current_status.md](../deployment/render_current_status.md))
+3. **DEMO-FREEZE-001** — freeze report + evidence baseline ← **next**
 4. **MOBILE-PWA-EVIDENCE-REFRESH-001** — iPad/PWA evidence refresh
 5. *Optional:* FABLE-LESSONS-BACKFILL-001 — write the first
    `docs/knowledge/fable_lessons/` entries from the #286→#293 arc
