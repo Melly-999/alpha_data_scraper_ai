@@ -8,14 +8,24 @@ from contextlib import contextmanager
 from collections.abc import Iterator
 from typing import Any
 
-import psycopg
-from psycopg.rows import dict_row
+try:  # psycopg is optional — the backend must boot without it.
+    import psycopg
+    from psycopg.rows import dict_row
+except ImportError:  # pragma: no cover - exercised via tests with import blocked
+    psycopg = None  # type: ignore[assignment]
+    dict_row = None  # type: ignore[assignment]
 
 _SELECT_ONLY_PATTERN = re.compile(r"^\s*(select|with)\b", re.IGNORECASE | re.DOTALL)
 _DANGEROUS_SQL_PATTERN = re.compile(
     r"\b(insert|update|delete|drop|alter|create|truncate|grant|revoke|merge|call|copy|execute)\b",
     re.IGNORECASE,
 )
+
+
+def is_driver_available() -> bool:
+    """Return True when the optional psycopg driver is importable."""
+
+    return psycopg is not None
 
 
 def get_database_url() -> str | None:
@@ -57,8 +67,13 @@ def assert_select_only(sql: str) -> None:
 
 
 @contextmanager
-def readonly_connection() -> Iterator[psycopg.Connection[Any]]:
+def readonly_connection() -> Iterator[Any]:
     """Open a Postgres connection forced into read-only mode."""
+
+    if psycopg is None:
+        raise RuntimeError(
+            "psycopg driver is not installed; Neon memory access is disabled."
+        )
 
     database_url = get_database_url()
     if database_url is None:

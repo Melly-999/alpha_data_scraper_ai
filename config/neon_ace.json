@@ -1,14 +1,15 @@
 {
-  "organization_id": "org-bitter-forest-07173841",
-  "organization_name": "Mateusz",
-  "project_id": "fragrant-river-86681973",
-  "project_name": "ace-mellytrade-memory",
+  "_note": "Placeholders only. Set real Neon identifiers via environment variables (.env, never committed). See .env.example.",
+  "organization_id": "example-org",
+  "organization_name": "Example Organization",
+  "project_id": "example-project",
+  "project_name": "example-neon-project",
   "database": "neondb",
   "branches": {
     "local_default": "production",
     "vercel_default": "vercel-dev"
   },
-  "ace_namespace": "mateusz-workspace",
+  "ace_namespace": "example-workspace",
   "ace_profile": "default",
   "ace_config_path": "%USERPROFILE%/.ace/profiles/default/config.json",
   "api_routes": {

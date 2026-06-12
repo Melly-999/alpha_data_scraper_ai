@@ -54,6 +54,34 @@ def test_neon_memory_summary_is_get_only_and_safe_without_database(client, monke
     _assert_no_secret_fields(data)
 
 
+def test_neon_memory_status_degrades_when_psycopg_driver_missing(client, monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:pass@host/neondb")
+    monkeypatch.setattr("app.services.neon_memory.is_driver_available", lambda: False)
+
+    response = client.get("/api/neon-memory/status")
+    data = response.json()
+
+    assert response.status_code == 200
+    _assert_safety_flags(data)
+    assert data["availability"] == "degraded"
+    assert data["source"] == "driver-missing"
+    assert data["database_reachable"] is False
+    assert "psycopg driver is not installed" in data["message"]
+    _assert_no_secret_fields(data)
+
+
+def test_neon_memory_defaults_do_not_expose_account_identifiers(client, monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("ACE_NAMESPACE", raising=False)
+
+    response = client.get("/api/neon-memory/status")
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["neon_project_id"] == "example-project"
+    assert data["ace_namespace"] == "example-workspace"
+
+
 def test_openapi_has_no_forbidden_methods_for_neon_memory_paths(client):
     openapi = client.app.openapi()
     paths = openapi["paths"]

@@ -5,12 +5,17 @@ from __future__ import annotations
 import os
 from typing import List
 
-from app.db.readonly import fetch_one, get_database_url
+from app.db.readonly import fetch_one, get_database_url, is_driver_available
 from app.schemas.neon_memory import (
     NeonMemoryStatus,
     NeonMemorySummary,
     NeonMemoryTableCount,
 )
+
+
+def _ace_namespace() -> str:
+    return os.environ.get("ACE_NAMESPACE", "example-workspace")
+
 
 _ACE_TABLES = (
     "memories",
@@ -29,12 +34,26 @@ class NeonMemoryService:
 
     def get_status(self) -> NeonMemoryStatus:
         database_url = get_database_url()
+        if not is_driver_available():
+            return NeonMemoryStatus(
+                availability="degraded",
+                source="driver-missing",
+                database_configured=database_url is not None,
+                database_reachable=False,
+                ace_namespace=_ace_namespace(),
+                message=(
+                    "psycopg driver is not installed. "
+                    "Neon memory routes stay read-only and degraded."
+                ),
+            )
+
         if database_url is None:
             return NeonMemoryStatus(
                 availability="degraded",
                 source="unconfigured",
                 database_configured=False,
                 database_reachable=False,
+                ace_namespace=_ace_namespace(),
                 message="DATABASE_URL is not set. Neon memory routes stay read-only.",
             )
 
@@ -58,8 +77,9 @@ class NeonMemoryService:
             database_reachable=True,
             postgres_version=row["postgres_version"] if row else None,
             current_database=row["current_database"] if row else None,
+            neon_project_id=os.environ.get("NEON_PROJECT_ID", "example-project"),
             neon_branch=os.environ.get("NEON_BRANCH_LOCAL", "production"),
-            ace_namespace=os.environ.get("ACE_NAMESPACE", "mateusz-workspace"),
+            ace_namespace=_ace_namespace(),
             message="Neon ACE memory database is reachable in read-only mode.",
         )
 
@@ -83,7 +103,7 @@ class NeonMemoryService:
             )
             total_rows += row_count
 
-        namespace = os.environ.get("ACE_NAMESPACE", "mateusz-workspace")
+        namespace = _ace_namespace()
         namespace_row = fetch_one(
             "SELECT COUNT(*) AS row_count FROM namespace_registry WHERE slug = %s",
             (namespace,),

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import textwrap
-from typing import Literal
+from typing import Any, Literal
 
 import pytest
 
@@ -146,3 +146,37 @@ def test_readonly_connection_requires_database_url(
     with pytest.raises(RuntimeError, match="DATABASE_URL is not configured"):
         with readonly_connection():
             pass
+
+
+def test_readonly_connection_degrades_without_psycopg(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://example")
+    monkeypatch.setattr(readonly_module, "psycopg", None)
+    with pytest.raises(RuntimeError, match="psycopg driver is not installed"):
+        with readonly_connection():
+            pass
+    assert readonly_module.is_driver_available() is False
+
+
+def test_readonly_module_imports_when_psycopg_is_absent() -> None:
+    """The backend must boot even when the optional psycopg driver is missing."""
+
+    import builtins
+    import importlib
+
+    real_import = builtins.__import__
+
+    def _blocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
+        if name == "psycopg" or name.startswith("psycopg."):
+            raise ImportError("psycopg blocked for test")
+        return real_import(name, *args, **kwargs)
+
+    builtins.__import__ = _blocked_import
+    try:
+        module = importlib.reload(readonly_module)
+        assert module.psycopg is None
+        assert module.is_driver_available() is False
+    finally:
+        builtins.__import__ = real_import
+        importlib.reload(readonly_module)
