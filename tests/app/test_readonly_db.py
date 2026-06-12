@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import textwrap
-from typing import Literal
+from typing import Any, Literal
 
 import pytest
 
@@ -167,7 +167,7 @@ def test_readonly_module_imports_when_psycopg_is_absent() -> None:
 
     real_import = builtins.__import__
 
-    def _blocked_import(name: str, *args: object, **kwargs: object):
+    def _blocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
         if name == "psycopg" or name.startswith("psycopg."):
             raise ImportError("psycopg blocked for test")
         return real_import(name, *args, **kwargs)
