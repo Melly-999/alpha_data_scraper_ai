@@ -61,7 +61,8 @@
 1. ~~ROADMAP-STATUS-DOCS-001~~ — this document
 2. ~~RENDER-DEPLOY-UNBLOCK-001~~ — completed 2026-06-12; hosted backend current
    (see [render_current_status.md](../deployment/render_current_status.md))
-3. **DEMO-FREEZE-001** — freeze report + evidence baseline ← **next**
+3. ~~DEMO-FREEZE-001~~ — checkpoint created: [docs/demo/demo_freeze_001.md](../demo/demo_freeze_001.md)
+   (+ checklist + recruiter script) ← **frozen 2026-06-12**
 4. **MOBILE-PWA-EVIDENCE-REFRESH-001** — iPad/PWA evidence refresh
 5. *Optional:* FABLE-LESSONS-BACKFILL-001 — write the first
    `docs/knowledge/fable_lessons/` entries from the #286→#293 arc
