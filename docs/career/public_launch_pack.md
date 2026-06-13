@@ -187,6 +187,19 @@ Never claim any of the following, in any post, message or conversation:
 
 ---
 
+## PR #300 Milestone
+
+PR #300 marks the public-launch readiness checkpoint for MellyTrade. It connects
+the completed demo freeze, evidence pack, recruiter portfolio pack, stale PR
+cleanup, and public feedback plan into one coherent public-facing launch layer.
+
+This milestone does not represent live trading, broker execution, production
+trading readiness, investment advice, or profit claims. It represents a
+portfolio-ready public launch package for a read-only, safety-first fintech
+tools project.
+
+---
+
 ## Safety confirmation
 
 ```text
