@@ -173,9 +173,9 @@ Hosted smoke test result (POST-FREEZE-HOSTED-SMOKE-001): **PASS WITH NOTES**
 
 | Surface | URL |
 |---|---|
-| Live web demo (Vercel) | mellytrade.vercel.app |
-| Live API (Render) | mellytrade-api.onrender.com |
-| GitHub repository | github.com/higherrrrrrr/alpha_data_scraper_ai |
+| Live web demo (Vercel) | <https://alpha-data-scraper-ai.vercel.app> |
+| Live API health (Render) | <https://alpha-data-scraper-ai.onrender.com/api/health> |
+| GitHub repository | <https://github.com/Melly-999/alpha_data_scraper_ai> |
 | Recruiter case study | docs/career/recruiter_case_study.md (this file) |
 | CV positioning notes | docs/career/cv_positioning_notes.md |
 | Module priority matrix | docs/roadmap/module_priority_matrix.md |
