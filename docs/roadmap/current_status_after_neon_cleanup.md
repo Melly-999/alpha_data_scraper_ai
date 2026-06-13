@@ -64,6 +64,7 @@
 3. ~~DEMO-FREEZE-001~~ — checkpoint created: [docs/demo/demo_freeze_001.md](../demo/demo_freeze_001.md)
    (+ checklist + recruiter script) ← **frozen 2026-06-12**
    - Evidence captured 2026-06-13: [docs/demo/demo_evidence_pack_001.md](../demo/demo_evidence_pack_001.md)
+   - Recruiter portfolio pack 2026-06-13: [docs/portfolio/mellytrade_recruiter_portfolio_pack.md](../portfolio/mellytrade_recruiter_portfolio_pack.md)
 4. **MOBILE-PWA-EVIDENCE-REFRESH-001** — iPad/PWA evidence refresh
 5. *Optional:* FABLE-LESSONS-BACKFILL-001 — write the first
    `docs/knowledge/fable_lessons/` entries from the #286→#293 arc
