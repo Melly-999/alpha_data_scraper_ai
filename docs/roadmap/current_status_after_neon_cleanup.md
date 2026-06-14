@@ -33,6 +33,7 @@
 | #292 | **Closed as superseded** by #293 (no unique content; verified diff vs main) |
 | Cleanup | CLEANUP-ROADMAP-POSTMERGE-001 (read-only audit) and CLEANUP-NEON-WORKTREES-001 (Neon worktrees deregistered/removed, local Neon branches deleted, remote branches retained for PR history) — no code changes |
 | #302 | Broker-sim readiness audit ([broker_sim_readiness_audit_001.md](../tasks/broker_sim_readiness_audit_001.md), classification **B**); follow-up adds a GET-only read-only smoke (`scripts/broker_sim_readonly_smoke.ps1`, [broker_sim_readonly_smoke_001.md](../tasks/broker_sim_readonly_smoke_001.md)) — docs + read-only smoke, no execution surface |
+| #303 → next | Broker-sim read-only smoke merged; follow-up adds a demo walkthrough ([broker_sim_walkthrough_001.md](../tasks/broker_sim_walkthrough_001.md)) — docs-only presenter guide for the read-only simulated broker preview, no execution surface |
 
 ## 3. Milestone status
 
