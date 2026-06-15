@@ -25,13 +25,18 @@ from app.schemas.alpaca_paper import (
     AlpacaPaperWatchlistPreview,
 )
 from app.schemas.alpaca_paper_order_preview import AlpacaPaperOrderPreviewResponse
+from app.schemas.alpaca_paper_readonly import AlpacaPaperPositionsPreview
 from app.services.alpaca_paper_demo import AlpacaPaperDemoService
 from app.services.alpaca_paper_order_preview_service import (
     generate_alpaca_paper_order_preview,
 )
+from app.services.alpaca_paper_readonly_adapter import AlpacaPaperReadOnlyAdapter
 
 router = APIRouter(tags=["alpaca-paper"])
 service = AlpacaPaperDemoService()
+# Default adapter: no injected client -> degraded_demo unless read-only is
+# explicitly enabled for a paper environment with credentials present.
+readonly_adapter = AlpacaPaperReadOnlyAdapter()
 
 
 @router.get("/alpaca-paper/status", response_model=AlpacaPaperStatus)
@@ -102,6 +107,23 @@ _ORDER_PREVIEW_DESCRIPTION = (
     "When validation fails: returns allowed=false with order=null and a "
     "descriptive reason. Human review is always required."
 )
+
+
+@router.get(
+    "/alpaca-paper/positions-preview",
+    response_model=AlpacaPaperPositionsPreview,
+    summary="Alpaca paper positions preview — GET-only, read-only, sanitized",
+    operation_id="get_alpaca_paper_positions_preview",
+)
+def get_positions_preview() -> AlpacaPaperPositionsPreview:
+    """Get a sanitized, read-only Alpaca paper positions preview.
+
+    GET-only. No order placement / cancellation / replacement, no broker
+    execution, no credentials exposed. Returns a safe ``degraded_demo`` preview
+    when read-only access is not explicitly enabled or credentials are absent;
+    otherwise returns sanitized paper positions from a read-only client.
+    """
+    return readonly_adapter.get_positions_preview()
 
 
 @router.get(
