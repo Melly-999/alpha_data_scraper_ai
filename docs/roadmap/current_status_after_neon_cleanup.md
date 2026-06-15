@@ -36,6 +36,7 @@
 | #303 → next | Broker-sim read-only smoke merged; follow-up adds a demo walkthrough ([broker_sim_walkthrough_001.md](../tasks/broker_sim_walkthrough_001.md)) — docs-only presenter guide for the read-only simulated broker preview, no execution surface |
 | #304 → closeout | Broker-sim walkthrough merged; arc closed out ([broker_sim_milestone_closeout_001.md](../tasks/broker_sim_milestone_closeout_001.md)) — audit + smoke + walkthrough complete, classification **B**, read-only/paper-only, real broker integration out of scope |
 | #306 → evidence | Paper-sim UI label polish merged; follow-up adds a screenshot evidence pack ([broker_sim_screenshot_evidence_001.md](../tasks/broker_sim_screenshot_evidence_001.md), `docs/assets/screenshots/broker-sim/`) — docs/images-only, read-only/demo UI, no execution surface |
+| #307 → summary | Broker-sim screenshot evidence merged; arc wrapped with a portfolio/demo summary ([broker_sim_demo_summary.md](../portfolio/broker_sim_demo_summary.md)) — docs-only, classification **B**, read-only/paper-only, no live execution |
 
 ## 3. Milestone status
 
