@@ -50,6 +50,10 @@ export function IBKRBrokerCard({ broker }: IBKRBrokerCardProps) {
           <li key={diagnostic}>{diagnostic}</li>
         ))}
       </ul>
+      <p className="panel-note">
+        Paper / simulated — read-only preview. No live execution, no credentials,
+        not live trading.
+      </p>
     </section>
   );
 }
