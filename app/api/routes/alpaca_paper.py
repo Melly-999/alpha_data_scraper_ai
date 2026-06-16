@@ -29,6 +29,10 @@ from app.schemas.alpaca_paper_order_draft import (
     AlpacaPaperOrderDraftResponse,
 )
 from app.schemas.alpaca_paper_order_preview import AlpacaPaperOrderPreviewResponse
+from app.schemas.alpaca_paper_order_submit_sandbox import (
+    AlpacaPaperOrderSubmitSandboxRequest,
+    AlpacaPaperOrderSubmitSandboxResponse,
+)
 from app.schemas.alpaca_paper_readonly import AlpacaPaperPositionsPreview
 from app.services.alpaca_paper_demo import AlpacaPaperDemoService
 from app.services.alpaca_paper_order_draft_service import (
@@ -37,6 +41,9 @@ from app.services.alpaca_paper_order_draft_service import (
 from app.services.alpaca_paper_order_preview_service import (
     generate_alpaca_paper_order_preview,
 )
+from app.services.alpaca_paper_order_submit_sandbox_service import (
+    AlpacaPaperOrderSubmitSandboxService,
+)
 from app.services.alpaca_paper_readonly_adapter import AlpacaPaperReadOnlyAdapter
 
 router = APIRouter(tags=["alpaca-paper"])
@@ -44,6 +51,9 @@ service = AlpacaPaperDemoService()
 # Default adapter: no injected client -> degraded_demo unless read-only is
 # explicitly enabled for a paper environment with credentials present.
 readonly_adapter = AlpacaPaperReadOnlyAdapter()
+# Default submit sandbox: no injected client -> blocked unless every explicit
+# paper-only gate is satisfied (env flags + ACK + credentials + confirmation).
+submit_sandbox_service = AlpacaPaperOrderSubmitSandboxService()
 
 
 @router.get("/alpaca-paper/status", response_model=AlpacaPaperStatus)
@@ -170,6 +180,45 @@ def post_alpaca_paper_order_draft(
     ``valid=false`` (HTTP 200) on validation failure.
     """
     return build_alpaca_paper_order_draft(request)
+
+
+_SUBMIT_SANDBOX_DESCRIPTION = (
+    "ALPACA-PAPER-ORDER-SUBMIT-SANDBOX-001 — backend-only, multi-gated, "
+    "PAPER-ONLY order submission sandbox for local/manual testing. "
+    "\n\n"
+    "**Blocked by default.** A real Alpaca **Paper** submission is attempted ONLY "
+    "when every explicit gate is satisfied: ALPACA_ENV=paper, "
+    "ALPACA_PAPER_ORDER_SUBMIT_ENABLED=true, the acknowledgement env gate, "
+    "Alpaca paper credentials present, request confirm_paper_order=true, and "
+    "source='manual_sandbox' — plus the standard draft risk validation and "
+    "conservative sandbox size caps. If any gate fails, no Alpaca call is made "
+    "and a safe blocked response (HTTP 200) is returned. "
+    "\n\n"
+    "**This is NOT live trading.** No live endpoint, no autotrade, no frontend "
+    "control, no cancellation/replacement, no bracket/OCO. live_orders_blocked "
+    "and dry_run remain true; only a paper order may be submitted, and only a "
+    "redacted order id is returned (never a raw broker order id, account id, or "
+    "credential)."
+)
+
+
+@router.post(
+    "/alpaca-paper/order-submit-sandbox",
+    response_model=AlpacaPaperOrderSubmitSandboxResponse,
+    summary="Alpaca paper order submit SANDBOX — gated, paper-only, not live",
+    description=_SUBMIT_SANDBOX_DESCRIPTION,
+    operation_id="post_alpaca_paper_order_submit_sandbox",
+)
+def post_alpaca_paper_order_submit_sandbox(
+    request: AlpacaPaperOrderSubmitSandboxRequest,
+) -> AlpacaPaperOrderSubmitSandboxResponse:
+    """Attempt a gated, paper-only order submission for manual sandbox testing.
+
+    Blocked by default; submits to Alpaca Paper only when every gate is
+    satisfied. Never live trading, never frontend-triggered. Returns a safe
+    blocked response (HTTP 200) on any gate/validation failure.
+    """
+    return submit_sandbox_service.submit(request)
 
 
 @router.get(
