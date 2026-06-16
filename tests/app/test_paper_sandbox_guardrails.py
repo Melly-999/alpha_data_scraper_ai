@@ -95,6 +95,14 @@ SAFE_ADMIN_NON_EXECUTION_PATHS: frozenset[str] = frozenset(
         # no broker call, no execution, no network. draft_only=true,
         # order_submission_enabled=false, execution_enabled=false.
         "/api/alpaca-paper/order-draft",
+        # ALPACA-PAPER-ORDER-SUBMIT-SANDBOX-001 — backend-only, PAPER-ONLY,
+        # multi-gated submission sandbox. NOT a live-execution surface: the
+        # client is built paper=True only and the live endpoint is never used.
+        # Blocked by default; may submit a single paper order ONLY when every
+        # env/ACK/credential/confirmation gate passes. No autotrade, no frontend
+        # trigger, no cancel/replace. live_trading=false, live_orders_blocked=
+        # true, dry_run=true, execution_enabled=false; redacted order id only.
+        "/api/alpaca-paper/order-submit-sandbox",
     }
 )
 

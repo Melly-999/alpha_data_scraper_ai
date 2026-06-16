@@ -66,6 +66,15 @@ TERMINAL_V1_GET_ONLY_PREFIXES: tuple[str, ...] = (
 #       is Literal-locked draft_only=true, order_submission_enabled=false,
 #       execution_enabled=false, live_orders_blocked=true, dry_run=true,
 #       read_only=true, requires_human_review=true.
+#   - /alpaca-paper/order-submit-sandbox (POST) → ALPACA-PAPER-ORDER-SUBMIT-
+#       SANDBOX-001 backend-only, PAPER-ONLY, multi-gated submission sandbox.
+#       Blocked by default; attempts an Alpaca *Paper* submission only when
+#       ALPACA_ENV=paper + ALPACA_PAPER_ORDER_SUBMIT_ENABLED=true + the ACK env
+#       gate + paper credentials + confirm_paper_order=true + source=
+#       "manual_sandbox" all hold. No live endpoint, no autotrade, no frontend
+#       control, no cancel/replace. Response keeps live_trading=false,
+#       live_orders_blocked=true, dry_run=true, execution_enabled=false; only a
+#       redacted order id is ever returned.
 # If you need to add another mutating route, add it here together with a
 # justification — the review will catch unintended additions.
 ADMIN_NON_GET_ALLOWLIST: frozenset[tuple[str, str]] = frozenset(
@@ -76,6 +85,7 @@ ADMIN_NON_GET_ALLOWLIST: frozenset[tuple[str, str]] = frozenset(
         ("POST", "/api/paper/tickets/draft"),
         ("POST", "/api/mobile/ai/screenshot/preview"),
         ("POST", "/api/alpaca-paper/order-draft"),
+        ("POST", "/api/alpaca-paper/order-submit-sandbox"),
     }
 )
 
