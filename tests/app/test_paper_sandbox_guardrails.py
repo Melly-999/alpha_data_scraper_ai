@@ -90,6 +90,11 @@ MUTATING_TRADING_FRAGMENTS: tuple[str, ...] = (
 SAFE_ADMIN_NON_EXECUTION_PATHS: frozenset[str] = frozenset(
     {
         "/api/broker/dry-run-report",  # dry-run only, no live broker calls
+        # ALPACA-PAPER-ORDER-DRAFT-001 — local-only paper order DRAFT. Validates
+        # input and returns a draft for human review; never submits to Alpaca,
+        # no broker call, no execution, no network. draft_only=true,
+        # order_submission_enabled=false, execution_enabled=false.
+        "/api/alpaca-paper/order-draft",
     }
 )
 
@@ -145,6 +150,8 @@ def test_no_live_execution_route_outside_paper_namespace(client, fragment: str) 
 
     for path in paths:
         lower = path.lower()
+        if path in SAFE_ADMIN_NON_EXECUTION_PATHS:
+            continue  # reviewed admin/dry-run/draft routes — not live execution
         if fragment in lower and not _is_paper_path(path):
             # Allow the path ONLY if it is purely read-only (no mutating
             # methods) AND its metadata does not imply order execution.

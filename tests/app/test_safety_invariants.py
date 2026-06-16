@@ -60,6 +60,12 @@ TERMINAL_V1_GET_ONLY_PREFIXES: tuple[str, ...] = (
 #       AI provider call, no broker execution, no order placement; response is
 #       Literal-locked analysis_only=true, paper_only=true,
 #       live_orders_blocked=true, broker_execution=false.
+#   - /alpaca-paper/order-draft (POST) → ALPACA-PAPER-ORDER-DRAFT-001 local-only
+#       paper order draft. Validates input and returns a draft for human review;
+#       no Alpaca/broker call, no order submission/execution, no network. Response
+#       is Literal-locked draft_only=true, order_submission_enabled=false,
+#       execution_enabled=false, live_orders_blocked=true, dry_run=true,
+#       read_only=true, requires_human_review=true.
 # If you need to add another mutating route, add it here together with a
 # justification — the review will catch unintended additions.
 ADMIN_NON_GET_ALLOWLIST: frozenset[tuple[str, str]] = frozenset(
@@ -69,6 +75,7 @@ ADMIN_NON_GET_ALLOWLIST: frozenset[tuple[str, str]] = frozenset(
         ("POST", "/api/broker/dry-run-report"),
         ("POST", "/api/paper/tickets/draft"),
         ("POST", "/api/mobile/ai/screenshot/preview"),
+        ("POST", "/api/alpaca-paper/order-draft"),
     }
 )
 

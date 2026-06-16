@@ -24,9 +24,16 @@ from app.schemas.alpaca_paper import (
     AlpacaPaperStatus,
     AlpacaPaperWatchlistPreview,
 )
+from app.schemas.alpaca_paper_order_draft import (
+    AlpacaPaperOrderDraftRequest,
+    AlpacaPaperOrderDraftResponse,
+)
 from app.schemas.alpaca_paper_order_preview import AlpacaPaperOrderPreviewResponse
 from app.schemas.alpaca_paper_readonly import AlpacaPaperPositionsPreview
 from app.services.alpaca_paper_demo import AlpacaPaperDemoService
+from app.services.alpaca_paper_order_draft_service import (
+    build_alpaca_paper_order_draft,
+)
 from app.services.alpaca_paper_order_preview_service import (
     generate_alpaca_paper_order_preview,
 )
@@ -124,6 +131,45 @@ def get_positions_preview() -> AlpacaPaperPositionsPreview:
     otherwise returns sanitized paper positions from a read-only client.
     """
     return readonly_adapter.get_positions_preview()
+
+
+_ORDER_DRAFT_DESCRIPTION = (
+    "ALPACA-PAPER-ORDER-DRAFT-001 — build a LOCAL paper order draft. "
+    "This endpoint validates the submitted trade parameters and returns a "
+    "structured draft object for human review. "
+    "\n\n"
+    "**What this endpoint does NOT do:** It does NOT submit the order to Alpaca "
+    "or any broker, does NOT place / cancel / replace any order, makes NO Alpaca "
+    "SDK calls, NO network I/O, and NO database writes. The POST verb only means "
+    "it accepts a request body — no external broker state is mutated. "
+    "\n\n"
+    "**Safety invariants (always enforced):** draft_only=true, "
+    "order_submission_enabled=false, execution_enabled=false, "
+    "live_orders_blocked=true, dry_run=true, read_only=true, "
+    "requires_human_review=true, max_risk_pct <= 1.0. "
+    "Validation failures return valid=false (HTTP 200), not an error. "
+    "The returned draft_id is a local paper-scoped id (paper-draft-*), never a "
+    "broker order id."
+)
+
+
+@router.post(
+    "/alpaca-paper/order-draft",
+    response_model=AlpacaPaperOrderDraftResponse,
+    summary="Alpaca paper order DRAFT — local-only, not submitted to Alpaca",
+    description=_ORDER_DRAFT_DESCRIPTION,
+    operation_id="post_alpaca_paper_order_draft",
+)
+def post_alpaca_paper_order_draft(
+    request: AlpacaPaperOrderDraftRequest,
+) -> AlpacaPaperOrderDraftResponse:
+    """Build a local-only Alpaca paper order draft.
+
+    Validates input and returns a draft for human review. Never submits to
+    Alpaca, never calls a broker/network, never executes. Returns
+    ``valid=false`` (HTTP 200) on validation failure.
+    """
+    return build_alpaca_paper_order_draft(request)
 
 
 @router.get(
