@@ -1,0 +1,96 @@
+{
+  "$schema_note": "MellyTrade public media pack manifest — MELLYTRADE-MEDIA-INTEGRATION-001. No secrets, account info, or rejected asset paths included.",
+  "generated_on": "2026-07-05",
+  "generation_run": "MELLYTRADE-MEDIA-GENERATION-001",
+  "integration_run": "MELLYTRADE-MEDIA-INTEGRATION-001",
+  "source_design_pack": "docs/design/mellytrade_website_design_pack_001.md",
+  "assets": [
+    {
+      "name": "H0 — Hero image",
+      "file": "hero-command-core.png",
+      "role": "hero image / Clip 1 poster frame",
+      "source_prompt": "H0 (hero image), 3rd take — refined negative prompt excluding line/price charts, KPI/percentage panels, humans/avatars",
+      "model": "Higgsfield Soul Cinema (soul_cinematic)",
+      "settings": "quality=2k, aspect_ratio=16:9",
+      "dimensions": "2048x1152",
+      "duration": null,
+      "credits_spent": 0.12,
+      "credits_spent_note": "3 takes generated total, 0.36 credits cumulative; only the 3rd take was accepted",
+      "safety_sweep": "PASS",
+      "safety_notes": "Legible amber pixel MT monogram at center; all 4 required badges legible (READ-ONLY, PAPER SANDBOX, AUTOTRADE OFF, AUDITED); no humans, no broker logos, no candles, no account/order numbers, no PnL, no secrets, no buy/sell/execute/order controls, no percentage/KPI dashboard.",
+      "caveat": "The flowing amber/cyan light line has a rising-trendline visual quality (smooth curve, lower-left to upper-right). It has no chart furniture (no axis, no gridlines, no price labels, no candlesticks), so it was judged to be the requested abstract signal-line motif rather than a literal price chart. Reviewed again in integration context on 2026-07-05 — see docs/showcase/media_integration_001.md for the in-context verdict."
+    },
+    {
+      "name": "Hero poster (duplicate of H0)",
+      "file": "hero-command-core-poster.png",
+      "role": "explicit poster frame for CinematicHeroMedia's video/poster fallback",
+      "source_prompt": "Direct copy of hero-command-core.png — no separate generation. Per the design pack: Clip 1's poster = the hero image itself.",
+      "model": null,
+      "settings": null,
+      "dimensions": "2048x1152",
+      "duration": null,
+      "credits_spent": 0,
+      "safety_sweep": "PASS (identical to H0)",
+      "caveat": "Same as H0."
+    },
+    {
+      "name": "C1 — AIOS Assembly",
+      "file": "aios-assembly.mp4",
+      "role": "hero clip (desktop, non-reduced-motion only)",
+      "source_prompt": "C1 (AIOS Assembly), 2nd take (1st take failed outright with a technical error, credits auto-refunded)",
+      "model": "Kling v3.0 (kling3_0)",
+      "settings": "mode=std, sound=off, duration=8, aspect_ratio=16:9, image reference = hero-command-core.png (role: start_image)",
+      "dimensions": "1280x720",
+      "duration_seconds": 7.54,
+      "credits_spent": 12,
+      "credits_spent_note": "1st take failed technically and was refunded 12 credits; the accepted take cost 12 credits",
+      "safety_sweep": "PASS",
+      "safety_notes": "Composition briefly dissolves into an amber/cyan particle cloud mid-clip, then reassembles into the MT monogram plus all 4 legible badges and an extra GitHub-evidence-like badge by the final frame. No candles, no price/PnL numbers, no account numbers, no broker logos, no humans, no secrets, no buy/sell/execute/order controls.",
+      "caveat": "Same rising-trendline-quality line as H0 persists throughout the clip. Reviewed again in integration context — see docs/showcase/media_integration_001.md."
+    },
+    {
+      "name": "C2 — Risk Layer Activation",
+      "file": "risk-layer-activation.mp4",
+      "role": "available for a future non-hero preview section (not wired into hero in this run)",
+      "source_prompt": "C2 (Risk Layer Activation), 1st take — accepted, no retake needed",
+      "model": "Kling v3.0 (kling3_0)",
+      "settings": "mode=std, sound=off, duration=8, aspect_ratio=16:9, image reference = hero-command-core.png (role: start_image)",
+      "dimensions": "1280x720",
+      "duration_seconds": 7.54,
+      "credits_spent": 12,
+      "safety_sweep": "PASS",
+      "safety_notes": "Amber toggle switches illuminate one at a time next to badge labels; cyan circuit-trace lines route cleanly into the badge rail (reads as an audit rail, not an order ticket). No candles, no price/PnL numbers, no account numbers, no broker logos, no humans, no secrets, no buy/sell/execute/order controls, no casino red/green cues.",
+      "caveat": "None beyond the general illegible-badge-text limitation common to all clips."
+    },
+    {
+      "name": "C3 — Product Showcase Finale",
+      "file": "product-showcase-finale.mp4",
+      "role": "available for a future non-hero preview section (not wired into hero in this run)",
+      "source_prompt": "C3 (Product Showcase Finale), 2nd take (1st take REJECTED — contained a visible price-chart widget with gridlines, axis-style numeric labels, and a jagged upward-trending line)",
+      "model": "Kling v3.0 (kling3_0)",
+      "settings": "mode=std, sound=off, duration=8, aspect_ratio=16:9, image reference = hero-command-core.png (role: start_image)",
+      "dimensions": "1280x720",
+      "duration_seconds": 7.54,
+      "credits_spent": 12,
+      "credits_spent_note": "1st (rejected) take also cost 12 credits, not refunded (rejection was a content/safety judgment call, not a technical failure)",
+      "safety_sweep": "PASS (2nd take)",
+      "safety_notes": "Converges into a multi-panel product composition: data/telemetry panel, risk-gauge panel with dials, mobile/tablet device-frame preview, an amber evidence card with a generic repo-style icon, and the badge rail, all connected by amber/cyan lines around the MT monogram. No candles, no price chart, no PnL, no account numbers, no broker logos, no humans, no secrets, no buy/sell/execute/order controls.",
+      "caveat": "1st take (not included in this repo) contained a clear price-chart widget and was rejected and not integrated. Only the 2nd, accepted take is present here."
+    }
+  ],
+  "excluded": {
+    "note": "Rejected and intermediate/review assets are intentionally NOT copied into this repo. They remain only in the local export folder outside version control.",
+    "rejected_summary": [
+      "H0 take 1 — rejected: percentage/KPI dashboard strip",
+      "H0 take 2 — rejected: bounded price-chart-style widget; also missing the MT monogram",
+      "C1 take 1 — failed technically (not a content rejection); credits refunded",
+      "C3 take 1 — rejected: visible price-chart widget with gridlines and axis labels"
+    ]
+  },
+  "budget_summary": {
+    "starting_credits": 110,
+    "ending_credits": 61.64,
+    "total_spent": 48.36,
+    "plan": "Higgsfield Plus (3-day trial)"
+  }
+}

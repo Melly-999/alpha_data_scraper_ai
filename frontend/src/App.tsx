@@ -4,11 +4,14 @@ import { TerminalPage } from "./pages/TerminalPage";
 import { PaperRunPreviewPage } from "./pages/PaperRunPreviewPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
 import { MobileAppPage } from "./pages/MobileAppPage";
+import { PublicLandingPage } from "./pages/PublicLandingPage";
+import { CaseStudyPage } from "./pages/CaseStudyPage";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/terminal" replace />} />
+      <Route path="/" element={<PublicLandingPage />} />
+      <Route path="/case-study" element={<CaseStudyPage />} />
       <Route path="/terminal" element={<TerminalPage />} />
       <Route path="/terminal/open-design-tabs" element={<TerminalPage />} />
       <Route path="/terminal/paper-run-preview" element={<PaperRunPreviewPage />} />
