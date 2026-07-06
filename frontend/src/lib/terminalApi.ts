@@ -46,6 +46,15 @@ export type RiskPolicy = {
   daily_loss_cap_pct: number;
   open_position_cap: number;
   execution_enabled: false;
+  // Safety flags carried by /api/risk/policy alongside the runtime gates.
+  // Optional because older backend builds may omit them.
+  max_risk_per_trade_pct?: number;
+  dry_run?: boolean;
+  auto_trade?: boolean;
+  read_only?: boolean;
+  live_orders_blocked?: boolean;
+  stop_loss_required?: boolean;
+  take_profit_required?: boolean;
 };
 
 export type BacktestSummary = {
