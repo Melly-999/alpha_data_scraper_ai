@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import { MellyCorePage } from "./pages/MellyCorePage";
 import { TerminalPage } from "./pages/TerminalPage";
 import { PaperRunPreviewPage } from "./pages/PaperRunPreviewPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
@@ -19,6 +20,7 @@ export default function App() {
       <Route path="/markets" element={<TerminalPage />} />
       <Route path="/global" element={<Navigate to="/markets" replace />} />
       <Route path="/watchlist" element={<WatchlistPage />} />
+      <Route path="/mellycore" element={<MellyCorePage />} />
       <Route path="/workspace" element={<TerminalPage />} />
       <Route path="/signals" element={<TerminalPage />} />
       <Route path="/risk" element={<TerminalPage />} />
