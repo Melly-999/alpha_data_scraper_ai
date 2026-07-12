@@ -176,3 +176,11 @@ Out of scope:
 - [Safety validator](scripts/validate_safety_config.py)
 - [OpenAPI forbidden-path tests](tests/app/test_openapi_forbidden_paths.py)
 - [Safety invariant tests](tests/app/test_safety_invariants.py)
+
+## Beta Docs Index
+
+Source-only beta rollout guidance is centralized in the canonical index and its operator checklists:
+
+- [MellyTrade Beta Docs Index](docs/beta/README.md)
+- [Beta Rollout Operator Command Center](docs/beta/beta_rollout_operator_command_center.md)
+- [Beta Rollout Operator Master Checklist](docs/qa/beta_rollout_operator_master_checklist.md)
