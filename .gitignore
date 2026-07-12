@@ -98,3 +98,17 @@ frontend/src-tauri/gen/
 
 # Allow the non-secret desktop build env example (public backend URL only)
 !.env.desktop.example
+# Packaged archives and local backups
+*.zip
+*.zip.bak-*
+*.bak
+
+# Local build/test output
+coverage/
+htmlcov/
+.coverage.*
+reports/local/
+results/local/
+frontend/.vite/
+frontend/coverage/
+frontend/.turbo/

@@ -425,9 +425,8 @@ Rules:
 ## Useful Links
 
 - [CLAUDE.md](./CLAUDE.md) — Original AI assistant guidance
-- [README.md](./README.md) — Polish-language project intro
+- [README.md](./README.md) - public project overview and safety contract
 - [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) — Production deployment
-- [GITHUB_INTEGRATION_QUICK_START.md](./GITHUB_INTEGRATION_QUICK_START.md) — GitHub setup
 - [Anthropic Claude Docs](https://docs.anthropic.com) — Claude API reference
 - [MetaTrader5 Docs](https://www.mql5.com/en/docs/integration/python_metatrader5) — MT5 Python binding
 
