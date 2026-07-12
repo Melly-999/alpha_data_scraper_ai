@@ -3,8 +3,7 @@ max-line-length = 88
 exclude =
     .git,
     .venv,
-    __pycache__,
-    GITHUB_INTEGRATION_SNIPPET.py
+    __pycache__
 extend-ignore =
     E203,
     W503,
